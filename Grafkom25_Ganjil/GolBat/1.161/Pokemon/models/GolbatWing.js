@@ -1,9 +1,9 @@
 /*
- * GolbatWing.js
- * Desain baru untuk Golbat:
- * - Tepi Atas: Kurva Bezier (mulus)
- * - Tepi Bawah: Garis lurus antar titik (angular)
- * - Tetap menggunakan membran dua sisi.
+ * GolbatWing.js - Improvement V2
+ * - Tepi Atas & Bawah: Keduanya menggunakan Kurva Bezier.
+ * - Memperkenalkan BOTTOM_CURVE_SEGMENTS untuk membran bawah yang melengkung.
+ * - Memperbaiki _generateBezierCenterline agar alokasi titik proporsional.
+ * - Memperbaiki bug ujung sayap yang berlubang.
  */
 import { SceneObject } from "./SceneObject.js";
 import { Node } from "./Node.js";
@@ -22,7 +22,7 @@ export class GolbatWing extends Node {
     const BONE_COLOR = [40 / 255, 40 / 255, 80 / 255]; // Tulang (lebih gelap)
 
     // --- Detail & Bentuk ---
-    const TOTAL_POINTS = 30; // Jumlah titik di sepanjang tepi (mempengaruhi kehalusan)
+    const TOTAL_POINTS = 60; // Jumlah total titik di sepanjang tepi
     const TUBE_SEGMENTS = 8;
     const MEMBRANE_THICKNESS = 0.02;
 
@@ -31,11 +31,10 @@ export class GolbatWing extends Node {
     };
 
     // --- Kurva Tulang Atas (Bézier) ---
-    // Definisikan sebagai 2 bagian yang menyambung
     const TOP_BONE_CURVE = [
       {
         startPoint: [0.0, 0.0, 0.0],
-        startHandle: [2.5, -0.5, -0.6],
+        startHandle: [2.3, -0.5, -0.6],
         endPoint: [2.0, 1.3, -0.6],
         endHandle: [-0.6, 0.0, -0.1],
       },
@@ -48,13 +47,42 @@ export class GolbatWing extends Node {
     ];
 
     // --- Titik Tepi Bawah (Linear) ---
-    // Cukup definisikan titik-titik tajamnya
-    const BOTTOM_EDGE_POINTS = [
-      [0.0, -0.5, 0.0], // 1. Pangkal
-      [2.0, -2, -0.6], // 2. Cekungan 1
-      [3.0, -1.0, -0.9], // 3. Puncak antara
-      [4.8, -1.2, -1.0], // 4. Cekungan 2
-      [5.5, 0.9, -1.0], // 5. Ujung (koordinat sama dengan ujung atas)
+    // Menggunakan koordinat Anda sebagai Endpoints
+    const BTM_P0 = [0.0, -0.6, 0.0];
+    const BTM_P1 = [0.0, -0.6, 0.0];
+    const BTM_P2 = [2.5, -1.8, -0.9];
+    const BTM_P3 = [5.0, -0.8, -1.0];
+
+    // --- IMPROVEMENT: Tepi Bawah sekarang adalah Kurva Bézier ---
+    const BOTTOM_CURVE_SEGMENTS = [
+      // Segmen 1 (Pangkal -> Cekungan 1)
+      {
+        startPoint: BTM_P0,
+        startHandle: [0.0, -0.5, 0],
+        endHandle: [0, 0, 0],
+        endPoint: BTM_P1,
+      },
+      // Segmen 2 (Cekungan 1 -> Puncak 1)
+      {
+        startPoint: BTM_P1,
+        startHandle: [1.5 ,0, 0.0, 0],
+        endHandle: [0, 0, 0],
+        endPoint: BTM_P2,
+      },
+      // Segmen 3 (Puncak 1 -> Cekungan 2)
+      {
+        startPoint: BTM_P2,
+        startHandle: [0, 0, 0],
+        endHandle: [-1.4, 0.5, 0],
+        endPoint: BTM_P3,
+      },
+      // Segmen 4 (Cekungan 2 -> Ujung Sayap)
+      {
+        startPoint: BTM_P3,
+        startHandle: [0.0, 2, 0.0],
+        endHandle: [-1.0, 0.0, 0.0],
+        endPoint: TOP_BONE_CURVE[1].endPoint,
+      },
     ];
 
     // Array untuk data geometri gabungan
@@ -69,9 +97,9 @@ export class GolbatWing extends Node {
       TOTAL_POINTS
     );
 
-    // 2. Buat Centerline Bawah (dari Titik Linear)
-    const bottomCenterline = this._generateLinearCenterline(
-      BOTTOM_EDGE_POINTS,
+    // 2. Buat Centerline Bawah (dari Bezier)
+    const bottomCenterline = this._generateBezierCenterline(
+      BOTTOM_CURVE_SEGMENTS.map((p) => this._getBezierControlPoints(p)),
       TOTAL_POINTS
     );
 
@@ -97,99 +125,70 @@ export class GolbatWing extends Node {
     this.setGeometry(sceneObj); // Set geometri untuk Node ini
   }
 
-  // ======================== FUNGSI HELPER BARU =========================
+  // ======================== FUNGSI HELPER YANG DIPERBAIKI =========================
 
   /**
    * Menghasilkan titik-titik di sepanjang serangkaian kurva Bezier.
-   * Disederhanakan: mengalokasikan titik secara merata per segmen kurva.
+   * DIPERBAIKI: Mengalokasikan titik secara proporsional berdasarkan estimasi panjang kurva.
    */
   _generateBezierCenterline(bezierSegmentsCPs, totalPoints) {
     const centerline = [];
-    const numSegments = bezierSegmentsCPs.length;
-    if (numSegments === 0) return [];
+    if (bezierSegmentsCPs.length === 0) return [];
 
-    const pointsPerSegment = Math.floor((totalPoints - 1) / numSegments);
-    let pointsRemaining = (totalPoints - 1) % numSegments;
+    let totalLength = 0;
+    // Estimasi panjang setiap segmen
+    const segmentLengths = bezierSegmentsCPs.map(cp => {
+        let length = 0;
+        let p0 = cp[0];
+        for(let i=1; i<=10; i++) { // Uji 10 titik di sepanjang kurva
+            let p1 = this._getPointOnBezierCurve(cp, i/10);
+            length += this._vectorLength(this._subtractVectors(p1, p0));
+            p0 = p1;
+        }
+        return length;
+    });
+    totalLength = segmentLengths.reduce((sum, len) => sum + len, 0);
 
     centerline.push([...bezierSegmentsCPs[0][0]]); // Tambahkan titik awal
-
-    for (let i = 0; i < numSegments; i++) {
-      const controlPoints = bezierSegmentsCPs[i];
-      let numPointsInThisSegment = pointsPerSegment;
-      if (pointsRemaining > 0) {
-        numPointsInThisSegment++;
-        pointsRemaining--;
-      }
-
-      for (let j = 1; j <= numPointsInThisSegment; j++) {
-        const t = j / numPointsInThisSegment;
-        centerline.push(this._getPointOnBezierCurve(controlPoints, t));
-      }
-    }
-    return centerline;
-  }
-
-  /**
-   * Menghasilkan titik-titik di sepanjang serangkaian garis lurus (dari array titik).
-   * Mengalokasikan titik secara proporsional berdasarkan panjang setiap garis.
-   */
-  _generateLinearCenterline(points, totalPoints) {
-    const centerline = [];
-    if (points.length < 2) return [];
-
-    const segmentLengths = [];
-    let totalLength = 0;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i];
-      const p1 = points[i + 1];
-      const len = Math.sqrt(
-        (p1[0] - p0[0]) ** 2 + (p1[1] - p0[1]) ** 2 + (p1[2] - p0[2]) ** 2
-      );
-      segmentLengths.push(len);
-      totalLength += len;
-    }
-
-    if (totalLength < 1e-6) {
-      for (let i = 0; i < totalPoints; i++) centerline.push([...points[0]]);
-      return centerline;
-    }
-
-    centerline.push([...points[0]]); // Tambahkan titik awal
     let pointsAllocated = 1;
 
-    for (let i = 0; i < segmentLengths.length; i++) {
-      const p0 = points[i];
-      const p1 = points[i + 1];
-      const proportion = segmentLengths[i] / totalLength;
+    for (let i = 0; i < bezierSegmentsCPs.length; i++) {
+        const controlPoints = bezierSegmentsCPs[i];
+        let numPointsInThisSegment;
+        
+        if (totalLength > 1e-6) {
+            const proportion = segmentLengths[i] / totalLength;
+            numPointsInThisSegment = Math.round(proportion * (totalPoints - 1));
+        } else {
+            numPointsInThisSegment = Math.round((totalPoints - 1) / bezierSegmentsCPs.length);
+        }
 
-      let numPointsInThisSegment;
-      if (i === segmentLengths.length - 1) {
-        numPointsInThisSegment = totalPoints - pointsAllocated;
-      } else {
-        numPointsInThisSegment = Math.round(proportion * (totalPoints - 1));
-      }
-      numPointsInThisSegment = Math.max(0, numPointsInThisSegment);
+        // Alokasikan sisa titik ke segmen terakhir
+        if (i === bezierSegmentsCPs.length - 1) {
+            numPointsInThisSegment = totalPoints - pointsAllocated;
+        }
+        numPointsInThisSegment = Math.max(0, numPointsInThisSegment);
 
-      for (let j = 1; j <= numPointsInThisSegment; j++) {
-        const t = j / numPointsInThisSegment;
-        const x = p0[0] * (1 - t) + p1[0] * t;
-        const y = p0[1] * (1 - t) + p1[1] * t;
-        const z = p0[2] * (1 - t) + p1[2] * t;
-        centerline.push([x, y, z]);
-      }
-      pointsAllocated += numPointsInThisSegment;
+        for (let j = 1; j <= numPointsInThisSegment; j++) {
+            const t = j / numPointsInThisSegment;
+            centerline.push(this._getPointOnBezierCurve(controlPoints, t));
+        }
+        pointsAllocated += numPointsInThisSegment;
     }
+    
     // Pastikan jumlah titik pas
-    while (centerline.length < totalPoints)
-      centerline.push([...points[points.length - 1]]);
     if (centerline.length > totalPoints) centerline.length = totalPoints;
+    while (centerline.length < totalPoints) centerline.push([...bezierSegmentsCPs[bezierSegmentsCPs.length-1][3]]);
 
     return centerline;
   }
 
-  // ======================== FUNGSI HELPER (DARI FILE ZUBAT/GOLBAT LAMA) =========================
-  // (Fungsi-fungsi ini disalin dari file GolbatWing.js Anda sebelumnya, tidak ada perubahan)
+  // _generateLinearCenterline() tidak diperlukan lagi
 
+  _vectorLength(v) { return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]); }
+
+  // ======================== FUNGSI HELPER (TIDAK BERUBAH) =========================
+  // ... (Salin semua fungsi helper lainnya dari _generateDoubleSidedMembrane hingga _generateTube)
   _generateDoubleSidedMembrane(
     centerline1,
     centerline2,
