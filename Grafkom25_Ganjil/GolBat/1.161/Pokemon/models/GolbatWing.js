@@ -35,7 +35,7 @@ export class GolbatWing extends Node {
     const TOP_BONE_CURVE = [
       {
         startPoint: [0.0, 0.0, 0.0],
-        startHandle: [3, -0.5, -0.6],
+        startHandle: [2.5, -0.5, -0.6],
         endPoint: [2.0, 1.3, -0.6],
         endHandle: [-0.6, 0.0, -0.1],
       },
@@ -54,7 +54,7 @@ export class GolbatWing extends Node {
       [2.0, -2, -0.6], // 2. Cekungan 1
       [3.0, -1.0, -0.9], // 3. Puncak antara
       [4.8, -1.2, -1.0], // 4. Cekungan 2
-      [5.5, 0.9, -1.1], // 5. Ujung (koordinat sama dengan ujung atas)
+      [5.5, 0.9, -1.0], // 5. Ujung (koordinat sama dengan ujung atas)
     ];
 
     // Array untuk data geometri gabungan
