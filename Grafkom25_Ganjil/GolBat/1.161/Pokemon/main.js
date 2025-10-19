@@ -47,7 +47,9 @@ precision mediump float;
     if (!uintIndexExtension) {
       console.error("WebGL extension OES_element_index_uint is not supported!");
       // You might want to display an alert here too if it's crucial
-      alert("Browser/GPU does not support required WebGL extension (OES_element_index_uint). Complex models may not render.");
+      alert(
+        "Browser/GPU does not support required WebGL extension (OES_element_index_uint). Complex models may not render."
+      );
     }
   } catch (e) {
     alert("WebGL context cannot be initialized");
@@ -63,8 +65,16 @@ precision mediump float;
     }
     return shader;
   };
-  var shader_vertex = compile_shader(vertex_shader_source, GL.VERTEX_SHADER, "VERTEX");
-  var shader_fragment = compile_shader(fragment_shader_source, GL.FRAGMENT_SHADER, "FRAGMENT");
+  var shader_vertex = compile_shader(
+    vertex_shader_source,
+    GL.VERTEX_SHADER,
+    "VERTEX"
+  );
+  var shader_fragment = compile_shader(
+    fragment_shader_source,
+    GL.FRAGMENT_SHADER,
+    "FRAGMENT"
+  );
   var SHADER_PROGRAM = GL.createProgram();
   GL.attachShader(SHADER_PROGRAM, shader_vertex);
   GL.attachShader(SHADER_PROGRAM, shader_fragment);
@@ -162,31 +172,6 @@ precision mediump float;
   golbatUpperBody.add(toothBottomLeft);
   golbatUpperBody.add(toothBottomRight);
 
-  // Di dalam main.js
-
-  // // --- SAYAP (KIRI DAN KANAN) ---
-  // var leftWing = new GolbatWing(GL, attribs);
-  // // Atur posisi LOKAL sayap kiri RELATIF TERHADAP BADAN
-  // // Coba geser LEBIH DEKAT ke badan dan sedikit lebih rendah/mundur
-  // LIBS.translateY(leftWing.localMatrix, 0.4); // Turunkan sedikit
-  // LIBS.translateX(leftWing.localMatrix, 0.55); // Lebih dekat ke sumbu Y
-  // LIBS.translateZ(leftWing.localMatrix, 0.2); // Tidak terlalu mundur
-  // // Atur sudut sayap RELATIF TERHADAP BADAN
-  // // LIBS.rotateZ(leftWing.localMatrix, Math.PI / 12); // Sedikit miring ke atas
-  // // LIBS.rotateY(leftWing.localMatrix, -Math.PI / 4); // Putar ke belakang (45 derajat)
-  // // LIBS.rotateX(leftWing.localMatrix, -Math.PI / 10); // Sedikit putar ujung depan ke bawah
-  // LIBS.scale(leftWing.localMatrix, 0.7, 0.7, 0.7); // Pertahankan skala 0.4 dulu
-  // golbatModel.add(leftWing);
-
-  // // === SAYAP KANAN (transformasi simetris) ===
-  // var rightWing = new GolbatWing(GL, attribs);
-  // LIBS.copy(rightWing.localMatrix, leftWing.localMatrix); // Salin transformasi kiri
-  // LIBS.scale(rightWing.localMatrix, -1, 1, 1); // Cerminkan X
-  // // Sesuaikan translasi X berdasarkan nilai X baru leftWing (-0.6 -> geser 1.2)
-  // LIBS.translateX(rightWing.localMatrix, 1.6);
-  // golbatModel.add(rightWing);
-  // // ===============================================
-
   var leftEye = new GolbatEye(GL, attribs);
   LIBS.translateY(leftEye.localMatrix, 0.9);
   LIBS.translateX(leftEye.localMatrix, -0.3);
@@ -207,9 +192,38 @@ precision mediump float;
   golbatModel.add(leftEye);
   golbatModel.add(rightEye);
 
+  // Golbat Wing
+
+  // --- SAYAP KIRI ---
+  var leftWing = new GolbatWing(GL, attribs);
+  // Posisikan sayap kiri relatif terhadap badan
+  LIBS.translateX(leftWing.localMatrix, 0.5); // Geser ke bahu kiri
+  LIBS.translateY(leftWing.localMatrix, 0.1);
+  LIBS.rotateZ(leftWing.localMatrix, 0.3); // Miringkan sedikit
+  LIBS.rotateY(leftWing.localMatrix, -0.2);
+  // Tambahkan sayap kiri sebagai anak dari model utama
+  golbatModel.add(leftWing);
+
+  // --- SAYAP KANAN (Dicerminkan) ---
+  var rightWing = new GolbatWing(GL, attribs);
+  // Gunakan trik skala negatif untuk mencerminkan geometri
+  LIBS.scale(rightWing.localMatrix, -1, 1, 1);
+  // Terapkan transformasi yang sama dengan kiri
+  LIBS.translateX(rightWing.localMatrix, 0.5);
+  LIBS.translateY(rightWing.localMatrix, 0.1);
+  LIBS.rotateZ(rightWing.localMatrix, -0.3);
+  LIBS.rotateY(rightWing.localMatrix, -0.2);
+  // Tambahkan sayap kanan
+  golbatModel.add(rightWing);
+
   /*================ MATRICES & INTERACTION =================*/
   // (Tidak berubah)
-  var PROJMATRIX = LIBS.get_projection(40, CANVAS.width / CANVAS.height, 1, 100);
+  var PROJMATRIX = LIBS.get_projection(
+    40,
+    CANVAS.width / CANVAS.height,
+    1,
+    100
+  );
   var MOVEMATRIX = LIBS.get_I4();
   var VIEWMATRIX = LIBS.get_I4();
   LIBS.translateZ(VIEWMATRIX, -12);
