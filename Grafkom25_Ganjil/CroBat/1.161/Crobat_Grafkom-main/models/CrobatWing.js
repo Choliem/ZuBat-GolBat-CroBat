@@ -1,7 +1,7 @@
 /*
- * models/CrobatWing.js
- * Menggunakan konsep dari Golbat (Bézier penuh)
- * untuk menciptakan bentuk sayap Crobat yang unik.
+ * models/CrobatWing.js - Improvement V3
+ * - Warna: Tulang & Membran Belakang = Ungu, Membran Depan = Biru Muda.
+ * - Struktur: Tulang melapisi seluruh tepi atas membran.
  */
 import { SceneObject } from "./SceneObject.js";
 
@@ -14,23 +14,22 @@ export class CrobatWing extends SceneObject {
     // =========================================================================
 
     // --- Warna ---
-    const OUTER_COLOR = [0.37, 0.23, 0.5]; // Ungu
-    const INNER_COLOR = [0.3, 0.7, 0.65]; // Teal (Hijau-Biru)
-    const BONE_COLOR = [0.25, 0.15, 0.35]; // Tulang (Ungu Tua)
+    const OUTER_COLOR = [0.5, 0.8, 0.9];
+    const INNER_COLOR = [0.37, 0.23, 0.5];
+    const BONE_COLOR = INNER_COLOR; // Tulang = Ungu
 
     // --- Detail & Bentuk ---
-    const TOTAL_POINTS = 50; // Jumlah total titik di sepanjang tepi
+    const TOTAL_POINTS = 50;
     const TUBE_SEGMENTS = 8;
     const MEMBRANE_THICKNESS = 0.02;
 
-    const BONE_THICKNESS = {
-      top: [0.08, 0.06, 0.04], // [pangkal, tengah, ujung]
-    };
+    const BONE_THICKNESS_PROFILE = [0.08, 0.06, 0.04]; // [pangkal, tengah, ujung]
 
     // --- Kurva Tulang Atas (Bézier "S" Shape) ---
+    // Ini adalah centerline untuk TULANG
     const TOP_BONE_CURVE = [
       {
-        startPoint: [0.0, 0.0, 0.0],
+        startPoint: [-1.6, -0.8, 0.0],
         startHandle: [1.0, 2.0, 0.0],
         endPoint: [3.0, 3.0, -0.2],
         endHandle: [1.0, -0.5, 0.0],
@@ -43,30 +42,44 @@ export class CrobatWing extends SceneObject {
       },
     ];
 
+    // --- IMPROVEMENT: Kurva Tepi Atas Membran ---
+    // Sedikit di bawah TOP_BONE_CURVE
+    const MEMBRANE_TOP_OFFSET = BONE_THICKNESS_PROFILE[0] * 0.5; // Offset berdasarkan ketebalan tulang pangkal
+    const MEMBRANE_TOP_CURVE = TOP_BONE_CURVE.map((segment) => ({
+      startPoint: [
+        segment.startPoint[0],
+        segment.startPoint[1] - MEMBRANE_TOP_OFFSET,
+        segment.startPoint[2],
+      ],
+      startHandle: segment.startHandle, // Handle bisa sama
+      endPoint: [
+        segment.endPoint[0],
+        segment.endPoint[1] - MEMBRANE_TOP_OFFSET,
+        segment.endPoint[2],
+      ],
+      endHandle: segment.endHandle, // Handle bisa sama
+    }));
+
     // --- Titik Kunci Tepi Bawah ---
-    // (Berdasarkan referensi)
-    const BTM_P0 = [-2, -1, 0.0]; // Pangkal bawah
-    const BTM_P1_HOOK = [1.5, -1.5, -0.1]; // "Kait" tajam
-    const BTM_P2_SCALLOP = [4.5, -0.5, -0.3]; // Lekukan terdalam
-    const WING_TIP_POINT = TOP_BONE_CURVE[1].endPoint; // Harus sama dengan ujung atas
+    const BTM_P0 = [-1, -1, 0.0];
+    const BTM_P1_HOOK = [1.5, -1.5, -0.1];
+    const BTM_P2_SCALLOP = [4.5, -0.5, -0.3];
+    const WING_TIP_POINT = TOP_BONE_CURVE[1].endPoint; // Harus sama dengan ujung tulang
 
     // --- Kurva Tepi Bawah (Bézier) ---
     const BOTTOM_CURVE_SEGMENTS = [
-      // Segmen 1 (Pangkal -> Kait)
       {
         startPoint: BTM_P0,
         startHandle: [0.5, -0.5, 0.0],
         endHandle: [0.2, 0.3, 0.0],
         endPoint: BTM_P1_HOOK,
       },
-      // Segmen 2 (Kait -> Lekukan)
       {
         startPoint: BTM_P1_HOOK,
         startHandle: [1.0, 0.8, 0.0],
         endHandle: [-1.0, 0.5, -0.1],
         endPoint: BTM_P2_SCALLOP,
       },
-      // Segmen 3 (Lekukan -> Ujung Sayap)
       {
         startPoint: BTM_P2_SCALLOP,
         startHandle: [1.0, 0.8, -0.1],
@@ -77,41 +90,47 @@ export class CrobatWing extends SceneObject {
 
     // ======================== PEMBUATAN MESH =========================
 
-    // 1. Buat Centerline Atas (dari Bezier)
-    const topCenterline = this._generateBezierCenterline(
+    // 1. Buat Centerline Tulang Atas
+    const topBoneCenterline = this._generateBezierCenterline(
       TOP_BONE_CURVE.map((p) => this._getBezierControlPoints(p)),
       TOTAL_POINTS
     );
 
-    // 2. Buat Centerline Bawah (dari Bezier)
-    const bottomCenterline = this._generateBezierCenterline(
+    // 2. Buat Centerline Tepi Atas Membran (BARU)
+    const membraneTopCenterline = this._generateBezierCenterline(
+      MEMBRANE_TOP_CURVE.map((p) => this._getBezierControlPoints(p)),
+      TOTAL_POINTS
+    );
+
+    // 3. Buat Centerline Tepi Bawah Membran
+    const bottomMembraneCenterline = this._generateBezierCenterline(
       BOTTOM_CURVE_SEGMENTS.map((p) => this._getBezierControlPoints(p)),
       TOTAL_POINTS
     );
 
-    // 3. Buat Tulang (HANYA di tepi atas)
+    // 4. Buat Tulang (menggunakan centerline tulang)
     this._generateTube(
-      topCenterline,
+      topBoneCenterline,
       TUBE_SEGMENTS,
-      BONE_THICKNESS.top,
+      BONE_THICKNESS_PROFILE,
       BONE_COLOR
     );
 
-    // 4. Buat Membran Dua Lapis
+    // 5. Buat Membran Dua Lapis (menggunakan centerline membran)
     this._generateDoubleSidedMembrane(
-      topCenterline,
-      bottomCenterline,
-      OUTER_COLOR,
-      INNER_COLOR,
+      membraneTopCenterline, // <-- Pakai centerline membran atas
+      bottomMembraneCenterline,
+      OUTER_COLOR, // Warna belakang = ungu
+      INNER_COLOR, // Warna depan = biru muda
       MEMBRANE_THICKNESS
     );
 
-    // 5. Setup SceneObject
+    // 6. Setup SceneObject
     this.setup();
   }
 
   // ======================== FUNGSI HELPER (DARI GOLBAT) =========================
-  // (Fungsi-fungsi ini disalin dari fondasi Golbat kita)
+  // (Fungsi-fungsi ini tidak berubah dari versi GolbatWing sebelumnya)
 
   _generateBezierCenterline(bezierSegmentsCPs, totalPoints) {
     const centerline = [];
@@ -156,11 +175,9 @@ export class CrobatWing extends SceneObject {
       centerline.push([...bezierSegmentsCPs[bezierSegmentsCPs.length - 1][3]]);
     return centerline;
   }
-
   _vectorLength(v) {
     return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   }
-
   _generateDoubleSidedMembrane(
     centerline1,
     centerline2,
@@ -186,68 +203,68 @@ export class CrobatWing extends SceneObject {
       let normal = this._normalizeVector(
         this._crossProduct(vecMembrane, vecForward)
       );
-      const outerOffset = this._scaleVector(normal, halfThickness);
-      const p1_outer = this._addVectors(p1, outerOffset);
+      // PENENTUAN ARAH NORMAL (Depan/Belakang) - Asumsi Z negatif adalah depan
+      if (normal[2] > 0) {
+        normal = this._scaleVector(normal, -1.0);
+      } // Pastikan normal mengarah ke Z negatif (depan)
+
+      const frontNormal = normal; // Sisi depan (biru muda)
+      const backNormal = this._scaleVector(normal, -1.0); // Sisi belakang (ungu)
+
+      const frontOffset = this._scaleVector(frontNormal, halfThickness);
+      const p1_front = this._addVectors(p1, frontOffset);
       this.vertices.push(
-        p1_outer[0],
-        p1_outer[1],
-        p1_outer[2],
-        ...outerColor,
-        ...normal
-      );
-      const p2_outer = this._addVectors(p2, outerOffset);
-      this.vertices.push(
-        p2_outer[0],
-        p2_outer[1],
-        p2_outer[2],
-        ...outerColor,
-        ...normal
-      );
-    }
-    const baseVertexIndexInner = Math.floor(this.vertices.length / 9);
-    for (let i = 0; i < numPoints; i++) {
-      const p1 = centerline1[i];
-      const p2 = centerline2[i];
-      const vecMembrane = this._subtractVectors(p1, p2);
-      let vecForward =
-        i < numPoints - 1
-          ? this._subtractVectors(centerline1[i + 1], p1)
-          : this._subtractVectors(p1, centerline1[i - 1]);
-      let normal = this._normalizeVector(
-        this._crossProduct(vecMembrane, vecForward)
-      );
-      const innerNormal = this._scaleVector(normal, -1.0);
-      const innerOffset = this._scaleVector(innerNormal, halfThickness);
-      const p1_inner = this._addVectors(p1, innerOffset);
-      this.vertices.push(
-        p1_inner[0],
-        p1_inner[1],
-        p1_inner[2],
+        p1_front[0],
+        p1_front[1],
+        p1_front[2],
         ...innerColor,
-        ...innerNormal
-      );
-      const p2_inner = this._addVectors(p2, innerOffset);
+        ...frontNormal
+      ); // WARNA INNER (BIRU)
+      const p2_front = this._addVectors(p2, frontOffset);
       this.vertices.push(
-        p2_inner[0],
-        p2_inner[1],
-        p2_inner[2],
+        p2_front[0],
+        p2_front[1],
+        p2_front[2],
         ...innerColor,
-        ...innerNormal
-      );
+        ...frontNormal
+      ); // WARNA INNER (BIRU)
+
+      const backOffset = this._scaleVector(backNormal, halfThickness);
+      const p1_back = this._addVectors(p1, backOffset);
+      this.vertices.push(
+        p1_back[0],
+        p1_back[1],
+        p1_back[2],
+        ...outerColor,
+        ...backNormal
+      ); // WARNA OUTER (UNGU)
+      const p2_back = this._addVectors(p2, backOffset);
+      this.vertices.push(
+        p2_back[0],
+        p2_back[1],
+        p2_back[2],
+        ...outerColor,
+        ...backNormal
+      ); // WARNA OUTER (UNGU)
     }
+    const numVerticesPerStrip = 4; // front_p1, front_p2, back_p1, back_p2
     for (let i = 0; i < numPoints - 1; i++) {
-      const otl = baseVertexIndexOuter + i * 2 + 0;
-      const obl = baseVertexIndexOuter + i * 2 + 1;
-      const otr = otl + 2;
-      const obr = obl + 2;
-      this.faces.push(otl, obl, otr);
-      this.faces.push(obl, obr, otr);
-      const itl = baseVertexIndexInner + i * 2 + 0;
-      const ibl = baseVertexIndexInner + i * 2 + 1;
-      const itr = itl + 2;
-      const ibr = ibl + 2;
-      this.faces.push(itl, itr, ibl);
-      this.faces.push(ibl, itr, ibr);
+      const base = baseVertexIndexOuter + i * numVerticesPerStrip;
+      const ftl = base + 0;
+      const fbl = base + 1; // Front Top/Bottom Left
+      const btl = base + 2;
+      const bbl = base + 3; // Back Top/Bottom Left
+      const ftr = ftl + numVerticesPerStrip;
+      const fbr = fbl + numVerticesPerStrip; // Front Top/Bottom Right
+      const btr = btl + numVerticesPerStrip;
+      const bbr = bbl + numVerticesPerStrip; // Back Top/Bottom Right
+
+      // Faces Depan (Biru Muda) - CCW dilihat dari depan
+      this.faces.push(ftl, fbl, ftr);
+      this.faces.push(fbl, fbr, ftr);
+      // Faces Belakang (Ungu) - CCW dilihat dari belakang
+      this.faces.push(btl, btr, bbl);
+      this.faces.push(bbl, btr, bbr);
     }
   }
   _getBezierControlPoints(curvePart) {

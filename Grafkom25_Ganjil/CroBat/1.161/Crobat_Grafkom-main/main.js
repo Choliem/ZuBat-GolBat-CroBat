@@ -284,7 +284,7 @@ function main() {
     LIBS.rotateY(M_UPPER_LEFT_WING, 0.4); // Sedikit ke belakang
     LIBS.rotateZ(M_UPPER_LEFT_WING, 0); // Miring ke atas
     LIBS.translateX(M_UPPER_LEFT_WING, 2); // Posisikan di "bahu" kiri
-    LIBS.translateY(M_UPPER_LEFT_WING, 1.5);
+    LIBS.translateY(M_UPPER_LEFT_WING, 1.0);
     upperLeftWing.render(GL, _Mmatrix, M_BODY);
 
     const M_UPPER_RIGHT_WING = upperRightWing.modelMatrix;
@@ -293,7 +293,7 @@ function main() {
     LIBS.rotateY(M_UPPER_RIGHT_WING, -0.4);
     LIBS.rotateZ(M_UPPER_RIGHT_WING, 0);
     LIBS.translateX(M_UPPER_RIGHT_WING, -2); // X tetap negatif karena sudah dibalik
-    LIBS.translateY(M_UPPER_RIGHT_WING, 1.5);
+    LIBS.translateY(M_UPPER_RIGHT_WING, 1.0);
     upperRightWing.render(GL, _Mmatrix, M_BODY);
 
     // =========================================================
@@ -301,20 +301,20 @@ function main() {
     // =========================================================
     const M_LOWER_LEFT_WING = lowerLeftWing.modelMatrix;
     LIBS.set_I4(M_LOWER_LEFT_WING);
-    LIBS.scale(M_LOWER_LEFT_WING, 0.8, 0.8, 0.8); // Buat 20% lebih kecil
-    LIBS.rotateY(M_LOWER_LEFT_WING, -0.2);
-    LIBS.rotateZ(M_LOWER_LEFT_WING, 0); // Sedikit lebih miring ke atas
+    LIBS.scale(M_LOWER_LEFT_WING, 0.5, 0.25, 0.25); // Buat 20% lebih kecil
+    LIBS.rotateY(M_LOWER_LEFT_WING, 3.2);
+    LIBS.rotateZ(M_LOWER_LEFT_WING, 3.25); // Sedikit lebih miring ke atas
     LIBS.translateX(M_LOWER_LEFT_WING, 0); // Posisikan di "pinggul" kiri
-    LIBS.translateY(M_LOWER_LEFT_WING, -5);
+    LIBS.translateY(M_LOWER_LEFT_WING, -1);
     lowerLeftWing.render(GL, _Mmatrix, M_BODY);
 
     const M_LOWER_RIGHT_WING = lowerRightWing.modelMatrix;
     LIBS.set_I4(M_LOWER_RIGHT_WING);
-    LIBS.scale(M_LOWER_RIGHT_WING, -0.8, 0.8, 0.8); // Balik dan kecilkan
-    LIBS.rotateY(M_LOWER_RIGHT_WING, -0.2);
-    LIBS.rotateZ(M_LOWER_RIGHT_WING, 0.0);
+    LIBS.scale(M_LOWER_RIGHT_WING, -0.5, 0.25, 0.25); // Balik dan kecilkan
+    LIBS.rotateY(M_LOWER_RIGHT_WING, 3);
+    LIBS.rotateZ(M_LOWER_RIGHT_WING, 3);
     LIBS.translateX(M_LOWER_RIGHT_WING, 0.0);
-    LIBS.translateY(M_LOWER_RIGHT_WING, -5);
+    LIBS.translateY(M_LOWER_RIGHT_WING, -1);
     lowerRightWing.render(GL, _Mmatrix, M_BODY);
 
     // =========================================================
