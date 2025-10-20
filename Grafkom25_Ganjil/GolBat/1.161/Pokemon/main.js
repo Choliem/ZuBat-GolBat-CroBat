@@ -14,9 +14,22 @@ import { GolbatWing } from "./models/GolbatWing.js";
 import { GolbatEye } from "./models/GolbatEye.js";
 
 function main() {
+  // --- KODE IMPROVEMENT UNTUK RESOLUSI TAJAM ---
   var CANVAS = document.getElementById("mycanvas");
-  CANVAS.width = window.innerWidth;
-  CANVAS.height = window.innerHeight;
+
+  // 1. Dapatkan rasio piksel perangkat
+  const dpr = window.devicePixelRatio || 1;
+
+  // 2. Set ukuran buffer gambar (resolusi asli)
+  // Kalikan ukuran CSS dengan rasio piksel
+  CANVAS.width = window.innerWidth * dpr;
+  CANVAS.height = window.innerHeight * dpr;
+
+  // 3. Set ukuran tampilan (CSS)
+  // Ini memberi tahu browser untuk mengecilkan canvas resolusi tinggi
+  // agar pas di layar, membuatnya super tajam.
+  CANVAS.style.width = window.innerWidth + "px";
+  CANVAS.style.height = window.innerHeight + "px";
 
   /*========================= SHADERS (PHONG SHADING) ========================= */
   // (Shader source tidak berubah)
@@ -200,7 +213,7 @@ precision mediump float;
   LIBS.translateX(leftWing.localMatrix, 0.5); // Geser ke bahu kiri
   LIBS.translateY(leftWing.localMatrix, 0.1);
   LIBS.rotateZ(leftWing.localMatrix, 0.3); // Miringkan sedikit
-  LIBS.rotateY(leftWing.localMatrix, -0.2);
+  LIBS.rotateY(leftWing.localMatrix, 0.2);
   // Tambahkan sayap kiri sebagai anak dari model utama
   golbatModel.add(leftWing);
 
