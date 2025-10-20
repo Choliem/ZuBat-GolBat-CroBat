@@ -200,7 +200,7 @@ precision mediump float;
   LIBS.translateX(leftWing.localMatrix, 0.5); // Geser ke bahu kiri
   LIBS.translateY(leftWing.localMatrix, 0.1);
   LIBS.rotateZ(leftWing.localMatrix, 0.3); // Miringkan sedikit
-  LIBS.rotateY(leftWing.localMatrix, -0.2);
+  LIBS.rotateY(leftWing.localMatrix, 0.2);
   // Tambahkan sayap kiri sebagai anak dari model utama
   golbatModel.add(leftWing);
 
