@@ -8,9 +8,22 @@ import { CrobatEar } from "./models/CrobatEar.js"; // <-- TAMBAHKAN BARIS INI
 import { CrobatMouthAndTeeth } from "./models/CrobatMouthAndTeeth.js";
 // === MAIN FUNCTION ===
 function main() {
+  // --- KODE IMPROVEMENT UNTUK RESOLUSI TAJAM ---
   const CANVAS = document.getElementById("mycanvas");
-  CANVAS.width = window.innerWidth;
-  CANVAS.height = window.innerHeight;
+
+  // 1. Dapatkan rasio piksel perangkat
+  const dpr = window.devicePixelRatio || 1;
+
+  // 2. Set ukuran buffer gambar (resolusi asli)
+  //    Kalikan ukuran CSS dengan rasio piksel
+  CANVAS.width = window.innerWidth * dpr;
+  CANVAS.height = window.innerHeight * dpr;
+
+  // 3. Set ukuran tampilan (CSS)
+  //    Ini memberitahu browser untuk mengecilkan canvas resolusi tinggi
+  //    agar pas di layar, membuatnya super tajam.
+  CANVAS.style.width = window.innerWidth + "px";
+  CANVAS.style.height = window.innerHeight + "px";
 
   let GL;
   try {
@@ -37,14 +50,23 @@ function main() {
   };
 
   const SHADER_PROGRAM = GL.createProgram();
-  GL.attachShader(SHADER_PROGRAM, compile_shader(shader_vertex_source, GL.VERTEX_SHADER));
-  GL.attachShader(SHADER_PROGRAM, compile_shader(shader_fragment_source, GL.FRAGMENT_SHADER));
+  GL.attachShader(
+    SHADER_PROGRAM,
+    compile_shader(shader_vertex_source, GL.VERTEX_SHADER)
+  );
+  GL.attachShader(
+    SHADER_PROGRAM,
+    compile_shader(shader_fragment_source, GL.FRAGMENT_SHADER)
+  );
   GL.linkProgram(SHADER_PROGRAM);
 
   const _Pmatrix = GL.getUniformLocation(SHADER_PROGRAM, "Pmatrix");
   const _Vmatrix = GL.getUniformLocation(SHADER_PROGRAM, "Vmatrix");
   const _Mmatrix = GL.getUniformLocation(SHADER_PROGRAM, "Mmatrix");
-  const _lightDirection = GL.getUniformLocation(SHADER_PROGRAM, "lightDirection");
+  const _lightDirection = GL.getUniformLocation(
+    SHADER_PROGRAM,
+    "lightDirection"
+  );
   const _lightColor = GL.getUniformLocation(SHADER_PROGRAM, "lightColor");
   const _ambientColor = GL.getUniformLocation(SHADER_PROGRAM, "ambientColor");
   const _position = GL.getAttribLocation(SHADER_PROGRAM, "position");
@@ -58,24 +80,50 @@ function main() {
 
   // --- INSTANSIASI OBJEK ---
   const axes = new Axes(GL, _position, _color, _normal);
-  const crobatBody = new CrobatBody(GL, _position, _color, _normal, 1.5, 100, 100);
+  const crobatBody = new CrobatBody(
+    GL,
+    _position,
+    _color,
+    _normal,
+    1.5,
+    100,
+    100
+  );
   const leftEye = new CrobatEye(GL, _position, _color, _normal); // <-- Cukup satu instance per mata
   const rightEye = new CrobatEye(GL, _position, _color, _normal);
-  const leftEar = new CrobatEar(GL, _position, _color, _normal);   // <-- TAMBAHKAN BARIS INI
-  const rightEar = new CrobatEar(GL, _position, _color, _normal);  // <-- TAMBAHKAN BARIS INI
+  const leftEar = new CrobatEar(GL, _position, _color, _normal); // <-- TAMBAHKAN BARIS INI
+  const rightEar = new CrobatEar(GL, _position, _color, _normal); // <-- TAMBAHKAN BARIS INI
   // const mouth = new CrobatMouth(GL, _position, _color, _normal); // <-- TAMBAHKAN
   const mouthAndTeeth = new CrobatMouthAndTeeth(GL, _position, _color, _normal);
   // --- MATRIKS & INTERAKSI (Sama seperti sebelumnya) ---
-  const PROJMATRIX = LIBS.get_projection(40, CANVAS.width / CANVAS.height, 1, 100);
+  const PROJMATRIX = LIBS.get_projection(
+    40,
+    CANVAS.width / CANVAS.height,
+    1,
+    100
+  );
   const VIEWMATRIX = LIBS.get_I4();
-  let THETA = 0, PHI = 0;
-  let drag = false, x_prev = 0, y_prev = 0, dX = 0, dY = 0;
+  let THETA = 0,
+    PHI = 0;
+  let drag = false,
+    x_prev = 0,
+    y_prev = 0,
+    dX = 0,
+    dY = 0;
   let cameraZ = -15;
   const FRICTION = 0.95;
 
-  CANVAS.addEventListener("mousedown", (e) => { drag = true; x_prev = e.pageX; y_prev = e.pageY; });
-  CANVAS.addEventListener("mouseup", () => { drag = false; });
-  CANVAS.addEventListener("mouseout", () => { drag = false; });
+  CANVAS.addEventListener("mousedown", (e) => {
+    drag = true;
+    x_prev = e.pageX;
+    y_prev = e.pageY;
+  });
+  CANVAS.addEventListener("mouseup", () => {
+    drag = false;
+  });
+  CANVAS.addEventListener("mouseout", () => {
+    drag = false;
+  });
   CANVAS.addEventListener("mousemove", (e) => {
     if (!drag) return;
     dX = ((e.pageX - x_prev) * 2 * Math.PI) / CANVAS.width;
@@ -95,7 +143,7 @@ function main() {
   GL.depthFunc(GL.LEQUAL);
   GL.clearColor(0.12, 0.12, 0.18, 1.0);
   GL.clearDepth(1.0);
-  
+
   // --- RENDER LOOP ---
   const render = () => {
     if (!drag) {
@@ -109,7 +157,7 @@ function main() {
     LIBS.translateZ(VIEWMATRIX, cameraZ);
     LIBS.rotateY(VIEWMATRIX, THETA);
     LIBS.rotateX(VIEWMATRIX, PHI);
-    
+
     const cameraDirection = [-VIEWMATRIX[2], -VIEWMATRIX[6], -VIEWMATRIX[10]];
 
     GL.viewport(0, 0, CANVAS.width, CANVAS.height);
@@ -130,7 +178,7 @@ function main() {
     LIBS.rotateX(M_BODY, 0.3);
     crobatBody.render(GL, _Mmatrix, LIBS.multiply(M_SCENE, M_BODY));
 
-// ... di dalam fungsi render() di main.js ...
+    // ... di dalam fungsi render() di main.js ...
 
     // --- MATA KIRI ---
     const M_LEFT_EYE = leftEye.modelMatrix;
@@ -141,7 +189,7 @@ function main() {
     LIBS.scale(M_LEFT_EYE, -1, 1, 1); // Balik secara horizontal
 
     LIBS.rotateZ(M_LEFT_EYE, -0.35); // Gunakan rotasi positif yang sama
-    LIBS.translateZ(M_LEFT_EYE, 1.15); 
+    LIBS.translateZ(M_LEFT_EYE, 1.15);
     LIBS.translateX(M_LEFT_EYE, -0.55);
     LIBS.translateY(M_LEFT_EYE, 0.45);
     leftEye.render(GL, _Mmatrix, M_BODY);
@@ -156,22 +204,22 @@ function main() {
     LIBS.translateY(M_RIGHT_EYE, 0.45);
     rightEye.render(GL, _Mmatrix, M_BODY);
 
-// ...
+    // ...
 
-// ... di dalam fungsi render() di main.js ...
+    // ... di dalam fungsi render() di main.js ...
 
     // --- TELINGA KIRI ---
     const M_LEFT_EAR = leftEar.modelMatrix;
     LIBS.set_I4(M_LEFT_EAR);
-    
+
     // URUTAN YANG BENAR:
-    LIBS.translateX(M_LEFT_EAR, -0.45);     // 1. Posisikan dulu di samping
-    LIBS.translateY(M_LEFT_EAR, 0.75);      // 2. Posisikan di atas
-    
-    LIBS.rotateX(M_LEFT_EAR, -0.3);         // 3. Miringkan ke belakang
-    LIBS.rotateZ(M_LEFT_EAR, 0.25);         // 4. Miringkan ke samping
+    LIBS.translateX(M_LEFT_EAR, -0.45); // 1. Posisikan dulu di samping
+    LIBS.translateY(M_LEFT_EAR, 0.75); // 2. Posisikan di atas
+
+    LIBS.rotateX(M_LEFT_EAR, -0.3); // 3. Miringkan ke belakang
+    LIBS.rotateZ(M_LEFT_EAR, 0.25); // 4. Miringkan ke samping
     // LIBS.rotateX(M_LEFT_EAR, Math.PI);   // <-- Kita tidak butuh ini lagi dengan model baru
-    LIBS.scale(M_LEFT_EAR, 0.4, 0.8, 0.4);  // 5. Atur ukurannya
+    LIBS.scale(M_LEFT_EAR, 0.4, 0.8, 0.4); // 5. Atur ukurannya
 
     leftEar.render(GL, _Mmatrix, M_BODY);
 
@@ -180,14 +228,14 @@ function main() {
     LIBS.set_I4(M_RIGHT_EAR);
 
     // URUTAN YANG BENAR:
-    LIBS.translateX(M_RIGHT_EAR, 0.45);     // 1. Posisikan dulu di samping
-    LIBS.translateY(M_RIGHT_EAR, 0.75);     // 2. Posisikan di atas
+    LIBS.translateX(M_RIGHT_EAR, 0.45); // 1. Posisikan dulu di samping
+    LIBS.translateY(M_RIGHT_EAR, 0.75); // 2. Posisikan di atas
 
-    LIBS.rotateX(M_RIGHT_EAR, -0.3);        // 3. Miringkan ke belakang
-    LIBS.rotateZ(M_RIGHT_EAR, -0.25);       // 4. Miringkan ke samping
+    LIBS.rotateX(M_RIGHT_EAR, -0.3); // 3. Miringkan ke belakang
+    LIBS.rotateZ(M_RIGHT_EAR, -0.25); // 4. Miringkan ke samping
     // LIBS.rotateX(M_RIGHT_EAR, Math.PI);  // <-- Kita tidak butuh ini lagi
     LIBS.scale(M_RIGHT_EAR, 0.4, 0.8, 0.4); // 5. Atur ukurannya
-    
+
     rightEar.render(GL, _Mmatrix, M_BODY);
 
     // =========================================================
