@@ -2,10 +2,12 @@
 
 import { Axes } from "./models/Axes.js";
 import { CrobatBody } from "./models/CrobatBody.js";
-import { CrobatEye } from "./models/CrobatEye.js"; // <-- File mata yang sudah dikonsolidasi
-import { CrobatEar } from "./models/CrobatEar.js"; // <-- TAMBAHKAN BARIS INI
+import { CrobatEye } from "./models/CrobatEye.js";
+import { CrobatEar } from "./models/CrobatEar.js";
 // import { CrobatMouth } from "./models/CrobatMouth.js";
 import { CrobatMouthAndTeeth } from "./models/CrobatMouthAndTeeth.js";
+import { CrobatWing } from "./models/CrobatWing.js";
+
 // === MAIN FUNCTION ===
 function main() {
   // --- KODE IMPROVEMENT UNTUK RESOLUSI TAJAM ---
@@ -185,7 +187,6 @@ function main() {
     crobatBody.render(GL, _Mmatrix, LIBS.multiply(M_SCENE, M_BODY));
 
     // ... di dalam fungsi render() di main.js ...
-
     // --- MATA KIRI ---
     const M_LEFT_EYE = leftEye.modelMatrix;
     LIBS.set_I4(M_LEFT_EYE); // Reset
@@ -263,6 +264,59 @@ function main() {
     LIBS.translateY(M_MOUTH_TEETH, -0.17);
     LIBS.rotateX(M_MOUTH_TEETH, -0.22);
     mouthAndTeeth.render(GL, _Mmatrix, M_BODY);
+    // =========================================================
+
+    // --- INSTANSIASI OBJEK ---
+    // ... (setelah mouthAndTeeth)
+    const upperLeftWing = new CrobatWing(GL, _position, _color, _normal);
+    const upperRightWing = new CrobatWing(GL, _position, _color, _normal);
+    const lowerLeftWing = new CrobatWing(GL, _position, _color, _normal);
+    const lowerRightWing = new CrobatWing(GL, _position, _color, _normal);
+
+    // ... (setelah render mouthAndTeeth)
+
+    // =========================================================
+    // --- SAYAP ATAS ---
+    // =========================================================
+    const M_UPPER_LEFT_WING = upperLeftWing.modelMatrix;
+    LIBS.set_I4(M_UPPER_LEFT_WING);
+    LIBS.scale(M_UPPER_LEFT_WING, 1.0, 1.0, 1.0); // Skala normal
+    LIBS.rotateY(M_UPPER_LEFT_WING, 0.4); // Sedikit ke belakang
+    LIBS.rotateZ(M_UPPER_LEFT_WING, 0); // Miring ke atas
+    LIBS.translateX(M_UPPER_LEFT_WING, 2); // Posisikan di "bahu" kiri
+    LIBS.translateY(M_UPPER_LEFT_WING, 1.0);
+    upperLeftWing.render(GL, _Mmatrix, M_BODY);
+
+    const M_UPPER_RIGHT_WING = upperRightWing.modelMatrix;
+    LIBS.set_I4(M_UPPER_RIGHT_WING);
+    LIBS.scale(M_UPPER_RIGHT_WING, -1.0, 1.0, 1.0); // Balik untuk sisi kanan
+    LIBS.rotateY(M_UPPER_RIGHT_WING, -0.4);
+    LIBS.rotateZ(M_UPPER_RIGHT_WING, 0);
+    LIBS.translateX(M_UPPER_RIGHT_WING, -2); // X tetap negatif karena sudah dibalik
+    LIBS.translateY(M_UPPER_RIGHT_WING, 1.0);
+    upperRightWing.render(GL, _Mmatrix, M_BODY);
+
+    // =========================================================
+    // --- SAYAP BAWAH ---
+    // =========================================================
+    const M_LOWER_LEFT_WING = lowerLeftWing.modelMatrix;
+    LIBS.set_I4(M_LOWER_LEFT_WING);
+    LIBS.scale(M_LOWER_LEFT_WING, 0.5, 0.25, 0.25); // Buat 20% lebih kecil
+    LIBS.rotateY(M_LOWER_LEFT_WING, 3.2);
+    LIBS.rotateZ(M_LOWER_LEFT_WING, 3.25); // Sedikit lebih miring ke atas
+    LIBS.translateX(M_LOWER_LEFT_WING, 0); // Posisikan di "pinggul" kiri
+    LIBS.translateY(M_LOWER_LEFT_WING, -1);
+    lowerLeftWing.render(GL, _Mmatrix, M_BODY);
+
+    const M_LOWER_RIGHT_WING = lowerRightWing.modelMatrix;
+    LIBS.set_I4(M_LOWER_RIGHT_WING);
+    LIBS.scale(M_LOWER_RIGHT_WING, -0.5, 0.25, 0.25); // Balik dan kecilkan
+    LIBS.rotateY(M_LOWER_RIGHT_WING, 3);
+    LIBS.rotateZ(M_LOWER_RIGHT_WING, 3);
+    LIBS.translateX(M_LOWER_RIGHT_WING, 0.0);
+    LIBS.translateY(M_LOWER_RIGHT_WING, -1);
+    lowerRightWing.render(GL, _Mmatrix, M_BODY);
+
     // =========================================================
 
     GL.flush();
