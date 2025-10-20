@@ -95,7 +95,8 @@ function main() {
   const rightEar = new CrobatEar(GL, _position, _color, _normal); // <-- TAMBAHKAN BARIS INI
   // const mouth = new CrobatMouth(GL, _position, _color, _normal); // <-- TAMBAHKAN
   const mouthAndTeeth = new CrobatMouthAndTeeth(GL, _position, _color, _normal);
-  // --- MATRIKS & INTERAKSI (Sama seperti sebelumnya) ---
+
+  // --- MATRICES AND CAMERA ---
   const PROJMATRIX = LIBS.get_projection(
     40,
     CANVAS.width / CANVAS.height,
@@ -103,6 +104,8 @@ function main() {
     100
   );
   const VIEWMATRIX = LIBS.get_I4();
+
+  // --- INTERACTION VARIABLES ---
   let THETA = 0,
     PHI = 0;
   let drag = false,
@@ -110,9 +113,10 @@ function main() {
     y_prev = 0,
     dX = 0,
     dY = 0;
-  let cameraZ = -15;
+  let cameraZ = -10;
   const FRICTION = 0.95;
 
+  // --- EVENT LISTENERS ---
   CANVAS.addEventListener("mousedown", (e) => {
     drag = true;
     x_prev = e.pageX;
@@ -135,13 +139,15 @@ function main() {
   });
   CANVAS.addEventListener("wheel", (e) => {
     e.preventDefault();
-    cameraZ += e.deltaY * 0.02;
-    cameraZ = Math.max(-40, Math.min(-10, cameraZ));
+    const zoomSpeed = 0.01;
+    cameraZ += e.deltaY * zoomSpeed;
+    cameraZ = Math.max(-20, Math.min(-3, cameraZ));
   });
 
+  // --- RENDER SETUP ---
   GL.enable(GL.DEPTH_TEST);
   GL.depthFunc(GL.LEQUAL);
-  GL.clearColor(0.12, 0.12, 0.18, 1.0);
+  GL.clearColor(0.1, 0.1, 0.1, 1.0);
   GL.clearDepth(1.0);
 
   // --- RENDER LOOP ---
