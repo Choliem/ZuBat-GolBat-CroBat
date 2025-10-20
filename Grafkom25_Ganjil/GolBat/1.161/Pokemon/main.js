@@ -47,9 +47,7 @@ precision mediump float;
     if (!uintIndexExtension) {
       console.error("WebGL extension OES_element_index_uint is not supported!");
       // You might want to display an alert here too if it's crucial
-      alert(
-        "Browser/GPU does not support required WebGL extension (OES_element_index_uint). Complex models may not render."
-      );
+      alert("Browser/GPU does not support required WebGL extension (OES_element_index_uint). Complex models may not render.");
     }
   } catch (e) {
     alert("WebGL context cannot be initialized");
@@ -65,16 +63,8 @@ precision mediump float;
     }
     return shader;
   };
-  var shader_vertex = compile_shader(
-    vertex_shader_source,
-    GL.VERTEX_SHADER,
-    "VERTEX"
-  );
-  var shader_fragment = compile_shader(
-    fragment_shader_source,
-    GL.FRAGMENT_SHADER,
-    "FRAGMENT"
-  );
+  var shader_vertex = compile_shader(vertex_shader_source, GL.VERTEX_SHADER, "VERTEX");
+  var shader_fragment = compile_shader(fragment_shader_source, GL.FRAGMENT_SHADER, "FRAGMENT");
   var SHADER_PROGRAM = GL.createProgram();
   GL.attachShader(SHADER_PROGRAM, shader_vertex);
   GL.attachShader(SHADER_PROGRAM, shader_fragment);
@@ -218,12 +208,7 @@ precision mediump float;
 
   /*================ MATRICES & INTERACTION =================*/
   // (Tidak berubah)
-  var PROJMATRIX = LIBS.get_projection(
-    40,
-    CANVAS.width / CANVAS.height,
-    1,
-    100
-  );
+  var PROJMATRIX = LIBS.get_projection(40, CANVAS.width / CANVAS.height, 1, 100);
   var MOVEMATRIX = LIBS.get_I4();
   var VIEWMATRIX = LIBS.get_I4();
   LIBS.translateZ(VIEWMATRIX, -12);
