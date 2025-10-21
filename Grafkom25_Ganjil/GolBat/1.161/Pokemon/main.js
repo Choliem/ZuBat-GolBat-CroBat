@@ -21,22 +21,22 @@ function main() {
   /*========================= SHADERS (PHONG SHADING) ========================= */
   // (Shader source tidak berubah)
   var vertex_shader_source = `
-    attribute vec3 position; attribute vec3 color; attribute vec3 normal;
-    uniform mat4 Pmatrix, Vmatrix, Mmatrix;
-    varying vec3 vColor; varying vec3 vNormal; varying vec3 vView;
-    void main(void) {
-        gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.);
-        vNormal = vec3(Mmatrix * vec4(normal, 0.));
-        vView = vec3(Vmatrix * Mmatrix * vec4(position, 1.));
-        vColor = color;
-    }`;
+        attribute vec3 position; attribute vec3 color; attribute vec3 normal;
+        uniform mat4 Pmatrix, Vmatrix, Mmatrix;
+        varying vec3 vColor; varying vec3 vNormal; varying vec3 vView;
+        void main(void) {
+            gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.);
+            vNormal = vec3(Mmatrix * vec4(normal, 0.));
+            vView = vec3(Vmatrix * Mmatrix * vec4(position, 1.));
+            vColor = color;
+        }`;
   var fragment_shader_source = `
-precision mediump float;
-  varying vec3 vColor;
+    precision mediump float;
+    varying vec3 vColor;
 
-  void main(void) {
-    gl_FragColor = vec4(vColor, 1.0); // Tampilkan warna asli
-  }`;
+    void main(void) {
+        gl_FragColor = vec4(vColor, 1.0); // Tampilkan warna asli
+    }`;
 
   /*========================= WEBGL CONTEXT & SHADER PROGRAM ========================= */
   // (Bagian ini tidak berubah)
@@ -200,6 +200,12 @@ precision mediump float;
   var THETA = 0,
     PHI = 0,
     time = 0; // <-- TAMBAHKAN VARIABEL WAKTU
+  // --- Variabel untuk Salto (Flip) ---
+  let lastFlipTime = performance.now(); // Catat waktu kapan animasi dimulai
+  let flipStartTime = 0;
+  let isFlipping = false;
+  const flipInterval = 5000; // 30 detik (dalam milidetik)
+  const flipDuration = 1000; // Salto berlangsung selama 1 detik (1000 ms)
   var drag = false;
   var x_prev, y_prev;
   var mouseDown = function (e) {
@@ -234,6 +240,7 @@ precision mediump float;
   GL.clearDepth(1.0);
 
   var animate = function () {
+    const currentTime = performance.now();
     time += 0.05;
     GL.viewport(0, 0, CANVAS.width, CANVAS.height);
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
@@ -268,15 +275,49 @@ precision mediump float;
     /*================= AKHIR ANIMASI =================*/
 
     // Set matriks global
-    LIBS.set_I4(MOVEMATRIX);
-    LIBS.rotateY(MOVEMATRIX, THETA);
-    LIBS.rotateX(MOVEMATRIX, PHI);
+    // Set matriks global
+    LIBS.set_I4(MOVEMATRIX); // Reset matriks model
+
+    /*================= ANIMASI FLOAT NAIK-TURUN (BARU) =================*/
+    // Parameter untuk gerakan naik-turun
+    var floatSpeed = 1.5; // Seberapa cepat naik-turun (lebih lambat dari sayap)
+    var floatAmplitude = 0.2; // Seberapa jauh naik-turunnya
+
+    // Hitung posisi Y baru menggunakan sinus
+    var floatY = Math.sin(time * floatSpeed) * floatAmplitude;
+
+    // Terapkan translasi Y ke MATRIKS GLOBAL
+    LIBS.translateY(MOVEMATRIX, floatY); /*================= AKHIR ANIMASI FLOAT =================*/ /*================= ANIMASI SALTO (FLIP) (BARU) =================*/
+    let flipAngle = 0.0; // Sudut salto default (0 = tidak salto) // 1. Cek apakah sudah waktunya salto lagi (setiap 30 detik)
+
+    if (!isFlipping && currentTime - lastFlipTime > flipInterval) {
+      isFlipping = true;
+      flipStartTime = currentTime;
+      lastFlipTime = currentTime; // Setel ulang timer untuk 30 detik berikutnya
+    } // 2. Jika sedang dalam proses salto (durasi 1 detik)
+
+    if (isFlipping) {
+      // Hitung progres salto (nilai dari 0.0 sampai 1.0)
+      let flipProgress = (currentTime - flipStartTime) / flipDuration;
+
+      if (flipProgress >= 1.0) {
+        flipProgress = 1.0;
+        isFlipping = false; // Selesai salto
+      } // Hitung sudut dari 0 sampai -2*PI (salto ke BELAKANG) // Kita pakai negatif untuk berputar "ke belakang" (sumbu X positif)
+
+      flipAngle = flipProgress * -Math.PI * 2.0;
+    } // 3. Terapkan rotasi salto DENGAN PIVOT di (0, 0, -2)
+
+    LIBS.translateZ(MOVEMATRIX, 2.0); // 1. Bawa pivot (0,0,-2) ke origin (0,0,0)
+    LIBS.rotateX(MOVEMATRIX, flipAngle); // 2. Lakukan rotasi (salto)
+    LIBS.translateZ(MOVEMATRIX, -2.0); /*================= AKHIR ANIMASI SALTO =================*/ // 3. Kembalikan pivot ke posisi semula
+    LIBS.rotateY(MOVEMATRIX, THETA); // Terapkan rotasi mouse
+    LIBS.rotateX(MOVEMATRIX, PHI); // Terapkan rotasi mouse
     GL.uniformMatrix4fv(_Pmatrix, false, PROJMATRIX);
     GL.uniformMatrix4fv(_Vmatrix, false, VIEWMATRIX);
 
     // --- GAMBAR SEMUANYA ---
     // Hanya DUA panggilan draw!
-    axes.draw(MOVEMATRIX, _Mmatrix);
     golbatModel.draw(MOVEMATRIX, _Mmatrix); // <-- Ini akan menggambar seluruh Golbat secara rekursif
 
     GL.flush();
