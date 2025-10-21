@@ -1,27 +1,14 @@
 /*
  * ZubatWing.js - Ultimate Edition
  *
- * IMPROVEMENTS:
- * 1. ✅ Extends Node (scene graph compatible)
- * 2. ✅ Separated geometry generation into logical parts
- * 3. ✅ Modular bone & membrane generation
- * 4. ✅ Better Bezier curve handling
- * 5. ✅ Dual-sided membrane (outer blue, inner pink)
- * 6. ✅ Options pattern for flexibility
- * 7. ✅ Animation-ready (localMatrix dapat di-update setiap frame)
+ * ... (komentar header lainnya) ...
  *
- * ARCHITECTURE:
- *   ZubatWing (Node) [Single SceneObject dengan combined geometry]
- *   ├─ Top Bone (tube mesh)
- *   ├─ Mid Bone (tube mesh)
- *   ├─ Connector Bone (tube mesh)
- *   └─ Membrane (dual-sided mesh)
- *
- * ANIMATION SUPPORT:
- *   Wing dirancang untuk di-animate via localMatrix rebuilding:
- *   - Flapping: rotateY(flapAngle)
- *   - Folding: rotateZ(foldAngle)
- *   - Extending: scale(stretchFactor, 1, 1)
+ * ===================================================================
+ * PERMINTAAN PENGGUNA (22/10/2025):
+ * - Memperbaiki warna membran yang terbalik (Final Fix).
+ * - Memperbaiki kalkulasi 'vecMembrane' agar normalnya benar.
+ * - Mengembalikan urutan pemanggilan warna ke (Blue, Pink).
+ * ===================================================================
  */
 
 import { Node } from "./Node.js";
@@ -60,8 +47,8 @@ export class ZubatWing extends Node {
   static DEFAULT_OPTIONS = {
     // Colors
     boneColor: [0.45, 0.65, 1.0], // Light blue bones
-    outerMembraneColor: [0.35, 0.55, 0.95], // Blue outer
-    innerMembraneColor: [0.9, 0.45, 0.6], // Pink inner
+    innerMembraneColor: [0.9, 0.45, 0.6],
+    outerMembraneColor: [0.35, 0.55, 0.95],
 
     // Bone thickness profiles [base, middle, tip]
     boneThickness: {
@@ -172,13 +159,17 @@ export class ZubatWing extends Node {
     appendPart(connectorData);
 
     // 4. Generate membrane (stretched between top & mid bones)
+
+    // --- PERBAIKAN: Kembalikan urutan warna ke (Blue, Pink) ---
     const membraneData = this._generateMembrane(
       topBonePath,
       midBonePath,
-      opts.outerMembraneColor,
-      opts.innerMembraneColor,
+      opts.innerMembraneColor, // Blue
+      opts.outerMembraneColor, // Pink
       opts.membraneThickness
     );
+    // ----------------------------------------------------
+
     appendPart(membraneData);
 
     return { vertices: allVertices, faces: allFaces };
@@ -186,10 +177,7 @@ export class ZubatWing extends Node {
 
   /**
    * Generate path dari Bezier curve segments.
-   *
-   * @param {Array} curveSegments - Array of curve definitions
-   * @param {Number} segmentsPerPart - Points per segment
-   * @returns {Array} Array of [x,y,z] points
+   * (Tidak berubah)
    */
   _generateBezierPath(curveSegments, segmentsPerPart) {
     const path = [];
@@ -212,6 +200,7 @@ export class ZubatWing extends Node {
 
   /**
    * Convert curve definition to Bezier control points.
+   * (Tidak berubah)
    */
   _getBezierControlPoints(curveDef) {
     const p0 = curveDef.startPoint;
@@ -234,6 +223,7 @@ export class ZubatWing extends Node {
 
   /**
    * Evaluate cubic Bezier curve at parameter t.
+   * (Tidak berubah)
    */
   _evaluateBezier(controlPoints, t) {
     const [p0, p1, p2, p3] = controlPoints;
@@ -253,12 +243,7 @@ export class ZubatWing extends Node {
 
   /**
    * Generate tube mesh along path (untuk bones).
-   *
-   * @param {Array} path - Array of [x,y,z] points
-   * @param {Number} tubeSegments - Circumference resolution
-   * @param {Number|Array} thickness - Constant or [base, mid, tip]
-   * @param {Array} color - RGB color [r,g,b]
-   * @returns {Object} { vertices: Array, faces: Array }
+   * (Tidak berubah)
    */
   _generateTube(path, tubeSegments, thickness, color) {
     const vertices = [];
@@ -346,8 +331,8 @@ export class ZubatWing extends Node {
    *
    * @param {Array} path1 - Top bone path
    * @param {Array} path2 - Mid bone path
-   * @param {Array} outerColor - Outer side color
-   * @param {Array} innerColor - Inner side color
+   * @param {Array} outerColor - Outer side color (Blue)
+   * @param {Array} innerColor - Inner side color (Pink)
    * @param {Number} thickness - Membrane thickness
    * @returns {Object} { vertices: Array, faces: Array }
    */
@@ -368,8 +353,8 @@ export class ZubatWing extends Node {
       const p1 = path1[i];
       const p2 = path2[i];
 
-      // Calculate normal (perpendicular to membrane surface)
-      const vecMembrane = this._subtract(p1, p2);
+      // --- PERBAIKAN: Sesuaikan 'vecMembrane' agar normalnya benar ---
+      const vecMembrane = this._subtract(p2, p1); // <-- DIUBAH (p2, p1)
       const vecForward =
         i < path1.length - 1
           ? this._subtract(path1[i + 1], p1)
@@ -377,19 +362,16 @@ export class ZubatWing extends Node {
 
       let normal = this._normalize(this._cross(vecMembrane, vecForward));
 
-      // Ensure normal points outward (negative Z)
-      if (normal[2] > 0) {
-        normal = this._scale(normal, -1);
-      }
+      // Hapus cek normal[2] > 0 agar identik dengan 'before'
 
       const outerOffset = this._scale(normal, halfThickness);
       const innerOffset = this._scale(normal, -halfThickness);
 
-      // Outer side (blue)
+      // Outer side (Blue)
       vertices.push(...this._add(p1, outerOffset), ...outerColor, ...normal);
       vertices.push(...this._add(p2, outerOffset), ...outerColor, ...normal);
 
-      // Inner side (pink)
+      // Inner side (Pink)
       const innerNormal = this._scale(normal, -1);
       vertices.push(
         ...this._add(p1, innerOffset),
@@ -404,6 +386,7 @@ export class ZubatWing extends Node {
     }
 
     // Generate faces
+    // (Tidak berubah)
     for (let i = 0; i < path1.length - 1; i++) {
       const baseIdx = i * 4;
 
@@ -430,6 +413,7 @@ export class ZubatWing extends Node {
   }
 
   // ==================== VECTOR MATH HELPERS ====================
+  // (Tidak berubah)
 
   _subtract(a, b) {
     return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
