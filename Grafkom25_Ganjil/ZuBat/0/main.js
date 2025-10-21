@@ -4,7 +4,8 @@
  * - Menggunakan arsitektur Scene Graph
  * - Menerapkan kamera orbit (Model diam, kamera berputar)
  * - [PERBAIKAN VISUAL] Ditambahkan Hi-DPI / devicePixelRatio handling
- * - [PERBAIKAN ANIMASI] Ditambahkan animasi float naik-turun
+ * - [PERBAIKAN ANIMASI] Ditambahkan animasi float
+ * - [PERBAIKAN ANIMASI] Ditambahkan animasi flip (salto)
  */
 import { Node } from "./models/Node.js";
 import { Axes } from "./models/Axes.js";
@@ -16,38 +17,25 @@ import { ZubatWing } from "./models/ZubatWing.js";
 function main() {
   const CANVAS = document.getElementById("mycanvas");
 
-  // --- PERBAIKAN 1: Hapus pengaturan width/height yang lama ---
-  // (Sudah ada di file 1)
-
   let GL;
 
-  // --- PERBAIKAN 2: Tambahkan fungsi resize handler Hi-DPI ---
-  /**
-   * Mengatur ukuran buffer gambar kanvas agar sesuai dengan resolusi fisik
-   * perangkat untuk rendering yang tajam (Hi-DPI aware).
-   */
+  // --- FUNGSI RESIZE HANDLER Hi-DPI ---
   function resizeCanvasToDisplaySize(canvas) {
     const dpr = window.devicePixelRatio || 1;
-    // Hitung ukuran piksel fisik yang diperlukan
     const displayWidth = Math.round(canvas.clientWidth * dpr);
     const displayHeight = Math.round(canvas.clientHeight * dpr);
 
-    // Cek jika ukuran buffer kanvas sudah berbeda
     if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
-      // Jadikan kanvas berukuran sama dengan piksel fisiknya
       canvas.width = displayWidth;
       canvas.height = displayHeight;
-
-      // Atur viewport WebGL agar sesuai (HANYA JIKA GL SUDAH ADA)
       if (GL) {
         GL.viewport(0, 0, canvas.width, canvas.height);
       }
-      return true; // Ukuran berubah
+      return true;
     }
-    return false; // Ukuran tetap sama
+    return false;
   }
 
-  // Panggil sekali saat startup untuk mengatur ukuran awal
   resizeCanvasToDisplaySize(CANVAS);
 
   try {
@@ -57,9 +45,7 @@ function main() {
     return false;
   }
 
-  // Atur viewport awal setelah GL context didapat
   GL.viewport(0, 0, GL.canvas.width, GL.canvas.height);
-
   GL.getExtension("OES_element_index_uint");
 
   // --- SHADERS ---
@@ -148,7 +134,7 @@ function main() {
   };
 
   /*========================= BUILD SCENE GRAPH ========================= */
-  // (Tidak ada perubahan di bagian ini, posisi tetap paten)
+  // (Fondasi paten, tidak diubah)
 
   const zubatModel = new Node();
   const axes = new Axes(GL, attribs);
@@ -222,15 +208,10 @@ function main() {
 
   /*========================= MATRICES AND INTERACTION ========================= */
 
-  // --- PERBAIKAN 3: Ubah PROJMATRIX menjadi 'let' dan buat fungsi update ---
-  let PROJMATRIX = LIBS.get_I4(); // Deklarasikan dengan let
+  let PROJMATRIX = LIBS.get_I4();
   const MOVEMATRIX = LIBS.get_I4();
   const VIEWMATRIX = LIBS.get_I4();
 
-  /**
-   * Fungsi baru untuk meng-update matriks proyeksi
-   * berdasarkan rasio aspek kanvas saat ini.
-   */
   function updateProjectionMatrix() {
     PROJMATRIX = LIBS.get_projection(
       40,
@@ -239,8 +220,6 @@ function main() {
       100
     );
   }
-
-  // Panggil sekali untuk inisialisasi
   updateProjectionMatrix();
 
   let THETA = 0,
@@ -254,21 +233,28 @@ function main() {
   let cameraZ = -10;
   const FRICTION = 0.95;
 
-  // --- EVENT LISTENERS ---
+  // --- PERBAIKAN: Variabel state untuk Flip Animation ---
+  //
+  let lastFlipTime = performance.now(); // Catat waktu kapan animasi dimulai
+  let flipStartTime = 0;
+  let isFlipping = false;
+  const flipInterval = 5000; // Interval 5 detik (sesuai kode Golbat)
+  const flipDuration = 1000; // Salto berlangsung selama 1 detik
+  // ----------------------------------------------------
+
+  // --- EVENT LISTENERS (Paten) ---
   CANVAS.addEventListener("mousedown", (e) => {
     drag = true;
     x_prev = e.pageX;
     y_prev = e.pageY;
   });
-
+  // ... (listener mouseup, mouseout, mousemove tidak berubah) ...
   CANVAS.addEventListener("mouseup", () => {
     drag = false;
   });
-
   CANVAS.addEventListener("mouseout", () => {
     drag = false;
   });
-
   CANVAS.addEventListener("mousemove", (e) => {
     if (!drag) return;
     dX = ((e.pageX - x_prev) * 2 * Math.PI) / CANVAS.width;
@@ -286,10 +272,9 @@ function main() {
     cameraZ = Math.max(-20, Math.min(-3, cameraZ));
   });
 
-  // --- PERBAIKAN 4: Tambahkan listener untuk window resize ---
+  // --- Listener untuk window resize (Paten) ---
   window.addEventListener("resize", () => {
     resizeCanvasToDisplaySize(CANVAS);
-    // Penting: Update matriks proyeksi saat aspect ratio berubah
     updateProjectionMatrix();
   });
 
@@ -301,17 +286,17 @@ function main() {
 
   /*========================= ANIMATION LOOP ========================= */
   const animate = () => {
-    time += 0.05; //
+    // --- PERBAIKAN: Dapatkan 'currentTime' untuk flip ---
+    const currentTime = performance.now(); //
+    time += 0.05; // (untuk float dan flap)
 
-    // --- Logika Interaksi (Kamera) ---
+    // --- Logika Interaksi (Kamera Orbit Paten) ---
     if (!drag) {
       dX *= FRICTION;
       dY *= FRICTION;
       THETA += dX;
       PHI += dY;
     }
-
-    // --- Setup View Matrix (Kamera) ---
     LIBS.set_I4(VIEWMATRIX);
     LIBS.translateZ(VIEWMATRIX, cameraZ);
     LIBS.rotateY(VIEWMATRIX, THETA);
@@ -321,7 +306,6 @@ function main() {
     const cameraDirection = [-VIEWMATRIX[2], -VIEWMATRIX[6], -VIEWMATRIX[10]];
 
     // --- Clear Screen ---
-    // --- PERBAIKAN 5: Hapus panggilan GL.viewport() dari loop ---
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
     // --- Set Uniforms ---
@@ -331,19 +315,17 @@ function main() {
     GL.uniform3fv(_lightColor, [1.0, 1.0, 1.0]);
     GL.uniform3fv(_ambientColor, [0.5, 0.5, 0.5]);
 
-    /*================= WING FLAPPING ANIMATION =================*/
+    /*================= WING FLAPPING ANIMATION (Paten) =================*/
     const flapSpeed = 1.0;
     const flapAmplitude = 0.15;
     const flapAngle = Math.sin(time * flapSpeed) * flapAmplitude;
 
-    // Rebuild left wing local matrix with animation
     LIBS.set_I4(leftWing.localMatrix);
     LIBS.translateY(leftWing.localMatrix, 0.0);
     LIBS.translateX(leftWing.localMatrix, 0.5);
     LIBS.rotateZ(leftWing.localMatrix, 0.4 + flapAngle);
     LIBS.rotateY(leftWing.localMatrix, 0.2);
 
-    // Rebuild right wing local matrix with opposite animation
     LIBS.set_I4(rightWing.localMatrix);
     LIBS.scale(rightWing.localMatrix, -1, 1, 1);
     LIBS.translateY(rightWing.localMatrix, 0.0);
@@ -352,25 +334,52 @@ function main() {
     LIBS.rotateY(rightWing.localMatrix, -0.2);
 
     /*================= SET GLOBAL ROTATION =================*/
-    // Model tetap di (0,0,0) relatif terhadap world
-    LIBS.set_I4(MOVEMATRIX); //
+    // Reset matriks model global
+    LIBS.set_I4(MOVEMATRIX);
 
-    // --- PERBAIKAN: Tambahkan animasi float dari file Golbat ---
-    /*================= ANIMASI FLOAT NAIK-TURUN (BARU) =================*/
-    // Parameter untuk gerakan naik-turun
-    var floatSpeed = 1.5; // Seberapa cepat naik-turun
-    var floatAmplitude = 0.2; // Seberapa jauh naik-turunnya
-
-    // Hitung posisi Y baru menggunakan sinus (berdasarkan 'time')
+    /*================= ANIMASI FLOAT NAIK-TURUN (Paten) =================*/
+    var floatSpeed = 1.5;
+    var floatAmplitude = 0.2;
     var floatY = Math.sin(time * floatSpeed) * floatAmplitude;
-
-    // Terapkan translasi Y ke MATRIKS GLOBAL (MOVEMATRIX)
     LIBS.translateY(MOVEMATRIX, floatY);
     /*================= AKHIR ANIMASI FLOAT =================*/
+
+    // --- PERBAIKAN: Tambahkan animasi flip dari file Golbat ---
+    /*================= ANIMASI SALTO (FLIP) (BARU) =================*/
+    //
+    let flipAngle = 0.0; // Sudut salto default (0 = tidak salto)
+
+    // 1. Cek apakah sudah waktunya salto lagi
+    if (!isFlipping && currentTime - lastFlipTime > flipInterval) {
+      isFlipping = true;
+      flipStartTime = currentTime;
+      lastFlipTime = currentTime; // Setel ulang timer
+    }
+
+    // 2. Jika sedang dalam proses salto
+    if (isFlipping) {
+      // Hitung progres salto (nilai dari 0.0 sampai 1.0)
+      let flipProgress = (currentTime - flipStartTime) / flipDuration;
+
+      if (flipProgress >= 1.0) {
+        flipProgress = 1.0;
+        isFlipping = false; // Selesai salto
+      }
+
+      // Hitung sudut dari 0 sampai -2*PI (salto ke BELAKANG)
+      flipAngle = flipProgress * -Math.PI * 2.0;
+    }
+
+    // 3. Terapkan rotasi salto DENGAN PIVOT
+    //    (Kita gunakan pivot Z=2.0 dari Golbat agar terlihat lebih dinamis)
+    LIBS.translateZ(MOVEMATRIX, 2.0); // 1. Bawa pivot ke origin
+    LIBS.rotateX(MOVEMATRIX, flipAngle); // 2. Lakukan rotasi (salto)
+    LIBS.translateZ(MOVEMATRIX, -2.0); // 3. Kembalikan pivot
+    /*================= AKHIR ANIMASI SALTO =================*/
     // -----------------------------------------------------------
 
     /*================= DRAW ENTIRE SCENE GRAPH =================*/
-    zubatModel.draw(MOVEMATRIX, _Mmatrix); //
+    zubatModel.draw(MOVEMATRIX, _Mmatrix);
 
     GL.flush();
     window.requestAnimationFrame(animate);
