@@ -48,7 +48,14 @@ function generateGolbatEyeShape(width, height, tilt, segments, color) {
 
 // --- FUNGSI IRIS DIPERBARUI ---
 // Sekarang menerima eyeWidth dan eyeHeight
-function generateIrisShape(x_offset, y_offset_top, size, color, eyeWidth, eyeHeight) {
+function generateIrisShape(
+  x_offset,
+  y_offset_top,
+  size,
+  color,
+  eyeWidth,
+  eyeHeight
+) {
   var vertices = [];
   var faces = [];
   var r = color[0],
@@ -60,7 +67,10 @@ function generateIrisShape(x_offset, y_offset_top, size, color, eyeWidth, eyeHei
   // Hitung sudut pada busur bawah yang sesuai dengan x_offset
   // x = eyeWidth * cos(angle) => angle = acos(x / eyeWidth)
   // Pastikan x_offset tidak melebihi eyeWidth
-  var clamped_x = Math.max(-eyeWidth * 0.99, Math.min(eyeWidth * 0.99, x_offset));
+  var clamped_x = Math.max(
+    -eyeWidth * 0.99,
+    Math.min(eyeWidth * 0.99, x_offset)
+  );
   var bottom_angle = Math.acos(clamped_x / eyeWidth);
 
   // Hitung y_bottom
@@ -68,13 +78,43 @@ function generateIrisShape(x_offset, y_offset_top, size, color, eyeWidth, eyeHei
 
   // Titik atas iris
   var top_y = y_offset_top + size;
-  vertices.push(x_offset, top_y, z, r, g, b_color, normal[0], normal[1], normal[2]);
+  vertices.push(
+    x_offset,
+    top_y,
+    z,
+    r,
+    g,
+    b_color,
+    normal[0],
+    normal[1],
+    normal[2]
+  );
 
   // Titik kiri bawah (gunakan y_bottom)
-  vertices.push(x_offset - size / 2, y_bottom, z, r, g, b_color, normal[0], normal[1], normal[2]);
+  vertices.push(
+    x_offset - size / 2,
+    y_bottom,
+    z,
+    r,
+    g,
+    b_color,
+    normal[0],
+    normal[1],
+    normal[2]
+  );
 
   // Titik kanan bawah (gunakan y_bottom)
-  vertices.push(x_offset + size / 2, y_bottom, z, r, g, b_color, normal[0], normal[1], normal[2]);
+  vertices.push(
+    x_offset + size / 2,
+    y_bottom,
+    z,
+    r,
+    g,
+    b_color,
+    normal[0],
+    normal[1],
+    normal[2]
+  );
 
   faces.push(0, 1, 2); // (CCW)
 
@@ -91,8 +131,19 @@ export class GolbatEye extends Node {
     var eyeTilt = 0.4;
     var eyeSegments = 20;
     var eyeColor = [1.0, 1.0, 1.0]; // Putih
-    var eyeShape = generateGolbatEyeShape(eyeWidth, eyeHeight, eyeTilt, eyeSegments, eyeColor);
-    var eyeSceneObj = new SceneObject(GL, eyeShape.vertices, eyeShape.faces, attribs);
+    var eyeShape = generateGolbatEyeShape(
+      eyeWidth,
+      eyeHeight,
+      eyeTilt,
+      eyeSegments,
+      eyeColor
+    );
+    var eyeSceneObj = new SceneObject(
+      GL,
+      eyeShape.vertices,
+      eyeShape.faces,
+      attribs
+    );
     this.setGeometry(eyeSceneObj);
 
     // --- Iris/Pupil Hitam ---
@@ -110,7 +161,12 @@ export class GolbatEye extends Node {
       eyeWidth, // <-- Kirim lebar mata
       eyeHeight // <-- Kirim tinggi mata
     );
-    var irisSceneObj = new SceneObject(GL, irisShape.vertices, irisShape.faces, attribs);
+    var irisSceneObj = new SceneObject(
+      GL,
+      irisShape.vertices,
+      irisShape.faces,
+      attribs
+    );
 
     var irisNode = new Node();
     irisNode.setGeometry(irisSceneObj);

@@ -20,7 +20,11 @@ export class SceneObject {
   setup() {
     this.vertexBuffer = this.GL.createBuffer();
     this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.vertexBuffer);
-    this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(this.vertices), this.GL.STATIC_DRAW);
+    this.GL.bufferData(
+      this.GL.ARRAY_BUFFER,
+      new Float32Array(this.vertices),
+      this.GL.STATIC_DRAW
+    );
 
     if (this.faces && this.faces.length > 0) {
       this.facesBuffer = this.GL.createBuffer();
@@ -41,9 +45,30 @@ export class SceneObject {
     this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.vertexBuffer);
 
     const stride = 9 * 4;
-    this.GL.vertexAttribPointer(this.attribs._position, 3, this.GL.FLOAT, false, stride, 0);
-    this.GL.vertexAttribPointer(this.attribs._color, 3, this.GL.FLOAT, false, stride, 3 * 4);
-    this.GL.vertexAttribPointer(this.attribs._normal, 3, this.GL.FLOAT, false, stride, 6 * 4);
+    this.GL.vertexAttribPointer(
+      this.attribs._position,
+      3,
+      this.GL.FLOAT,
+      false,
+      stride,
+      0
+    );
+    this.GL.vertexAttribPointer(
+      this.attribs._color,
+      3,
+      this.GL.FLOAT,
+      false,
+      stride,
+      3 * 4
+    );
+    this.GL.vertexAttribPointer(
+      this.attribs._normal,
+      3,
+      this.GL.FLOAT,
+      false,
+      stride,
+      6 * 4
+    );
 
     this.GL.enableVertexAttribArray(this.attribs._position);
     this.GL.enableVertexAttribArray(this.attribs._color);
@@ -66,8 +91,22 @@ export class SceneObject {
     this.GL.uniformMatrix4fv(_Mmatrix, false, parentMatrix);
     this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.vertexBuffer);
     const stride = 6 * 4;
-    this.GL.vertexAttribPointer(this.attribs._position, 3, this.GL.FLOAT, false, stride, 0);
-    this.GL.vertexAttribPointer(this.attribs._color, 3, this.GL.FLOAT, false, stride, 3 * 4);
+    this.GL.vertexAttribPointer(
+      this.attribs._position,
+      3,
+      this.GL.FLOAT,
+      false,
+      stride,
+      0
+    );
+    this.GL.vertexAttribPointer(
+      this.attribs._color,
+      3,
+      this.GL.FLOAT,
+      false,
+      stride,
+      3 * 4
+    );
     this.GL.disableVertexAttribArray(this.attribs._normal);
     const lineVertexCount = this.vertices.length / 6;
     this.GL.drawArrays(this.GL.LINES, 0, lineVertexCount);

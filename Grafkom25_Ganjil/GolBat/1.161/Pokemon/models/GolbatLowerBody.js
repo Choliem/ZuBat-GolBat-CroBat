@@ -107,20 +107,41 @@ export class GolbatLowerBody extends Node {
   constructor(GL, attribs) {
     super(); // Panggil konstruktor Node
 
-    var bodyColor = [60 / 255, 60 / 255, 124 / 255];
+    var bodyColor = [0.35, 0.55, 0.95];
     var legHeight = 0.65;
     var footMajorRadius = 0.3;
     var footMinorRadius = 0.1;
 
     // Buat geometri SATU KALI
     var legCylinder = generateCylinder(0.1, legHeight, 20, bodyColor);
-    var footTube = generateTube(footMajorRadius, footMinorRadius, 20, Math.PI, bodyColor);
+    var footTube = generateTube(
+      footMajorRadius,
+      footMinorRadius,
+      20,
+      Math.PI,
+      bodyColor
+    );
     var capSphere = generateSphere(footMinorRadius, 10, 10, bodyColor); // Geometri untuk tutup
 
     // Buat SceneObjects untuk geometri (data mentah)
-    var thighSceneObject = new SceneObject(GL, legCylinder.vertices, legCylinder.faces, attribs);
-    var footSceneObject = new SceneObject(GL, footTube.vertices, footTube.faces, attribs);
-    var capSceneObject = new SceneObject(GL, capSphere.vertices, capSphere.faces, attribs); // <-- SceneObject untuk tutup
+    var thighSceneObject = new SceneObject(
+      GL,
+      legCylinder.vertices,
+      legCylinder.faces,
+      attribs
+    );
+    var footSceneObject = new SceneObject(
+      GL,
+      footTube.vertices,
+      footTube.faces,
+      attribs
+    );
+    var capSceneObject = new SceneObject(
+      GL,
+      capSphere.vertices,
+      capSphere.faces,
+      attribs
+    ); // <-- SceneObject untuk tutup
 
     // --- Bangun Hierarki Kaki Kiri ---
     var leftLeg = new Node(); // Ini adalah "sendi" panggul kiri

@@ -8,7 +8,14 @@
 import { SceneObject } from "./SceneObject.js";
 import { Node } from "./Node.js"; // <-- Impor Node
 
-function generateEllipticParaboloid(a, b, stack, step, colorInside, colorOutside) {
+function generateEllipticParaboloid(
+  a,
+  b,
+  stack,
+  step,
+  colorInside,
+  colorOutside
+) {
   var vertices = [];
   var faces = [];
 
@@ -107,7 +114,7 @@ export class GolbatEar extends Node {
   constructor(GL, attribs) {
     super(); // Panggil konstruktor Node
 
-    var earColorOutside = [60 / 255, 60 / 255, 124 / 255]; // Biru/Ungu
+    var earColorOutside = [0.35, 0.55, 0.95]; // Biru/Ungu
     var earColorInside = [255 / 255, 184 / 255, 203 / 255]; // Pink
 
     var earShape = generateEllipticParaboloid(
@@ -119,7 +126,12 @@ export class GolbatEar extends Node {
       earColorOutside // Warna luar
     );
 
-    var sceneObj = new SceneObject(GL, earShape.vertices, earShape.faces, attribs);
+    var sceneObj = new SceneObject(
+      GL,
+      earShape.vertices,
+      earShape.faces,
+      attribs
+    );
     this.setGeometry(sceneObj);
   }
 }
