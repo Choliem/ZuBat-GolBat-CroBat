@@ -1,6 +1,9 @@
 /*
  * main.js - Complete Scene Graph Implementation for Zubat
- * FINAL VERSION: Full parent-child hierarchy like Golbat
+ * VERSI PERBAIKAN:
+ * - Menggunakan arsitektur Scene Graph
+ * - Menerapkan kamera orbit (Model diam, kamera berputar)
+ * - [PERBAIKAN VISUAL] Ditambahkan Hi-DPI / devicePixelRatio handling
  */
 import { Node } from "./models/Node.js";
 import { Axes } from "./models/Axes.js";
@@ -11,16 +14,51 @@ import { ZubatWing } from "./models/ZubatWing.js";
 
 function main() {
   const CANVAS = document.getElementById("mycanvas");
-  CANVAS.width = window.innerWidth;
-  CANVAS.height = window.innerHeight;
+
+  // --- PERBAIKAN 1: Hapus pengaturan width/height yang lama ---
+  // CANVAS.width = window.innerWidth; // <-- DIHAPUS
+  // CANVAS.height = window.innerHeight; // <-- DIHAPUS
 
   let GL;
+
+  // --- PERBAIKAN 2: Tambahkan fungsi resize handler Hi-DPI ---
+  /**
+   * Mengatur ukuran buffer gambar kanvas agar sesuai dengan resolusi fisik
+   * perangkat untuk rendering yang tajam (Hi-DPI aware).
+   */
+  function resizeCanvasToDisplaySize(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    // Hitung ukuran piksel fisik yang diperlukan
+    const displayWidth = Math.round(canvas.clientWidth * dpr);
+    const displayHeight = Math.round(canvas.clientHeight * dpr);
+
+    // Cek jika ukuran buffer kanvas sudah berbeda
+    if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+      // Jadikan kanvas berukuran sama dengan piksel fisiknya
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+
+      // Atur viewport WebGL agar sesuai (HANYA JIKA GL SUDAH ADA)
+      if (GL) {
+        GL.viewport(0, 0, canvas.width, canvas.height);
+      }
+      return true; // Ukuran berubah
+    }
+    return false; // Ukuran tetap sama
+  }
+
+  // Panggil sekali saat startup untuk mengatur ukuran awal
+  resizeCanvasToDisplaySize(CANVAS);
+
   try {
     GL = CANVAS.getContext("webgl", { antialias: true });
   } catch (e) {
     alert("WebGL tidak didukung!");
     return false;
   }
+
+  // Atur viewport awal setelah GL context didapat
+  GL.viewport(0, 0, GL.canvas.width, GL.canvas.height);
 
   GL.getExtension("OES_element_index_uint");
 
@@ -110,7 +148,7 @@ function main() {
   GL.enableVertexAttribArray(_normal);
   GL.useProgram(SHADER_PROGRAM);
 
-  // Create attribs object (NEW PATTERN!)
+  // Create attribs object
   const attribs = {
     _position: _position,
     _color: _color,
@@ -118,20 +156,18 @@ function main() {
   };
 
   /*========================= BUILD SCENE GRAPH ========================= */
+  // (Tidak ada perubahan di bagian ini, posisi tetap paten)
 
-  // Create ROOT node for entire Zubat model
   const zubatModel = new Node();
-
-  // Create axes (optional, for debugging)
-  const axes = new Axes(GL, _position, _color, _normal);
+  const axes = new Axes(GL, attribs);
+  // zubatModel.add(axes);
 
   // --- BODY (Upper & Lower) ---
-  // Upper body with auto-attached teeth!
   const zubatUpperBody = new ZubatUpperBody(GL, attribs, {
     scaleFactor: 2.5,
-    latBands: 50, // Optimized from 1000!
+    latBands: 50,
     longBands: 50,
-    attachTeeth: true, // AUTO-ATTACH teeth as children
+    attachTeeth: true,
     teethOptions: {
       segments: 160,
       rings: 1,
@@ -141,11 +177,10 @@ function main() {
 
   const zubatLowerBody = new ZubatLowerBody(GL, attribs, {
     scaleFactor: 2.5,
-    latBands: 50, // Optimized from 1000!
+    latBands: 50,
     longBands: 50,
   });
 
-  // Add bodies to root
   zubatModel.add(zubatUpperBody);
   zubatModel.add(zubatLowerBody);
 
@@ -155,8 +190,6 @@ function main() {
     rings: 10,
     bluntness: 0.3,
   });
-
-  // Set LOCAL transformation for left ear (relative to zubatModel)
   LIBS.translateY(leftEar.localMatrix, 4.3);
   LIBS.translateX(leftEar.localMatrix, -1.5);
   LIBS.translateZ(leftEar.localMatrix, 1.1);
@@ -168,15 +201,12 @@ function main() {
     rings: 10,
     bluntness: 0.3,
   });
-
-  // Set LOCAL transformation for right ear
   LIBS.translateY(rightEar.localMatrix, 4.3);
   LIBS.translateX(rightEar.localMatrix, 1.5);
   LIBS.translateZ(rightEar.localMatrix, 1.1);
   LIBS.rotateZ(rightEar.localMatrix, -3.5);
   LIBS.rotateY(rightEar.localMatrix, 0.2);
 
-  // Add ears to root
   zubatModel.add(leftEar);
   zubatModel.add(rightEar);
 
@@ -184,31 +214,42 @@ function main() {
   const leftWing = new ZubatWing(GL, attribs);
   const rightWing = new ZubatWing(GL, attribs);
 
-  // Initial wing positions (will be updated in animation loop)
   LIBS.translateY(leftWing.localMatrix, 0.0);
   LIBS.translateX(leftWing.localMatrix, 0.5);
   LIBS.rotateZ(leftWing.localMatrix, 0.4);
   LIBS.rotateY(leftWing.localMatrix, 0.2);
 
-  LIBS.scale(rightWing.localMatrix, -1, 1, 1); // Mirror for right wing
+  LIBS.scale(rightWing.localMatrix, -1, 1, 1);
   LIBS.translateY(rightWing.localMatrix, 0.0);
   LIBS.translateX(rightWing.localMatrix, -0.5);
   LIBS.rotateZ(rightWing.localMatrix, -0.4);
   LIBS.rotateY(rightWing.localMatrix, -0.2);
 
-  // Add wings to root
   zubatModel.add(leftWing);
   zubatModel.add(rightWing);
 
   /*========================= MATRICES AND INTERACTION ========================= */
-  const PROJMATRIX = LIBS.get_projection(
-    40,
-    CANVAS.width / CANVAS.height,
-    1,
-    100
-  );
+
+  // --- PERBAIKAN 3: Ubah PROJMATRIX menjadi 'let' dan buat fungsi update ---
+  let PROJMATRIX = LIBS.get_I4(); // Deklarasikan dengan let
   const MOVEMATRIX = LIBS.get_I4();
   const VIEWMATRIX = LIBS.get_I4();
+
+  /**
+   * Fungsi baru untuk meng-update matriks proyeksi
+   * berdasarkan rasio aspek kanvas saat ini.
+   */
+  function updateProjectionMatrix() {
+    PROJMATRIX = LIBS.get_projection(
+      40,
+      CANVAS.width / CANVAS.height, // Gunakan rasio aspek yang benar
+      1,
+      100
+    );
+  }
+
+  // Panggil sekali untuk inisialisasi
+  updateProjectionMatrix();
 
   let THETA = 0,
     PHI = 0,
@@ -253,6 +294,13 @@ function main() {
     cameraZ = Math.max(-20, Math.min(-3, cameraZ));
   });
 
+  // --- PERBAIKAN 4: Tambahkan listener untuk window resize ---
+  window.addEventListener("resize", () => {
+    resizeCanvasToDisplaySize(CANVAS);
+    // Penting: Update matriks proyeksi saat aspect ratio berubah
+    updateProjectionMatrix();
+  });
+
   // --- RENDER SETUP ---
   GL.enable(GL.DEPTH_TEST);
   GL.depthFunc(GL.LEQUAL);
@@ -263,6 +311,7 @@ function main() {
   const animate = () => {
     time += 0.05;
 
+    // --- Logika Interaksi (Kamera) ---
     if (!drag) {
       dX *= FRICTION;
       dY *= FRICTION;
@@ -270,17 +319,23 @@ function main() {
       PHI += dY;
     }
 
+    // --- Setup View Matrix (Kamera) ---
     LIBS.set_I4(VIEWMATRIX);
     LIBS.translateZ(VIEWMATRIX, cameraZ);
     LIBS.rotateY(VIEWMATRIX, THETA);
     LIBS.rotateX(VIEWMATRIX, PHI);
 
+    // --- Setup Pencahayaan ---
     const cameraDirection = [-VIEWMATRIX[2], -VIEWMATRIX[6], -VIEWMATRIX[10]];
 
-    GL.viewport(0, 0, CANVAS.width, CANVAS.height);
+    // --- Clear Screen ---
+    // --- PERBAIKAN 5: Hapus panggilan GL.viewport() dari loop ---
+    // Viewport sekarang di-handle oleh resize handler
+    // GL.viewport(0, 0, CANVAS.width, CANVAS.height); // <-- DIHAPUS
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
-    GL.uniformMatrix4fv(_Pmatrix, false, PROJMATRIX);
+    // --- Set Uniforms ---
+    GL.uniformMatrix4fv(_Pmatrix, false, PROJMATRIX); // PROJMATRIX sekarang dinamis
     GL.uniformMatrix4fv(_Vmatrix, false, VIEWMATRIX);
     GL.uniform3fv(_lightDirection, cameraDirection);
     GL.uniform3fv(_lightColor, [1.0, 1.0, 1.0]);
@@ -295,7 +350,7 @@ function main() {
     LIBS.set_I4(leftWing.localMatrix);
     LIBS.translateY(leftWing.localMatrix, 0.0);
     LIBS.translateX(leftWing.localMatrix, 0.5);
-    LIBS.rotateZ(leftWing.localMatrix, 0.4 + flapAngle); // ANIMATED!
+    LIBS.rotateZ(leftWing.localMatrix, 0.4 + flapAngle);
     LIBS.rotateY(leftWing.localMatrix, 0.2);
 
     // Rebuild right wing local matrix with opposite animation
@@ -303,29 +358,14 @@ function main() {
     LIBS.scale(rightWing.localMatrix, -1, 1, 1);
     LIBS.translateY(rightWing.localMatrix, 0.0);
     LIBS.translateX(rightWing.localMatrix, -0.5);
-    LIBS.rotateZ(rightWing.localMatrix, -0.4 - flapAngle); // OPPOSITE!
+    LIBS.rotateZ(rightWing.localMatrix, -0.4 - flapAngle);
     LIBS.rotateY(rightWing.localMatrix, -0.2);
 
     /*================= SET GLOBAL ROTATION =================*/
+    // Model tetap di (0,0,0) relatif terhadap world
     LIBS.set_I4(MOVEMATRIX);
-    LIBS.rotateY(MOVEMATRIX, THETA);
-    LIBS.rotateX(MOVEMATRIX, PHI);
 
     /*================= DRAW ENTIRE SCENE GRAPH =================*/
-    // BUAT axes sebagai Node
-    const axes = new Axes(GL, attribs);
-
-    // TAMBAHKAN axes ke root model (opsional)
-    // zubatModel.add(axes);
-
-    // Draw entire Zubat model with ONE call!
-    // This recursively draws:
-    // - zubatUpperBody (+ 4 teeth as children)
-    // - zubatLowerBody
-    // - leftEar
-    // - rightEar
-    // - leftWing (animated)
-    // - rightWing (animated)
     zubatModel.draw(MOVEMATRIX, _Mmatrix);
 
     GL.flush();

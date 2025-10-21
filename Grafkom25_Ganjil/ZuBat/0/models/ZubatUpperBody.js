@@ -81,12 +81,12 @@ export class ZubatUpperBody extends Node {
 
     // Mouth shape control points (elliptical regions)
     mouthControlPoints: [
-      { angle: 45, radii: { x: 0.6, y: 0.5 }, pullTarget: [1.5, 1.5, -0.1] },
-      { angle: 135, radii: { x: 0.6, y: 0.5 }, pullTarget: [-1.6, 1.5, -0.1] },
+      { angle: 45, radii: { x: 0.6, y: 0.5 }, pullTarget: [1.5, 1.5, -0.8] },
+      { angle: 135, radii: { x: 0.6, y: 0.5 }, pullTarget: [-1.6, 1.5, -0.8] },
       { angle: 225, radii: { x: 0.6, y: 0.7 }, pullTarget: [-0.6, -1.7, 0.0] },
       { angle: 315, radii: { x: 0.6, y: 0.7 }, pullTarget: [0.6, -1.7, 0.0] },
-      { angle: 0, radii: { x: 0.6, y: 0.8 }, pullTarget: [1.6, -0.8, -0.05] },
-      { angle: 90, radii: { x: 0.5, y: 0.5 }, pullTarget: [1.5, 1.5, -0.15] },
+      { angle: 0, radii: { x: 0.6, y: 0.8 }, pullTarget: [1.6, -0.8, -0.08] },
+      { angle: 90, radii: { x: 0.5, y: 0.5 }, pullTarget: [1.5, 1.5, -0.3] },
       {
         angle: 180,
         radii: { x: 0.6, y: 0.8 },
@@ -288,16 +288,16 @@ export class ZubatUpperBody extends Node {
 
     // --- UPPER TEETH (Gigi Atas) ---
     const toothUpperLeft = new ZubatTooth(GL, attribs, teethOptions.upper);
-    LIBS.translateY(toothUpperLeft.localMatrix, -0.6);
-    LIBS.translateX(toothUpperLeft.localMatrix, -0.3);
-    LIBS.translateZ(toothUpperLeft.localMatrix, 0.55);
-    LIBS.rotateZ(toothUpperLeft.localMatrix, 0.0);
+    LIBS.translateY(toothUpperLeft.localMatrix, 1.25);
+    LIBS.translateX(toothUpperLeft.localMatrix, -0.5);
+    LIBS.translateZ(toothUpperLeft.localMatrix, 1.7);
+    LIBS.rotateZ(toothUpperLeft.localMatrix, 0.2);
     this.add(toothUpperLeft); // ← PARENT-CHILD!
 
     const toothUpperRight = new ZubatTooth(GL, attribs, teethOptions.upper);
-    LIBS.translateY(toothUpperRight.localMatrix, -0.8);
-    LIBS.translateX(toothUpperRight.localMatrix, 0.3);
-    LIBS.translateZ(toothUpperRight.localMatrix, 0.5);
+    LIBS.translateY(toothUpperRight.localMatrix, 1.25);
+    LIBS.translateX(toothUpperRight.localMatrix, 0.5);
+    LIBS.translateZ(toothUpperRight.localMatrix, 1.7);
     LIBS.rotateZ(toothUpperRight.localMatrix, -0.2);
     this.add(toothUpperRight);
 
