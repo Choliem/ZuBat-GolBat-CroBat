@@ -1,172 +1,179 @@
 /*
- * SceneObject.js
- * Kelas untuk menyimpan dan me-render geometri 3D.
+ * ===================================================================
+ * SceneObject.js - Pekerja Rendering WebGL
+ * ===================================================================
  *
- * PERUBAHAN DARI VERSI LAMA:
- * - TIDAK LAGI abstract class yang harus di-extend
- * - MENERIMA data vertices & faces dari luar (separation of concerns)
- * - Fokus HANYA pada: buffer management & rendering
+ * KRITERIA 5: PEMISAHAN TANGGUNG JAWAB
  *
  * FILOSOFI:
- * - SceneObject = "Geometry Data + WebGL Buffers"
- * - Node = "Transformation + Hierarchy"
- * - Part Classes (e.g., ZubatTooth) = "Geometry Generator"
+ * - SceneObject = Hanya mengurus Data Geometri + WebGL Buffers.
+ * - TIDAK tahu apa-apa tentang hierarki atau animasi.
+ * - Tugasnya: Mengambil data, membuat buffer, dan menggambar.
  */
 export class SceneObject {
   /**
    * Constructor - Menerima geometry data yang sudah jadi.
-   *
    * @param {WebGLRenderingContext} GL - WebGL context
-   * @param {Array} verticesData - Array of vertices [x,y,z,r,g,b,nx,ny,nz, ...]
-   * @param {Array} facesData - Array of face indices [i1,i2,i3, ...]
-   * @param {Object} attribs - Attribute locations { _position, _color, _normal }
+   * @param {Array} verticesData - Array [x,y,z, r,g,b, nx,ny,nz, ...]
+   * @param {Array} facesData - Array [i1,i2,i3, ...]
+   * @param {Object} attribs - Lokasi attribute shader
    */
   constructor(GL, verticesData, facesData, attribs) {
     this.GL = GL;
     this.attribs = attribs;
-    this.vertices = verticesData; // Data mentah dari generator
-    this.faces = facesData; // Data mentah dari generator
+    this.vertices = verticesData;
+    this.faces = facesData;
 
-    this.vertexBuffer = null; // WebGL buffer untuk vertices
-    this.facesBuffer = null; // WebGL buffer untuk indices
-    this.modelMatrix = LIBS.get_I4(); // Legacy (tidak dipakai lagi dengan Node system)
+    this.vertexBuffer = null;
+    this.facesBuffer = null;
+    this.faceCount = 0;
+    this.vertexCount = 0;
 
     this.setup(); // Langsung buat WebGL buffers
   }
 
   /**
    * Setup WebGL buffers dari data vertices & faces.
-   * Dipanggil otomatis di constructor.
    */
   setup() {
-    // Create & fill vertex buffer
-    this.vertexBuffer = this.GL.createBuffer();
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.vertexBuffer);
-    this.GL.bufferData(
-      this.GL.ARRAY_BUFFER,
+    const GL = this.GL;
+
+    // --- Vertex Buffer Object (VBO) ---
+    this.vertexBuffer = GL.createBuffer();
+    GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
+    GL.bufferData(
+      GL.ARRAY_BUFFER,
       new Float32Array(this.vertices),
-      this.GL.STATIC_DRAW
+      GL.STATIC_DRAW
     );
 
-    // Create & fill index buffer (if faces exist)
+    // --- Element Buffer Object (EBO) / Index Buffer ---
     if (this.faces && this.faces.length > 0) {
-      this.facesBuffer = this.GL.createBuffer();
-      this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-      this.GL.bufferData(
-        this.GL.ELEMENT_ARRAY_BUFFER,
-        new Uint32Array(this.faces), // ← PENTING: Uint32Array untuk index > 65535
-        this.GL.STATIC_DRAW
+      this.facesBuffer = GL.createBuffer();
+      GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
+      GL.bufferData(
+        GL.ELEMENT_ARRAY_BUFFER,
+        new Uint32Array(this.faces), // WAJIB Uint32Array untuk model > 65k vertices
+        GL.STATIC_DRAW
       );
       this.faceCount = this.faces.length;
     } else {
-      // Fallback untuk non-indexed drawing
-      this.vertexCount = this.vertices.length / 9; // 9 floats per vertex (pos+color+normal)
+      // Fallback jika tidak ada faces (misal: Axes)
+      this.vertexCount = this.vertices.length / 9; // 9 floats (pos,col,norm)
     }
   }
 
   /**
-   * Render geometri dengan transformasi yang diberikan.
-   * Dipanggil oleh Node.draw() dengan finalMatrix.
+   * KRITERIA 5: Proses DRAWING (Dipanggil oleh Node)
+   * ALGORITMA:
+   * 1. Set matriks model (Mmatrix)
+   * 2. Bind VBO
+   * 3. Set up Attribute Pointers (Stride & Offset)
+   * 4. Bind EBO (jika ada)
+   * 5. Panggil drawElements (jika ada EBO) atau drawArrays
    *
-   * @param {Array} combinedMatrix - Final transformation matrix (4x4)
-   * @param {WebGLUniformLocation} _Mmatrix - Uniform location untuk model matrix
+   * @param {Array} combinedMatrix - Matriks transformasi final
+   * @param {WebGLUniformLocation} _Mmatrix - Lokasi uniform Mmatrix
    */
   draw(combinedMatrix, _Mmatrix) {
-    // Set model matrix uniform
-    this.GL.uniformMatrix4fv(_Mmatrix, false, combinedMatrix);
+    const GL = this.GL;
 
-    // Bind vertex buffer
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.vertexBuffer);
+    // 1. Set matriks
+    GL.uniformMatrix4fv(_Mmatrix, false, combinedMatrix);
 
-    // Setup vertex attributes
-    const stride = 9 * 4; // 9 floats × 4 bytes = 36 bytes per vertex
+    // 2. Bind VBO
+    GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
 
-    // Position attribute (3 floats, offset 0)
-    this.GL.vertexAttribPointer(
+    // 3. Setup Attribute Pointers
+    // KRITERIA 3: Penjelasan Stride & Offset
+    // Stride = Total byte per vertex.
+    // (3 Pos + 3 Col + 3 Norm) * 4 bytes/float = 36 bytes
+    const stride = 9 * 4;
+
+    // Position: 3 floats, offset 0 bytes
+    GL.vertexAttribPointer(
       this.attribs._position,
       3,
-      this.GL.FLOAT,
+      GL.FLOAT,
       false,
       stride,
       0
     );
 
-    // Color attribute (3 floats, offset 12 bytes)
-    this.GL.vertexAttribPointer(
+    // Color: 3 floats, offset 12 bytes (setelah 3 float Posisi)
+    GL.vertexAttribPointer(
       this.attribs._color,
       3,
-      this.GL.FLOAT,
+      GL.FLOAT,
       false,
       stride,
       3 * 4
     );
 
-    // Normal attribute (3 floats, offset 24 bytes)
-    this.GL.vertexAttribPointer(
+    // Normal: 3 floats, offset 24 bytes (setelah 3 Pos + 3 Col)
+    GL.vertexAttribPointer(
       this.attribs._normal,
       3,
-      this.GL.FLOAT,
+      GL.FLOAT,
       false,
       stride,
       6 * 4
     );
 
-    // Enable attributes
-    this.GL.enableVertexAttribArray(this.attribs._position);
-    this.GL.enableVertexAttribArray(this.attribs._color);
-    this.GL.enableVertexAttribArray(this.attribs._normal);
+    // Aktifkan attributes
+    GL.enableVertexAttribArray(this.attribs._position);
+    GL.enableVertexAttribArray(this.attribs._color);
+    GL.enableVertexAttribArray(this.attribs._normal);
 
-    // Draw with indexed or non-indexed method
+    // 4. & 5. Panggil Draw Call
     if (this.facesBuffer) {
-      // Indexed drawing (lebih efisien)
-      this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-      this.GL.drawElements(
-        this.GL.TRIANGLES,
+      // Menggambar menggunakan index (EBO)
+      GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
+      GL.drawElements(
+        GL.TRIANGLES,
         this.faceCount,
-        this.GL.UNSIGNED_INT, // ← PENTING: Sesuai dengan Uint32Array di setup()
+        GL.UNSIGNED_INT, // Sesuai dengan Uint32Array
         0
       );
     } else {
-      // Non-indexed drawing (fallback)
-      this.GL.drawArrays(this.GL.TRIANGLES, 0, this.vertexCount);
+      // Menggambar langsung (VBO)
+      GL.drawArrays(GL.TRIANGLES, 0, this.vertexCount);
     }
   }
 
   /**
-   * Render sebagai garis (untuk Axes atau wireframe).
-   * Method khusus, tidak dipakai oleh Node system.
-   *
-   * @param {Array} parentMatrix - Transformation matrix
-   * @param {WebGLUniformLocation} _Mmatrix - Uniform location
+   * Render sebagai garis (khusus untuk Axes).
    */
   drawLines(parentMatrix, _Mmatrix) {
-    this.GL.uniformMatrix4fv(_Mmatrix, false, parentMatrix);
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.vertexBuffer);
+    const GL = this.GL;
+    GL.uniformMatrix4fv(_Mmatrix, false, parentMatrix);
+    GL.bindBuffer(GL.ARRAY_BUFFER, this.vertexBuffer);
 
-    const stride = 6 * 4; // 6 floats untuk axes (pos + color, tanpa normal)
+    // Stride untuk Axes: (3 Pos + 3 Col) * 4 bytes = 24 bytes
+    const stride = 6 * 4;
 
-    this.GL.vertexAttribPointer(
+    GL.vertexAttribPointer(
       this.attribs._position,
       3,
-      this.GL.FLOAT,
+      GL.FLOAT,
       false,
       stride,
       0
     );
-    this.GL.vertexAttribPointer(
+    GL.vertexAttribPointer(
       this.attribs._color,
       3,
-      this.GL.FLOAT,
+      GL.FLOAT,
       false,
       stride,
       3 * 4
     );
 
-    this.GL.disableVertexAttribArray(this.attribs._normal);
+    GL.disableVertexAttribArray(this.attribs._normal); // Axes tidak punya normal
 
     const lineVertexCount = this.vertices.length / 6;
-    this.GL.drawArrays(this.GL.LINES, 0, lineVertexCount);
+    GL.drawArrays(GL.LINES, 0, lineVertexCount);
 
-    this.GL.enableVertexAttribArray(this.attribs._normal);
+    GL.enableVertexAttribArray(this.attribs._normal);
   }
 }
