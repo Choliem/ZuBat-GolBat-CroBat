@@ -2,6 +2,7 @@
  * main.js - Complete Scene Graph Implementation for Zubat
  * FINAL VERSION: Full parent-child hierarchy like Golbat
  */
+import { LIBS } from "./libs.js";
 import { Node } from "./models/Node.js";
 import { Axes } from "./models/Axes.js";
 import { ZubatLowerBody } from "./models/ZubatLowerBody.js";

@@ -1,8 +1,24 @@
+/*
+ * ZubatWing.js - REFACTORED to fit Scene Graph
+ *
+ * PERUBAHAN:
+ * 1. ✅ extends Node (bukan SceneObject) agar kompatibel dengan hierarki.
+ * 2. ✅ Mengimpor Node.
+ * 3. ✅ Constructor memanggil super() milik Node.
+ * 4. ✅ Geometri dibuat di array lokal (vertices, faces).
+ * 5. ✅ Metode helper diubah untuk mengisi array lokal.
+ * 6. ✅ Membuat SceneObject di akhir dan memanggil this.setGeometry().
+ */
+import { Node } from "./Node.js";
 import { SceneObject } from "./SceneObject.js";
 
-export class ZubatWing extends SceneObject {
-  constructor(GL, _position, _color, _normal) {
-    super(GL, _position, _color, _normal);
+export class ZubatWing extends Node {
+  constructor(GL, attribs) {
+    super(); // Memanggil constructor Node
+
+    // Array lokal untuk menampung geometri
+    const vertices = [];
+    const faces = [];
 
     // =================================================================================
     // == KONTROL PARAMETER SAYAP ==
@@ -96,22 +112,27 @@ export class ZubatWing extends SceneObject {
       fullTopCenterline,
       TUBE_SEGMENTS,
       BONE_THICKNESS.top,
-      BONE_COLOR
+      BONE_COLOR,
+      vertices,
+      faces
     );
     this._generateTube(
       fullMidCenterline,
       TUBE_SEGMENTS,
       BONE_THICKNESS.mid,
-      BONE_COLOR
+      BONE_COLOR,
+      vertices,
+      faces
     );
 
-    // Perbarui pemanggilan _generateMembrane
     this._generateMembrane(
       fullTopCenterline,
       fullMidCenterline,
       INNER_MEMBRANE_COLOR,
       OUTER_MEMBRANE_COLOR,
-      MEMBRANE_THICKNESS
+      MEMBRANE_THICKNESS,
+      vertices,
+      faces
     );
 
     const connectorPath = [
@@ -122,32 +143,34 @@ export class ZubatWing extends SceneObject {
       connectorPath,
       TUBE_SEGMENTS,
       BONE_THICKNESS.connector,
-      BONE_COLOR
+      BONE_COLOR,
+      vertices,
+      faces
     );
 
-    this.setup();
+    // =================================================================================
+    // == FINALISASI: BUAT SCENEOBJECT DAN ATTACH KE NODE INI ==
+    // =================================================================================
+    const sceneObj = new SceneObject(GL, vertices, faces, attribs);
+    this.setGeometry(sceneObj); //
   }
 
   getControlPoints() {
     return this.controlPoints;
   }
 
-  // ... (Metode _generateCenterline, _subtractVectors, _normalizeVector, _crossProduct, _generateTube, _getPointOnBezierCurve tidak berubah)
-
-  // =================================================================================
-  // == PERBARUIAN METODE _generateMembrane ==
-  // =================================================================================
   _generateMembrane(
     centerline1,
     centerline2,
     outerColor,
     innerColor,
-    thickness
+    thickness,
+    vertices, // Terima array lokal
+    faces // Terima array lokal
   ) {
-    const baseVertexIndex = this.vertices.length / 9;
+    const baseVertexIndex = vertices.length / 9;
     const halfThickness = thickness / 2.0;
 
-    // Buat dua set vertex: satu untuk luar, satu untuk dalam
     for (let i = 0; i < centerline1.length; i++) {
       const p1 = centerline1[i];
       const p2 = centerline2[i];
@@ -156,15 +179,15 @@ export class ZubatWing extends SceneObject {
       const vecB = this._subtractVectors(p3, p1);
       const normal = this._normalizeVector(this._crossProduct(vecA, vecB));
 
-      // Vertex luar (biru), digeser keluar sepanjang normal
-      this.vertices.push(
+      // Vertex luar (biru)
+      vertices.push(
         p1[0] + normal[0] * halfThickness,
         p1[1] + normal[1] * halfThickness,
         p1[2] + normal[2] * halfThickness,
         ...outerColor,
         ...normal
       );
-      this.vertices.push(
+      vertices.push(
         p2[0] + normal[0] * halfThickness,
         p2[1] + normal[1] * halfThickness,
         p2[2] + normal[2] * halfThickness,
@@ -172,8 +195,8 @@ export class ZubatWing extends SceneObject {
         ...normal
       );
 
-      // Vertex dalam (pink), digeser ke dalam (arah normal terbalik)
-      this.vertices.push(
+      // Vertex dalam (pink)
+      vertices.push(
         p1[0] - normal[0] * halfThickness,
         p1[1] - normal[1] * halfThickness,
         p1[2] - normal[2] * halfThickness,
@@ -182,7 +205,7 @@ export class ZubatWing extends SceneObject {
         -normal[1],
         -normal[2]
       );
-      this.vertices.push(
+      vertices.push(
         p2[0] - normal[0] * halfThickness,
         p2[1] - normal[1] * halfThickness,
         p2[2] - normal[2] * halfThickness,
@@ -193,9 +216,7 @@ export class ZubatWing extends SceneObject {
       );
     }
 
-    // Buat faces untuk kedua sisi
     for (let i = 0; i < centerline1.length - 1; i++) {
-      // Index untuk 4 titik di setiap segmen (luar atas, luar bawah, dalam atas, dalam bawah)
       const outerTopLeft = baseVertexIndex + i * 4;
       const outerBotLeft = outerTopLeft + 1;
       const innerTopLeft = outerTopLeft + 2;
@@ -206,46 +227,28 @@ export class ZubatWing extends SceneObject {
       const innerTopRight = outerTopLeft + 6;
       const innerBotRight = outerTopLeft + 7;
 
-      // Faces untuk permukaan luar (biru)
-      this.faces.push(outerTopLeft, outerBotLeft, outerTopRight);
-      this.faces.push(outerBotLeft, outerBotRight, outerTopRight);
+      // Faces luar
+      faces.push(outerTopLeft, outerBotLeft, outerTopRight);
+      faces.push(outerBotLeft, outerBotRight, outerTopRight);
 
-      // Faces untuk permukaan dalam (pink)
-      // Dibuat dengan urutan terbalik agar terlihat dari dalam
-      this.faces.push(innerTopLeft, innerTopRight, innerBotLeft);
-      this.faces.push(innerBotLeft, innerTopRight, innerBotRight);
+      // Faces dalam (urutan terbalik)
+      faces.push(innerTopLeft, innerTopRight, innerBotLeft);
+      faces.push(innerBotLeft, innerTopRight, innerBotRight);
     }
   }
-  _generateCenterline(parts, segmentsPerPart) {
-    const centerline = [];
-    for (let i = 0; i < parts.length; i++) {
-      const controlPoints = parts[i];
-      const start = i === 0 ? 0 : 1;
-      for (let j = start; j <= segmentsPerPart; j++) {
-        const t = j / segmentsPerPart;
-        centerline.push(this._getPointOnBezierCurve(controlPoints, t));
-      }
-    }
-    return centerline;
-  }
-  _subtractVectors(a, b) {
-    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-  }
-  _normalizeVector(v) {
-    const len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    return len > 0 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 0, 0];
-  }
-  _crossProduct(a, b) {
-    return [
-      a[1] * b[2] - a[2] * b[1],
-      a[2] * b[0] - a[0] * b[2],
-      a[0] * b[1] - a[1] * b[0],
-    ];
-  }
-  _generateTube(path, tubeSegments, thickness, color) {
-    if (path.length < 2) return; // Guard clause for connector bone
-    const baseVertexIndex = this.vertices.length / 9;
+
+  _generateTube(
+    path,
+    tubeSegments,
+    thickness,
+    color,
+    vertices, // Terima array lokal
+    faces // Terima array lokal
+  ) {
+    if (path.length < 2) return;
+    const baseVertexIndex = vertices.length / 9;
     const vertexCount = path.length;
+
     for (let i = 0; i < vertexCount; i++) {
       const point = path[i];
       const t = vertexCount > 1 ? i / (vertexCount - 1) : 0;
@@ -288,7 +291,7 @@ export class ZubatWing extends SceneObject {
           vertex_y - point[1],
           vertex_z - point[2],
         ]);
-        this.vertices.push(vertex_x, vertex_y, vertex_z, ...color, ...normal_v);
+        vertices.push(vertex_x, vertex_y, vertex_z, ...color, ...normal_v);
       }
     }
     for (let i = 0; i < vertexCount - 1; i++) {
@@ -299,6 +302,34 @@ export class ZubatWing extends SceneObject {
         this.faces.push(idx2, idx2 + 1, idx1 + 1);
       }
     }
+  }
+
+  // --- METODE HELPER LAINNYA (tidak perlu diubah) ---
+  _generateCenterline(parts, segmentsPerPart) {
+    const centerline = [];
+    for (let i = 0; i < parts.length; i++) {
+      const controlPoints = parts[i];
+      const start = i === 0 ? 0 : 1;
+      for (let j = start; j <= segmentsPerPart; j++) {
+        const t = j / segmentsPerPart;
+        centerline.push(this._getPointOnBezierCurve(controlPoints, t));
+      }
+    }
+    return centerline;
+  }
+  _subtractVectors(a, b) {
+    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  }
+  _normalizeVector(v) {
+    const len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return len > 0 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 0, 0];
+  }
+  _crossProduct(a, b) {
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
   }
   _getPointOnBezierCurve(controlPoints, t) {
     const [p0, p1, p2, p3] = controlPoints;

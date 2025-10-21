@@ -288,16 +288,16 @@ export class ZubatUpperBody extends Node {
 
     // --- UPPER TEETH (Gigi Atas) ---
     const toothUpperLeft = new ZubatTooth(GL, attribs, teethOptions.upper);
-    LIBS.translateY(toothUpperLeft.localMatrix, -0.6);
-    LIBS.translateX(toothUpperLeft.localMatrix, -0.3);
-    LIBS.translateZ(toothUpperLeft.localMatrix, 0.55);
-    LIBS.rotateZ(toothUpperLeft.localMatrix, 0.0);
+    LIBS.translateY(toothUpperLeft.localMatrix, 1.25);
+    LIBS.translateX(toothUpperLeft.localMatrix, -0.5);
+    LIBS.translateZ(toothUpperLeft.localMatrix, 1.7);
+    LIBS.rotateZ(toothUpperLeft.localMatrix, 0.2);
     this.add(toothUpperLeft); // ← PARENT-CHILD!
 
     const toothUpperRight = new ZubatTooth(GL, attribs, teethOptions.upper);
-    LIBS.translateY(toothUpperRight.localMatrix, -0.8);
-    LIBS.translateX(toothUpperRight.localMatrix, 0.3);
-    LIBS.translateZ(toothUpperRight.localMatrix, 0.5);
+    LIBS.translateY(toothUpperRight.localMatrix, 1.25);
+    LIBS.translateX(toothUpperRight.localMatrix, 0.5);
+    LIBS.translateZ(toothUpperRight.localMatrix, 1.7);
     LIBS.rotateZ(toothUpperRight.localMatrix, -0.2);
     this.add(toothUpperRight);
 

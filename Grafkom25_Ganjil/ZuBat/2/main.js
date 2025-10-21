@@ -1,7 +1,11 @@
+/*
+ * main.js - Complete Scene Graph Implementation for Zubat
+ * IMPROVEMENT: Following Golbat's parent-child architecture
+ */
+import { Node } from "./models/Node.js";
 import { Axes } from "./models/Axes.js";
 import { ZubatLowerBody } from "./models/ZubatLowerBody.js";
 import { ZubatUpperBody } from "./models/ZubatUpperBody.js";
-import { ZubatTooth } from "./models/ZubatTooth.js";
 import { ZubatEar } from "./models/ZubatEar.js";
 import { ZubatWing } from "./models/ZubatWing.js";
 
@@ -22,47 +26,46 @@ function main() {
 
   // --- SHADERS ---
   const shader_vertex_source = `
-        attribute vec3 position;
-        attribute vec3 color;
-        attribute vec3 normal;
+    attribute vec3 position;
+    attribute vec3 color;
+    attribute vec3 normal;
 
-        uniform mat4 Pmatrix, Vmatrix, Mmatrix;
-        
-        varying vec3 vColor;
-        varying vec3 vNormal;
-        varying vec3 vView;
+    uniform mat4 Pmatrix, Vmatrix, Mmatrix;
+    
+    varying vec3 vColor;
+    varying vec3 vNormal;
+    varying vec3 vView;
 
-        void main(void) {
-            gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.0);
-            
-            vNormal = normalize(mat3(Mmatrix) * normal); 
-            vView = vec3(Vmatrix * Mmatrix * vec4(position, 1.));
-            vColor = color;
-        }`;
+    void main(void) {
+      gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.0);
+      vNormal = normalize(mat3(Mmatrix) * normal); 
+      vView = vec3(Vmatrix * Mmatrix * vec4(position, 1.));
+      vColor = color;
+    }`;
 
   const shader_fragment_source = `
-        precision mediump float;
-        
-        varying vec3 vColor;
-        varying vec3 vNormal;
-        varying vec3 vView;
+    precision mediump float;
+    
+    varying vec3 vColor;
+    varying vec3 vNormal;
+    varying vec3 vView;
 
-        uniform vec3 lightDirection;
-        uniform vec3 lightColor;
-        uniform vec3 ambientColor;
+    uniform vec3 lightDirection;
+    uniform vec3 lightColor;
+    uniform vec3 ambientColor;
 
-        void main(void) {
-            vec3 N = normalize(vNormal);
-            vec3 L = normalize(lightDirection);
-            vec3 V = normalize(-vView);
-            vec3 R = reflect(-L, N);
+    void main(void) {
+      vec3 N = normalize(vNormal);
+      vec3 L = normalize(lightDirection);
+      vec3 V = normalize(-vView);
+      vec3 R = reflect(-L, N);
 
-            float diffuse = max(dot(N, L), 0.0);
-            float specular = pow(max(dot(V, R), 0.0), 100.0);
-            vec3 finalColor = ambientColor + (diffuse * lightColor) + (specular * lightColor);
+      float diffuse = max(dot(N, L), 0.0);
+      float specular = pow(max(dot(V, R), 0.0), 100.0);
+      vec3 finalColor = ambientColor + (diffuse * lightColor) + (specular * lightColor);
 
-            gl_FragColor = vec4(vColor * finalColor, 1.0);
-        }`;
+      gl_FragColor = vec4(vColor * finalColor, 1.0);
+    }`;
 
   // --- SHADER COMPILATION ---
   const compile_shader = (source, type) => {
@@ -107,107 +110,72 @@ function main() {
   GL.enableVertexAttribArray(_normal);
   GL.useProgram(SHADER_PROGRAM);
 
-  // --- OBJECT INSTANTIATION ---
+  const attribs = {
+    _position: _position,
+    _color: _color,
+    _normal: _normal,
+  };
+
+  /*========================= BUILD SCENE GRAPH (LIKE GOLBAT!) ========================= */
+
+  // Create ROOT node for Zubat model
+  const zubatModel = new Node();
+
+  // Create axes (separate from model)
   const axes = new Axes(GL, _position, _color, _normal);
-  const zubatLowerBody = new ZubatLowerBody(
-    GL,
-    _position,
-    _color,
-    _normal,
-    2.5,
-    1000,
-    1000
-  );
-  const zubatUpperBody = new ZubatUpperBody(
-    GL,
-    _position,
-    _color,
-    _normal,
-    2.5,
-    1000,
-    1000
-  );
 
-  // tooth
-  const segments = 160;
-  const rings = 1;
-  const bluntness = 0.2;
-  const tooth_UL = new ZubatTooth(
-    GL,
-    _position,
-    _color,
-    _normal,
-    segments,
-    rings,
-    bluntness
-  ); // Upper Left
-  const tooth_UR = new ZubatTooth(
-    GL,
-    _position,
-    _color,
-    _normal,
-    segments,
-    rings,
-    bluntness
-  ); // Upper Right
-  const tooth_LL = new ZubatTooth(
-    GL,
-    _position,
-    _color,
-    _normal,
-    segments,
-    rings,
-    bluntness
-  ); // Lower Left
-  const tooth_LR = new ZubatTooth(
-    GL,
-    _position,
-    _color,
-    _normal,
-    segments,
-    rings,
-    bluntness
-  ); // Lower Right
+  // --- BODY (Upper & Lower) ---
+  // Upper body automatically includes teeth as children!
+  const zubatUpperBody = new ZubatUpperBody(GL, attribs, {
+    attachTeeth: true, // Auto-attach teeth
+  });
 
-  // Ears
-  const earSegments = 20;
-  const earRings = 10;
-  const earBluntness = 0.3; // Ketumpulan ujung telinga
-  const ear_L = new ZubatEar(
-    GL,
-    _position,
-    _color,
-    _normal,
-    earSegments,
-    earRings,
-    earBluntness
-  ); // Telinga Kiri
-  const ear_R = new ZubatEar(
-    GL,
-    _position,
-    _color,
-    _normal,
-    earSegments,
-    earRings,
-    earBluntness
-  ); // Telinga Kanan
+  const zubatLowerBody = new ZubatLowerBody(GL, attribs);
 
-  // Wings
-  const wing_L = new ZubatWing(GL, _position, _color, _normal); // Sayap Kiri
-  const wing_R = new ZubatWing(GL, _position, _color, _normal); // Sayap Kanan
+  // Add bodies to root
+  zubatModel.add(zubatUpperBody);
+  zubatModel.add(zubatLowerBody);
 
-  // --- MATRICES AND CAMERA ---
+  // --- EARS ---
+  const leftEar = new ZubatEar(GL, attribs, 20, 10, 0.3);
+  LIBS.translateY(leftEar.localMatrix, 4.3);
+  LIBS.translateX(leftEar.localMatrix, -1.5);
+  LIBS.translateZ(leftEar.localMatrix, 1.1);
+  LIBS.rotateZ(leftEar.localMatrix, 3.5);
+  LIBS.rotateY(leftEar.localMatrix, -0.2);
+
+  const rightEar = new ZubatEar(GL, attribs, 20, 10, 0.3);
+  LIBS.translateY(rightEar.localMatrix, 4.3);
+  LIBS.translateX(rightEar.localMatrix, 1.5);
+  LIBS.translateZ(rightEar.localMatrix, 1.1);
+  LIBS.rotateZ(rightEar.localMatrix, -3.5);
+  LIBS.rotateY(rightEar.localMatrix, 0.2);
+
+  // Add ears to root
+  zubatModel.add(leftEar);
+  zubatModel.add(rightEar);
+
+  // --- WINGS (with animation support) ---
+  const leftWing = new ZubatWing(GL, attribs);
+  const rightWing = new ZubatWing(GL, attribs);
+
+  // Add wings to root
+  zubatModel.add(leftWing);
+  zubatModel.add(rightWing);
+
+  /*========================= MATRICES AND INTERACTION ========================= */
   const PROJMATRIX = LIBS.get_projection(
     40,
     CANVAS.width / CANVAS.height,
     1,
     100
   );
+  const MOVEMATRIX = LIBS.get_I4();
   const VIEWMATRIX = LIBS.get_I4();
 
-  // --- INTERACTION VARIABLES ---
   let THETA = 0,
-    PHI = 0;
+    PHI = 0,
+    time = 0;
   let drag = false,
     x_prev = 0,
     y_prev = 0,
@@ -222,12 +190,15 @@ function main() {
     x_prev = e.pageX;
     y_prev = e.pageY;
   });
+
   CANVAS.addEventListener("mouseup", () => {
     drag = false;
   });
+
   CANVAS.addEventListener("mouseout", () => {
     drag = false;
   });
+
   CANVAS.addEventListener("mousemove", (e) => {
     if (!drag) return;
     dX = ((e.pageX - x_prev) * 2 * Math.PI) / CANVAS.width;
@@ -237,6 +208,7 @@ function main() {
     x_prev = e.pageX;
     y_prev = e.pageY;
   });
+
   CANVAS.addEventListener("wheel", (e) => {
     e.preventDefault();
     const zoomSpeed = 0.01;
@@ -250,8 +222,10 @@ function main() {
   GL.clearColor(0.1, 0.1, 0.1, 1.0);
   GL.clearDepth(1.0);
 
-  // --- ANIMATION LOOP ---
-  const animate = (time) => {
+  /*========================= ANIMATION LOOP ========================= */
+  const animate = () => {
+    time += 0.05;
+
     if (!drag) {
       dX *= FRICTION;
       dY *= FRICTION;
@@ -259,14 +233,11 @@ function main() {
       PHI += dY;
     }
 
-    const modelMatrix = LIBS.get_I4();
-
     LIBS.set_I4(VIEWMATRIX);
     LIBS.translateZ(VIEWMATRIX, cameraZ);
     LIBS.rotateY(VIEWMATRIX, THETA);
     LIBS.rotateX(VIEWMATRIX, PHI);
 
-    // ARAH PANDANG KAMERA DARI VIEW MATRIX
     const cameraDirection = [-VIEWMATRIX[2], -VIEWMATRIX[6], -VIEWMATRIX[10]];
 
     GL.viewport(0, 0, CANVAS.width, CANVAS.height);
@@ -274,101 +245,46 @@ function main() {
 
     GL.uniformMatrix4fv(_Pmatrix, false, PROJMATRIX);
     GL.uniformMatrix4fv(_Vmatrix, false, VIEWMATRIX);
-
-    // ARAH KAMERA SEBAGAI ARAH CAHAYA
     GL.uniform3fv(_lightDirection, cameraDirection);
-
     GL.uniform3fv(_lightColor, [1.0, 1.0, 1.0]);
     GL.uniform3fv(_ambientColor, [0.5, 0.5, 0.5]);
 
-    // axes.render(GL, _Mmatrix, modelMatrix);
-    zubatLowerBody.render(GL, _Mmatrix, modelMatrix);
-    zubatUpperBody.render(GL, _Mmatrix, modelMatrix);
+    /*================= WING ANIMATION (LIKE GOLBAT!) =================*/
+    const flapSpeed = 1.0;
+    const flapAmplitude = 0.15;
+    const flapAngle = Math.sin(time * flapSpeed) * flapAmplitude;
 
-    // --- RENDER & POSISIKAN TELINGA ---
+    // Left Wing Animation
+    LIBS.set_I4(leftWing.localMatrix);
+    LIBS.translateY(leftWing.localMatrix, 0.0);
+    LIBS.translateX(leftWing.localMatrix, 0.5);
+    LIBS.rotateZ(leftWing.localMatrix, 0.4 + flapAngle);
+    LIBS.rotateY(leftWing.localMatrix, 0.2);
 
-    // TELINGA KIRI
-    let M_TELINGA_L = LIBS.get_I4();
-    LIBS.translateY(M_TELINGA_L, 4.3);
-    LIBS.translateX(M_TELINGA_L, -1.5);
-    LIBS.translateZ(M_TELINGA_L, 1.1); // improvement
-    LIBS.rotateZ(M_TELINGA_L, 3.5); // Kemikiran
-    LIBS.rotateY(M_TELINGA_L, -0.2); // Perputaran
-    ear_L.render(GL, _Mmatrix, LIBS.multiply(modelMatrix, M_TELINGA_L));
+    // Right Wing Animation (mirrored)
+    LIBS.set_I4(rightWing.localMatrix);
+    LIBS.scale(rightWing.localMatrix, -1, 1, 1);
+    LIBS.translateY(rightWing.localMatrix, 0.0);
+    LIBS.translateX(rightWing.localMatrix, -0.5);
+    LIBS.rotateZ(rightWing.localMatrix, -0.4 - flapAngle);
+    LIBS.rotateY(rightWing.localMatrix, -0.2);
 
-    // TELINGA KANAN
-    let M_TELINGA_R = LIBS.get_I4();
-    LIBS.translateY(M_TELINGA_R, 4.3);
-    LIBS.translateX(M_TELINGA_R, 1.5);
-    LIBS.translateZ(M_TELINGA_R, 1.1); // improvement lagi
-    LIBS.rotateZ(M_TELINGA_R, -3.5); // Kemikiran
-    LIBS.rotateY(M_TELINGA_R, 0.2); // Perputaran
-    ear_R.render(GL, _Mmatrix, LIBS.multiply(modelMatrix, M_TELINGA_R));
+    /*================= DRAW SCENE GRAPH =================*/
+    LIBS.set_I4(MOVEMATRIX);
+    LIBS.rotateY(MOVEMATRIX, THETA);
+    LIBS.rotateX(MOVEMATRIX, PHI);
 
-    // --- RENDER & POSITION TEETH ---
-    // Lower Left Tooth
-    let M_TARING_UL = LIBS.get_I4();
-    LIBS.translateY(M_TARING_UL, 1.25);
-    LIBS.translateX(M_TARING_UL, -0.5);
-    LIBS.translateZ(M_TARING_UL, 1.7);
-    LIBS.rotateZ(M_TARING_UL, 0.2);
-    let M_FINAL_UL = LIBS.multiply(modelMatrix, M_TARING_UL);
-    tooth_UL.render(GL, _Mmatrix, M_FINAL_UL);
+    // Draw axes (optional, comment out if not needed)
+    // axes.render(GL, _Mmatrix, MOVEMATRIX);
 
-    // Lower Right Tooth
-    let M_TARING_UR = LIBS.get_I4();
-    LIBS.translateY(M_TARING_UR, 1.25);
-    LIBS.translateX(M_TARING_UR, 0.5);
-    LIBS.translateZ(M_TARING_UR, 1.7);
-    LIBS.rotateZ(M_TARING_UR, -0.2);
-    let M_FINAL_UR = LIBS.multiply(modelMatrix, M_TARING_UR);
-    tooth_UR.render(GL, _Mmatrix, M_FINAL_UR);
-
-    // Upper Left Tooth
-    let M_TARING_LL = LIBS.get_I4();
-    LIBS.translateY(M_TARING_LL, 2.73);
-    LIBS.translateX(M_TARING_LL, -0.3);
-    LIBS.translateZ(M_TARING_LL, 1.8);
-    LIBS.rotateX(M_TARING_LL, Math.PI);
-    let M_FINAL_LL = LIBS.multiply(modelMatrix, M_TARING_LL);
-    tooth_LL.render(GL, _Mmatrix, M_FINAL_LL);
-
-    // Upper Right Tooth
-    let M_TARING_LR = LIBS.get_I4();
-    LIBS.translateY(M_TARING_LR, 2.73);
-    LIBS.translateX(M_TARING_LR, 0.3);
-    LIBS.translateZ(M_TARING_LR, 1.8);
-    LIBS.rotateX(M_TARING_LR, Math.PI);
-    let M_FINAL_LR = LIBS.multiply(modelMatrix, M_TARING_LR);
-    tooth_LR.render(GL, _Mmatrix, M_FINAL_LR);
-
-    // --- RENDER & POSISIKAN SAYAP ---
-
-    // Hitung sudut kepakan sayap berdasarkan waktu
-    const flapAngle = Math.sin(time / 100) * 0.1; // Angka bisa disesuaikan
-
-    // SAYAP KIRI
-    let M_SAYAP_L = LIBS.get_I4();
-    LIBS.translateY(M_SAYAP_L, 0.0);
-    LIBS.translateX(M_SAYAP_L, 0.5);
-    LIBS.rotateZ(M_SAYAP_L, 0.4 + flapAngle); // Terapkan animasi rotasi
-    LIBS.rotateY(M_SAYAP_L, 0.2);
-    wing_L.render(GL, _Mmatrix, LIBS.multiply(modelMatrix, M_SAYAP_L));
-
-    // SAYAP KANAN
-    let M_SAYAP_R = LIBS.get_I4();
-    LIBS.scale(M_SAYAP_R, -1, 1, 1);
-    LIBS.translateY(M_SAYAP_R, 0.0);
-    LIBS.translateX(M_SAYAP_R, -0.5);
-    LIBS.rotateZ(M_SAYAP_R, -0.4 - flapAngle); // Terapkan animasi rotasi yang berlawanan
-    LIBS.rotateY(M_SAYAP_R, -0.2);
-    wing_R.render(GL, _Mmatrix, LIBS.multiply(modelMatrix, M_SAYAP_R));
+    // Draw entire Zubat model with ONE call (scene graph magic!)
+    zubatModel.draw(MOVEMATRIX, _Mmatrix);
 
     GL.flush();
     window.requestAnimationFrame(animate);
   };
 
-  animate(0);
+  animate();
 }
 
 main();
