@@ -19,7 +19,7 @@ export class GolbatWing extends Node {
     // --- Warna ---
     const OUTER_COLOR = [60 / 255, 60 / 255, 124 / 255]; // Biru
     const INNER_COLOR = [170 / 255, 120 / 255, 200 / 255]; // Ungu
-    const BONE_COLOR = [40 / 255, 40 / 255, 80 / 255]; // Tulang (lebih gelap)
+    const BONE_COLOR = [0.35, 0.55, 0.95]; // Tulang (lebih gelap)
 
     // --- Detail & Bentuk ---
     const TOTAL_POINTS = 60; // Jumlah total titik di sepanjang tepi

@@ -107,7 +107,7 @@ export class GolbatEar extends Node {
   constructor(GL, attribs) {
     super(); // Panggil konstruktor Node
 
-    var earColorOutside = [60 / 255, 60 / 255, 124 / 255]; // Biru/Ungu
+    var earColorOutside = [0.35, 0.55, 0.95]; // Biru/Ungu
     var earColorInside = [255 / 255, 184 / 255, 203 / 255]; // Pink
 
     var earShape = generateEllipticParaboloid(
