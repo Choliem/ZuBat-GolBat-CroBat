@@ -1,26 +1,8 @@
-/*
- * ===================================================================
- * libs.js - Pustaka Helper untuk Matematika Matriks 3D
- * ===================================================================
- *
- * Menyediakan fungsi-fungsi dasar untuk manipulasi matriks 4x4
- * yang diperlukan oleh WebGL.
- */
-var LIBS = {
-  /**
-   * Konversi Derajat ke Radian
-   */
+export const LIBS = {
   degToRad: function (angle) {
     return (angle * Math.PI) / 180;
   },
 
-  /**
-   * Membuat Matriks Proyeksi Perspektif
-   * @param {float} angle - Field of View (FOV) dalam derajat
-   * @param {float} a - Aspect Ratio (width / height)
-   * @param {float} zMin - Jarak Near Plane
-   * @param {float} zMax - Jarak Far Plane
-   */
   get_projection: function (angle, a, zMin, zMax) {
     var tan = Math.tan(LIBS.degToRad(0.5 * angle)),
       A = -(zMax + zMin) / (zMax - zMin),
@@ -46,16 +28,10 @@ var LIBS = {
     ];
   },
 
-  /**
-   * Membuat Matriks Identitas 4x4 baru
-   */
   get_I4: function () {
     return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
   },
 
-  /**
-   * Mengatur ulang matriks yang ada menjadi Matriks Identitas
-   */
   set_I4: function (m) {
     (m[0] = 1),
       (m[1] = 0),
@@ -75,9 +51,6 @@ var LIBS = {
       (m[15] = 1);
   },
 
-  /**
-   * Rotasi matriks 'm' mengelilingi sumbu X
-   */
   rotateX: function (m, angle) {
     var c = Math.cos(angle);
     var s = Math.sin(angle);
@@ -92,9 +65,6 @@ var LIBS = {
     m[10] = m[10] * c + mv9 * s;
   },
 
-  /**
-   * Rotasi matriks 'm' mengelilingi sumbu Y
-   */
   rotateY: function (m, angle) {
     var c = Math.cos(angle);
     var s = Math.sin(angle);
@@ -109,9 +79,6 @@ var LIBS = {
     m[10] = c * m[10] - s * mv8;
   },
 
-  /**
-   * Rotasi matriks 'm' mengelilingi sumbu Z
-   */
   rotateZ: function (m, angle) {
     var c = Math.cos(angle);
     var s = Math.sin(angle);
@@ -126,37 +93,26 @@ var LIBS = {
     m[9] = c * m[9] + s * mv8;
   },
 
-  /**
-   * Translasi matriks 'm' sepanjang sumbu Z
-   */
   translateZ: function (m, t) {
     m[14] += t;
   },
-  /**
-   * Translasi matriks 'm' sepanjang sumbu X
-   */
   translateX: function (m, t) {
     m[12] += t;
   },
-  /**
-   * Translasi matriks 'm' sepanjang sumbu Y
-   */
   translateY: function (m, t) {
     m[13] += t;
   },
 
-  /**
-   * Skala matriks 'm'
-   */
   scale: function (m, x, y, z) {
     m[0] *= x;
     m[5] *= y;
     m[10] *= z;
   },
 
-  /**
-   * Mengalikan dua matriks 4x4 (m1 * m2)
-   */
+  set_position: function (m, x, y, z) {
+    (m[12] = x), (m[13] = y), (m[14] = z);
+  },
+
   multiply: function (m1, m2) {
     var rm = this.get_I4();
     var N = 4;

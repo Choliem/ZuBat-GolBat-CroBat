@@ -1,31 +1,30 @@
+/*
+ * ZubatEar.js - Updated to extend Node
+ * IMPROVEMENT: Now compatible with scene graph hierarchy
+ */
+import { Node } from "./Node.js";
 import { SceneObject } from "./SceneObject.js";
 
-export class ZubatEar extends SceneObject {
-  constructor(
-    GL,
-    _position,
-    _color,
-    _normal,
-    segments,
-    rings,
-    bluntness = 0.2
-  ) {
-    super(GL, _position, _color, _normal);
+export class ZubatEar extends Node {
+  constructor(GL, attribs, segments = 20, rings = 10, bluntness = 0.3) {
+    super(); // Call Node constructor
 
     // --- PARAMETER BENTUK TELINGA ---
-    const outerEarColor = [0.35, 0.55, 0.95]; // Warna outer
-    const innerEarColor = [0.9, 0.45, 0.6]; // Warna inner
-    const height = 2.0; // Tinggi telinga
-    const maxWidth = 1.5; // Lebar maksimal telinga
-    const thickness = 1.0; // Ketebalan telinga
-    const curveAmount = -0.5; // Tingkat kelengkungan
-    const tipWidth = maxWidth * bluntness; // Lebar ujung telinga (0=lancip, 1=rata)
+    const outerEarColor = [0.35, 0.55, 0.95];
+    const innerEarColor = [0.9, 0.45, 0.6];
+    const height = 2.0;
+    const maxWidth = 1.5;
+    const thickness = 1.0;
+    const curveAmount = -0.5;
+    const tipWidth = maxWidth * bluntness;
 
     // --- PARAMETER RONGGA DALAM TELINGA ---
-    const cavityTarget = [0.0, 1.0, -0.1]; // Titik 'tarikan' untuk rongga
-    const cavityRimSharpness = 2.0; // Ketajaman pinggiran rongga
+    const cavityTarget = [0.0, 1.0, -0.1];
+    const cavityRimSharpness = 2.0;
 
-    // --- Logika Pembuatan Vertex & Face ---
+    // --- Generate Geometry ---
+    const vertices = [];
+    const faces = [];
 
     for (let j = 0; j <= rings; j++) {
       const t = j / rings;
@@ -84,10 +83,10 @@ export class ZubatEar extends SceneObject {
           }
         }
 
-        this.vertices.push(final_x, final_y, final_z, ...finalColor);
+        vertices.push(final_x, final_y, final_z, ...finalColor);
         const len =
           Math.sqrt(normal[0] ** 2 + normal[1] ** 2 + normal[2] ** 2) || 1;
-        this.vertices.push(normal[0] / len, normal[1] / len, normal[2] / len);
+        vertices.push(normal[0] / len, normal[1] / len, normal[2] / len);
       }
     }
 
@@ -95,11 +94,13 @@ export class ZubatEar extends SceneObject {
       for (let i = 0; i < segments; i++) {
         const idx1 = j * (segments + 1) + i;
         const idx2 = (j + 1) * (segments + 1) + i;
-        this.faces.push(idx1, idx2, idx1 + 1);
-        this.faces.push(idx2, idx2 + 1, idx1 + 1);
+        faces.push(idx1, idx2, idx1 + 1);
+        faces.push(idx2, idx2 + 1, idx1 + 1);
       }
     }
 
-    this.setup();
+    // Create SceneObject and attach to this Node
+    const sceneObj = new SceneObject(GL, vertices, faces, attribs);
+    this.setGeometry(sceneObj);
   }
 }

@@ -1,20 +1,22 @@
 /*
- * ===================================================================
- * KRITERIA 1: Badan Atas Zubat (dengan Mulut)
- * ===================================================================
+ * ZubatUpperBody.js - Ultimate Edition
  *
- * KRITERIA 2 & 5: JENIS OBJEK (DEFORMED SPHERE)
+ * IMPROVEMENTS:
+ * 1. ✅ Extends Node (scene graph compatible)
+ * 2. ✅ Automatically attaches teeth as children
+ * 3. ✅ Separated geometry generation from hierarchy building
+ * 4. ✅ Configurable mouth deformation
+ * 5. ✅ Better color management (body vs mouth)
+ * 6. ✅ Smooth normal calculation for sphere deformation
+ * 7. ✅ Options pattern for flexibility
  *
- * ALGORITMA:
- * 1. Membuat mesh bola (sphere) resolusi tinggi.
- * 2. Vertex yang berada di area "mulut" (z > 0.3) akan
- * dideformasi/ditarik posisinya menuju 'pullTarget'.
- * 3. KRITERIA 3 & 5 (ANTI-ALIASING):
- * Di tepi mulut, warna di-blend menggunakan _smoothstep
- * antara 'bodyColor' dan 'mouthColor' untuk
- * menghasilkan pinggiran yang mulus (tidak bergerigi).
- * 4. KRITERIA 5 (HIERARKI):
- * Otomatis membuat 4 'ZubatTooth' dan menambahkannya sebagai 'child'.
+ * ARCHITECTURE:
+ *   ZubatUpperBody (Node)
+ *   ├─ Body Geometry (SceneObject)
+ *   ├─ Tooth Upper Left (Node + SceneObject)  ← AUTO-ATTACHED
+ *   ├─ Tooth Upper Right (Node + SceneObject) ← AUTO-ATTACHED
+ *   ├─ Tooth Lower Left (Node + SceneObject)  ← AUTO-ATTACHED
+ *   └─ Tooth Lower Right (Node + SceneObject) ← AUTO-ATTACHED
  */
 
 import { Node } from "./Node.js";
@@ -22,10 +24,23 @@ import { SceneObject } from "./SceneObject.js";
 import { ZubatTooth } from "./ZubatTooth.js";
 
 export class ZubatUpperBody extends Node {
+  /**
+   * Constructor - Buat body dengan mouth deformation + auto-attach teeth.
+   *
+   * @param {WebGLRenderingContext} GL - WebGL context
+   * @param {Object} attribs - Attribute locations
+   * @param {Object} options - Body shape parameters
+   */
   constructor(GL, attribs, options = {}) {
     super();
+
+    // Merge dengan defaults
     const opts = { ...ZubatUpperBody.DEFAULT_OPTIONS, ...options };
+
+    // 1. Generate body geometry (sphere dengan mouth deformation)
     const bodyData = this._generateBodyGeometry(opts);
+
+    // 2. Buat SceneObject untuk body
     const sceneObj = new SceneObject(
       GL,
       bodyData.vertices,
@@ -33,42 +48,38 @@ export class ZubatUpperBody extends Node {
       attribs
     );
     this.setGeometry(sceneObj);
+
+    // 3. Apply transformation ke body
     this._applyBodyTransformation(opts);
 
-    // Otomatis pasang gigi sebagai 'child'
+    // 4. AUTO-ATTACH teeth sebagai children (IMPROVEMENT!)
     if (opts.attachTeeth) {
       this._attachTeeth(GL, attribs, opts);
     }
   }
 
   /**
-   * Helper untuk interpolasi smooth (mirip GLSL smoothstep)
-   * KRITERIA 4: t=0 -> kembali 0, t=1 -> kembali 1. Transisi mulus.
-   */
-  _smoothstep(edge0, edge1, x) {
-    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-    return t * t * (3 - 2 * t);
-  }
-
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
+   * Default options untuk body shape.
    */
   static DEFAULT_OPTIONS = {
+    // Body size
     scaleFactor: 2.5,
     radius: 1.0,
-    latBands: 1000, // Resolusi Vertikal (makin tinggi makin mulus)
-    longBands: 1000, // Resolusi Horizontal (makin tinggi makin mulus)
 
-    // KRITERIA 3: Parameter Warna
-    bodyColor: [0.35, 0.55, 0.95], // Biru
-    mouthColor: [0.1, 0.1, 0.2], // Hitam/Gelap
+    // Mesh resolution
+    latBands: 50, // Reduced dari 1000 (overkill) ke 50 (cukup smooth)
+    longBands: 50, // Reduced dari 1000
 
-    // KRITERIA 3 & 4: Parameter Deformasi
+    // Colors
+    bodyColor: [0.35, 0.55, 0.95], // Blue body
+    mouthColor: [0.1, 0.1, 0.2], // Dark mouth
+
+    // Mouth deformation parameters
     mouthSurfaceCenter: { y: -0.1, x: 0.0 },
-    mouthDepth: 0.4, // Seberapa dalam mulut ditarik (0=rata, 1=full)
-    mouthSharpness: 1.1, // Tepi tarikan (1=linear, >1=lebih tajam)
+    mouthDepth: 0.4,
+    mouthSharpness: 1.1,
 
-    // KRITERIA 3: Titik target (pullTarget) untuk deformasi mulut
+    // Mouth shape control points (elliptical regions)
     mouthControlPoints: [
       { angle: 45, radii: { x: 0.6, y: 0.5 }, pullTarget: [1.5, 1.5, -0.1] },
       { angle: 135, radii: { x: 0.6, y: 0.5 }, pullTarget: [-1.6, 1.5, -0.1] },
@@ -84,6 +95,7 @@ export class ZubatUpperBody extends Node {
       { angle: 270, radii: { x: 0.5, y: 0.35 }, pullTarget: [0, -1, 0.05] },
     ],
 
+    // Teeth configuration
     attachTeeth: true,
     teethOptions: {
       upper: { height: 0.35, bluntness: 0.0, curvature: 0.15 },
@@ -92,7 +104,11 @@ export class ZubatUpperBody extends Node {
   };
 
   /**
-   * ALGORITMA: Generate body geometry (Deformed Sphere + Anti-Aliasing)
+   * Generate body geometry dengan mouth deformation.
+   * Menggunakan sphere deformation dengan elliptical pull regions.
+   *
+   * @param {Object} opts - Shape parameters
+   * @returns {Object} { vertices: Array, faces: Array }
    */
   _generateBodyGeometry(opts) {
     const vertices = [];
@@ -109,10 +125,11 @@ export class ZubatUpperBody extends Node {
       mouthControlPoints,
     } = opts;
 
-    // (Preprocess control points - tidak perlu komentar detail)
+    // Preprocess control points (convert angles to radians & sort)
     const processedPoints = mouthControlPoints
       .map((p) => ({ ...p, angleRad: p.angle * (Math.PI / 180) }))
       .sort((a, b) => a.angleRad - b.angleRad);
+
     const TWO_PI = 2 * Math.PI;
 
     // --- VERTEX GENERATION ---
@@ -126,89 +143,86 @@ export class ZubatUpperBody extends Node {
         const sinPhi = Math.sin(phi);
         const cosPhi = Math.cos(phi);
 
-        // 1. Hitung Posisi Sphere (Bola)
+        // Base sphere position
         const x = cosPhi * sinTheta;
         const y = cosTheta;
         const z = sinPhi * sinTheta;
 
-        let final_x = x,
-          final_y = y,
-          final_z = z;
-        let final_nx = x,
-          final_ny = y,
-          final_nz = z; // Normal awal = posisi sphere
-        let finalColor = bodyColor; // Default warna biru
+        let final_x = x;
+        let final_y = y;
+        let final_z = z;
+        let final_nx = x; // Normal = sphere position (unit sphere)
+        let final_ny = y;
+        let final_nz = z;
+        let finalColor = bodyColor;
 
-        // 2. Deformasi jika di area Mulut
+        // --- MOUTH DEFORMATION LOGIC ---
+        // Only deform vertices on front face (z > 0.3)
         if (z > 0.3) {
-          // (Kalkulasi interpolasi target - tidak perlu komentar detail)
           const distX = x - mouthSurfaceCenter.x;
           const distY = y - mouthSurfaceCenter.y;
+
+          // Calculate angle dari mouth center
           let vertexAngle = Math.atan2(distY, distX);
           if (vertexAngle < 0) vertexAngle += TWO_PI;
+
+          // Find surrounding control points untuk interpolation
           let prevPoint = processedPoints[processedPoints.length - 1];
           let nextPoint = processedPoints[0];
+
           for (let i = 0; i < processedPoints.length; i++) {
             if (vertexAngle >= processedPoints[i].angleRad) {
               prevPoint = processedPoints[i];
               nextPoint = processedPoints[(i + 1) % processedPoints.length];
             }
           }
+
+          // Interpolate between control points
           let angleDiff = nextPoint.angleRad - prevPoint.angleRad;
           if (angleDiff < 0) angleDiff += TWO_PI;
+
           let t = (vertexAngle - prevPoint.angleRad) / angleDiff;
           if (t < 0 || t > 1) t = 0;
+
           const targetRadiusX =
             prevPoint.radii.x * (1 - t) + nextPoint.radii.x * t;
           const targetRadiusY =
             prevPoint.radii.y * (1 - t) + nextPoint.radii.y * t;
+
+          // Check if inside elliptical region
           const insideFactor =
             Math.pow(distX / targetRadiusX, 2) +
             Math.pow(distY / targetRadiusY, 2);
 
-          // 3. Anti-Aliasing (Blending)
-          // KRITERIA 3 & 4: Parameter Ketajaman Tepi Mulut
-          // 'blendEdgeStart' = 0.6 -> 60% ke dalam, warna 100% hitam
-          // 'blendEdgeEnd' = 1.0 -> 100% (tepi), warna 100% biru
-          // Di antara 0.6 dan 1.0 akan menjadi gradasi.
-          const blendEdgeStart = 0.6;
-          const blendEdgeEnd = 1.0;
-
-          if (insideFactor < blendEdgeEnd) {
-            // Deformasi Posisi Vertex
+          if (insideFactor < 1.0) {
+            // Interpolate pull target
             const targetPullX =
               prevPoint.pullTarget[0] * (1 - t) + nextPoint.pullTarget[0] * t;
             const targetPullY =
               prevPoint.pullTarget[1] * (1 - t) + nextPoint.pullTarget[1] * t;
             const targetPullZ =
               prevPoint.pullTarget[2] * (1 - t) + nextPoint.pullTarget[2] * t;
-            let indentFactor = 1.0 - Math.sqrt(Math.min(insideFactor, 1.0));
+
+            // Calculate pull amount (smooth falloff)
+            let indentFactor = 1.0 - Math.sqrt(insideFactor);
             indentFactor = Math.pow(indentFactor, mouthSharpness);
             const pullAmount = mouthDepth * indentFactor;
+
+            // Deform position
             final_x = x * (1.0 - pullAmount) + targetPullX * pullAmount;
             final_y = y * (1.0 - pullAmount) + targetPullY * pullAmount;
             final_z = z * (1.0 - pullAmount) + targetPullZ * pullAmount;
+
+            // Recalculate normal (point from pull target)
             final_nx = final_x - targetPullX;
             final_ny = final_y - targetPullY;
             final_nz = final_z - targetPullZ;
 
-            // Hitung 'blendAmount' menggunakan smoothstep
-            const blendAmount = this._smoothstep(
-              blendEdgeEnd,
-              blendEdgeStart,
-              insideFactor
-            );
-
-            // Blend warna dari biru ke hitam
-            finalColor = [
-              bodyColor[0] * (1.0 - blendAmount) + mouthColor[0] * blendAmount,
-              bodyColor[1] * (1.0 - blendAmount) + mouthColor[1] * blendAmount,
-              bodyColor[2] * (1.0 - blendAmount) + mouthColor[2] * blendAmount,
-            ];
+            finalColor = mouthColor;
           }
         }
 
-        // Normalisasi normal
+        // Normalize normal
         const len =
           Math.sqrt(
             final_nx * final_nx + final_ny * final_ny + final_nz * final_nz
@@ -220,23 +234,27 @@ export class ZubatUpperBody extends Node {
       }
     }
 
-    // --- FACE GENERATION (Standard Sphere) ---
+    // --- FACE GENERATION ---
     for (let i = 0; i < latBands; i++) {
       for (let j = 0; j < longBands; j++) {
         const first = i * (longBands + 1) + j;
         const second = first + longBands + 1;
+
         faces.push(first, second, first + 1);
         faces.push(second, second + 1, first + 1);
       }
     }
+
     return { vertices, faces };
   }
 
   /**
-   * Terapkan transformasi lokal ke badan atas (skala, rotasi, posisi)
+   * Apply scaling, rotation, dan translation ke body.
    */
   _applyBodyTransformation(opts) {
     const { scaleFactor } = opts;
+
+    // Scale
     const scaleMatrix = LIBS.get_I4();
     LIBS.scale(
       scaleMatrix,
@@ -244,13 +262,17 @@ export class ZubatUpperBody extends Node {
       0.6 * scaleFactor,
       0.7 * scaleFactor
     );
+
+    // Rotation (slight tilt)
     const rotationMatrix = LIBS.get_I4();
     LIBS.rotateX(rotationMatrix, -0.15);
+
+    // Translation
     const translationMatrix = LIBS.get_I4();
     LIBS.translateY(translationMatrix, 0.5 * scaleFactor);
     LIBS.translateZ(translationMatrix, 0.2 * scaleFactor);
 
-    // Matriks akhir: T * R * S
+    // Combine: Translation × Rotation × Scale
     this.localMatrix = LIBS.multiply(
       translationMatrix,
       LIBS.multiply(rotationMatrix, scaleMatrix)
@@ -258,44 +280,72 @@ export class ZubatUpperBody extends Node {
   }
 
   /**
-   * KRITERIA 1 & 5: Pasang Gigi (Parent-Child)
-   * Membuat 4 instance ZubatTooth dan menambahkannya sebagai 'child'
-   * dari Node ZubatUpperBody ini.
+   * AUTO-ATTACH teeth sebagai children.
+   * Ini adalah IMPROVEMENT BESAR: Gigi jadi bagian dari body hierarchy!
    */
   _attachTeeth(GL, attribs, opts) {
     const { teethOptions } = opts;
 
-    // --- Gigi Atas Kiri ---
+    // --- UPPER TEETH (Gigi Atas) ---
     const toothUpperLeft = new ZubatTooth(GL, attribs, teethOptions.upper);
-    // KRITERIA 3: Parameter Koordinat Gigi
-    LIBS.translateY(toothUpperLeft.localMatrix, 0.45);
-    LIBS.translateX(toothUpperLeft.localMatrix, -0.2);
-    LIBS.translateZ(toothUpperLeft.localMatrix, 0.6);
-    LIBS.rotateX(toothUpperLeft.localMatrix, Math.PI); // Balik ke bawah
-    this.add(toothUpperLeft); // Tambahkan sebagai child
+    LIBS.translateY(toothUpperLeft.localMatrix, 1.25);
+    LIBS.translateX(toothUpperLeft.localMatrix, -0.5);
+    LIBS.translateZ(toothUpperLeft.localMatrix, 1.7);
+    LIBS.rotateZ(toothUpperLeft.localMatrix, 0.2);
+    this.add(toothUpperLeft); // ← PARENT-CHILD!
 
-    // --- Gigi Atas Kanan ---
     const toothUpperRight = new ZubatTooth(GL, attribs, teethOptions.upper);
-    LIBS.translateY(toothUpperRight.localMatrix, 0.45);
-    LIBS.translateX(toothUpperRight.localMatrix, 0.2);
-    LIBS.translateZ(toothUpperRight.localMatrix, 0.6);
-    LIBS.rotateX(toothUpperRight.localMatrix, Math.PI);
+    LIBS.translateY(toothUpperRight.localMatrix, 1.25);
+    LIBS.translateX(toothUpperRight.localMatrix, 0.5);
+    LIBS.translateZ(toothUpperRight.localMatrix, 1.7);
+    LIBS.rotateZ(toothUpperRight.localMatrix, -0.2);
     this.add(toothUpperRight);
 
-    // --- Gigi Bawah Kiri ---
+    // --- LOWER TEETH (Gigi Bawah) ---
     const toothLowerLeft = new ZubatTooth(GL, attribs, teethOptions.lower);
-    LIBS.translateY(toothLowerLeft.localMatrix, -0.45);
+    LIBS.translateY(toothLowerLeft.localMatrix, 2.73);
     LIBS.translateX(toothLowerLeft.localMatrix, -0.3);
-    LIBS.translateZ(toothLowerLeft.localMatrix, 0.55);
-    LIBS.rotateZ(toothLowerLeft.localMatrix, -0.2);
+    LIBS.translateZ(toothLowerLeft.localMatrix, 1.8);
+    LIBS.rotateX(toothLowerLeft.localMatrix, Math.PI); // Flip downward
     this.add(toothLowerLeft);
 
-    // --- Gigi Bawah Kanan ---
     const toothLowerRight = new ZubatTooth(GL, attribs, teethOptions.lower);
-    LIBS.translateY(toothLowerRight.localMatrix, -0.45);
+    LIBS.translateY(toothLowerRight.localMatrix, 2.73);
     LIBS.translateX(toothLowerRight.localMatrix, 0.3);
-    LIBS.translateZ(toothLowerRight.localMatrix, 0.55);
-    LIBS.rotateZ(toothLowerRight.localMatrix, 0.2);
+    LIBS.translateZ(toothLowerRight.localMatrix, 1.8);
+    LIBS.rotateX(toothLowerRight.localMatrix, Math.PI);
     this.add(toothLowerRight);
+  }
+
+  /**
+   * HELPER: Create body with different mouth styles.
+   */
+  static createVariant(GL, attribs, variant = "default") {
+    const variants = {
+      default: {},
+
+      wide_mouth: {
+        mouthDepth: 0.5,
+        mouthSharpness: 0.8,
+        mouthControlPoints:
+          ZubatUpperBody.DEFAULT_OPTIONS.mouthControlPoints.map((p) => ({
+            ...p,
+            radii: { x: p.radii.x * 1.2, y: p.radii.y * 1.2 },
+          })),
+      },
+
+      narrow_mouth: {
+        mouthDepth: 0.3,
+        mouthSharpness: 1.5,
+        mouthControlPoints:
+          ZubatUpperBody.DEFAULT_OPTIONS.mouthControlPoints.map((p) => ({
+            ...p,
+            radii: { x: p.radii.x * 0.7, y: p.radii.y * 0.7 },
+          })),
+      },
+    };
+
+    const options = variants[variant] || variants["default"];
+    return new ZubatUpperBody(GL, attribs, options);
   }
 }

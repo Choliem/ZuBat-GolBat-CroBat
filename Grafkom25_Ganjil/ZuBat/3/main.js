@@ -1,7 +1,8 @@
 /*
  * main.js - Complete Scene Graph Implementation for Zubat
- * IMPROVEMENT: Following Golbat's parent-child architecture
+ * FINAL VERSION: Full parent-child hierarchy like Golbat
  */
+import { LIBS } from "./libs.js";
 import { Node } from "./models/Node.js";
 import { Axes } from "./models/Axes.js";
 import { ZubatLowerBody } from "./models/ZubatLowerBody.js";
@@ -110,41 +111,66 @@ function main() {
   GL.enableVertexAttribArray(_normal);
   GL.useProgram(SHADER_PROGRAM);
 
+  // Create attribs object (NEW PATTERN!)
   const attribs = {
     _position: _position,
     _color: _color,
     _normal: _normal,
   };
 
-  /*========================= BUILD SCENE GRAPH (LIKE GOLBAT!) ========================= */
+  /*========================= BUILD SCENE GRAPH ========================= */
 
-  // Create ROOT node for Zubat model
+  // Create ROOT node for entire Zubat model
   const zubatModel = new Node();
 
-  // Create axes (separate from model)
+  // Create axes (optional, for debugging)
   const axes = new Axes(GL, _position, _color, _normal);
 
   // --- BODY (Upper & Lower) ---
-  // Upper body automatically includes teeth as children!
+  // Upper body with auto-attached teeth!
   const zubatUpperBody = new ZubatUpperBody(GL, attribs, {
-    attachTeeth: true, // Auto-attach teeth
+    scaleFactor: 2.5,
+    latBands: 50, // Optimized from 1000!
+    longBands: 50,
+    attachTeeth: true, // AUTO-ATTACH teeth as children
+    teethOptions: {
+      segments: 160,
+      rings: 1,
+      bluntness: 0.2,
+    },
   });
 
-  const zubatLowerBody = new ZubatLowerBody(GL, attribs);
+  const zubatLowerBody = new ZubatLowerBody(GL, attribs, {
+    scaleFactor: 2.5,
+    latBands: 50, // Optimized from 1000!
+    longBands: 50,
+  });
 
   // Add bodies to root
   zubatModel.add(zubatUpperBody);
   zubatModel.add(zubatLowerBody);
 
   // --- EARS ---
-  const leftEar = new ZubatEar(GL, attribs, 20, 10, 0.3);
+  const leftEar = new ZubatEar(GL, attribs, {
+    segments: 20,
+    rings: 10,
+    bluntness: 0.3,
+  });
+
+  // Set LOCAL transformation for left ear (relative to zubatModel)
   LIBS.translateY(leftEar.localMatrix, 4.3);
   LIBS.translateX(leftEar.localMatrix, -1.5);
   LIBS.translateZ(leftEar.localMatrix, 1.1);
   LIBS.rotateZ(leftEar.localMatrix, 3.5);
   LIBS.rotateY(leftEar.localMatrix, -0.2);
 
-  const rightEar = new ZubatEar(GL, attribs, 20, 10, 0.3);
+  const rightEar = new ZubatEar(GL, attribs, {
+    segments: 20,
+    rings: 10,
+    bluntness: 0.3,
+  });
+
+  // Set LOCAL transformation for right ear
   LIBS.translateY(rightEar.localMatrix, 4.3);
   LIBS.translateX(rightEar.localMatrix, 1.5);
   LIBS.translateZ(rightEar.localMatrix, 1.1);
@@ -155,9 +181,21 @@ function main() {
   zubatModel.add(leftEar);
   zubatModel.add(rightEar);
 
-  // --- WINGS (with animation support) ---
+  // --- WINGS ---
   const leftWing = new ZubatWing(GL, attribs);
   const rightWing = new ZubatWing(GL, attribs);
+
+  // Initial wing positions (will be updated in animation loop)
+  LIBS.translateY(leftWing.localMatrix, 0.0);
+  LIBS.translateX(leftWing.localMatrix, 0.5);
+  LIBS.rotateZ(leftWing.localMatrix, 0.4);
+  LIBS.rotateY(leftWing.localMatrix, 0.2);
+
+  LIBS.scale(rightWing.localMatrix, -1, 1, 1); // Mirror for right wing
+  LIBS.translateY(rightWing.localMatrix, 0.0);
+  LIBS.translateX(rightWing.localMatrix, -0.5);
+  LIBS.rotateZ(rightWing.localMatrix, -0.4);
+  LIBS.rotateY(rightWing.localMatrix, -0.2);
 
   // Add wings to root
   zubatModel.add(leftWing);
@@ -249,35 +287,46 @@ function main() {
     GL.uniform3fv(_lightColor, [1.0, 1.0, 1.0]);
     GL.uniform3fv(_ambientColor, [0.5, 0.5, 0.5]);
 
-    /*================= WING ANIMATION (LIKE GOLBAT!) =================*/
+    /*================= WING FLAPPING ANIMATION =================*/
     const flapSpeed = 1.0;
     const flapAmplitude = 0.15;
     const flapAngle = Math.sin(time * flapSpeed) * flapAmplitude;
 
-    // Left Wing Animation
+    // Rebuild left wing local matrix with animation
     LIBS.set_I4(leftWing.localMatrix);
     LIBS.translateY(leftWing.localMatrix, 0.0);
     LIBS.translateX(leftWing.localMatrix, 0.5);
-    LIBS.rotateZ(leftWing.localMatrix, 0.4 + flapAngle);
+    LIBS.rotateZ(leftWing.localMatrix, 0.4 + flapAngle); // ANIMATED!
     LIBS.rotateY(leftWing.localMatrix, 0.2);
 
-    // Right Wing Animation (mirrored)
+    // Rebuild right wing local matrix with opposite animation
     LIBS.set_I4(rightWing.localMatrix);
     LIBS.scale(rightWing.localMatrix, -1, 1, 1);
     LIBS.translateY(rightWing.localMatrix, 0.0);
     LIBS.translateX(rightWing.localMatrix, -0.5);
-    LIBS.rotateZ(rightWing.localMatrix, -0.4 - flapAngle);
+    LIBS.rotateZ(rightWing.localMatrix, -0.4 - flapAngle); // OPPOSITE!
     LIBS.rotateY(rightWing.localMatrix, -0.2);
 
-    /*================= DRAW SCENE GRAPH =================*/
+    /*================= SET GLOBAL ROTATION =================*/
     LIBS.set_I4(MOVEMATRIX);
     LIBS.rotateY(MOVEMATRIX, THETA);
     LIBS.rotateX(MOVEMATRIX, PHI);
 
-    // Draw axes (optional, comment out if not needed)
-    // axes.render(GL, _Mmatrix, MOVEMATRIX);
+    /*================= DRAW ENTIRE SCENE GRAPH =================*/
+    // BUAT axes sebagai Node
+    const axes = new Axes(GL, attribs);
 
-    // Draw entire Zubat model with ONE call (scene graph magic!)
+    // TAMBAHKAN axes ke root model (opsional)
+    // zubatModel.add(axes);
+
+    // Draw entire Zubat model with ONE call!
+    // This recursively draws:
+    // - zubatUpperBody (+ 4 teeth as children)
+    // - zubatLowerBody
+    // - leftEar
+    // - rightEar
+    // - leftWing (animated)
+    // - rightWing (animated)
     zubatModel.draw(MOVEMATRIX, _Mmatrix);
 
     GL.flush();
