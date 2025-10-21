@@ -4,6 +4,7 @@
  * - Menggunakan arsitektur Scene Graph
  * - Menerapkan kamera orbit (Model diam, kamera berputar)
  * - [PERBAIKAN VISUAL] Ditambahkan Hi-DPI / devicePixelRatio handling
+ * - [PERBAIKAN ANIMASI] Ditambahkan animasi float naik-turun
  */
 import { Node } from "./models/Node.js";
 import { Axes } from "./models/Axes.js";
@@ -16,8 +17,7 @@ function main() {
   const CANVAS = document.getElementById("mycanvas");
 
   // --- PERBAIKAN 1: Hapus pengaturan width/height yang lama ---
-  // CANVAS.width = window.innerWidth; // <-- DIHAPUS
-  // CANVAS.height = window.innerHeight; // <-- DIHAPUS
+  // (Sudah ada di file 1)
 
   let GL;
 
@@ -67,13 +67,10 @@ function main() {
     attribute vec3 position;
     attribute vec3 color;
     attribute vec3 normal;
-
     uniform mat4 Pmatrix, Vmatrix, Mmatrix;
-    
     varying vec3 vColor;
     varying vec3 vNormal;
     varying vec3 vView;
-
     void main(void) {
       gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.0);
       vNormal = normalize(mat3(Mmatrix) * normal); 
@@ -83,25 +80,20 @@ function main() {
 
   const shader_fragment_source = `
     precision mediump float;
-    
     varying vec3 vColor;
     varying vec3 vNormal;
     varying vec3 vView;
-
     uniform vec3 lightDirection;
     uniform vec3 lightColor;
     uniform vec3 ambientColor;
-
     void main(void) {
       vec3 N = normalize(vNormal);
       vec3 L = normalize(lightDirection);
       vec3 V = normalize(-vView);
       vec3 R = reflect(-L, N);
-
       float diffuse = max(dot(N, L), 0.0);
       float specular = pow(max(dot(V, R), 0.0), 100.0);
       vec3 finalColor = ambientColor + (diffuse * lightColor) + (specular * lightColor);
-
       gl_FragColor = vec4(vColor * finalColor, 1.0);
     }`;
 
@@ -309,7 +301,7 @@ function main() {
 
   /*========================= ANIMATION LOOP ========================= */
   const animate = () => {
-    time += 0.05;
+    time += 0.05; //
 
     // --- Logika Interaksi (Kamera) ---
     if (!drag) {
@@ -330,12 +322,10 @@ function main() {
 
     // --- Clear Screen ---
     // --- PERBAIKAN 5: Hapus panggilan GL.viewport() dari loop ---
-    // Viewport sekarang di-handle oleh resize handler
-    // GL.viewport(0, 0, CANVAS.width, CANVAS.height); // <-- DIHAPUS
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
     // --- Set Uniforms ---
-    GL.uniformMatrix4fv(_Pmatrix, false, PROJMATRIX); // PROJMATRIX sekarang dinamis
+    GL.uniformMatrix4fv(_Pmatrix, false, PROJMATRIX);
     GL.uniformMatrix4fv(_Vmatrix, false, VIEWMATRIX);
     GL.uniform3fv(_lightDirection, cameraDirection);
     GL.uniform3fv(_lightColor, [1.0, 1.0, 1.0]);
@@ -363,10 +353,24 @@ function main() {
 
     /*================= SET GLOBAL ROTATION =================*/
     // Model tetap di (0,0,0) relatif terhadap world
-    LIBS.set_I4(MOVEMATRIX);
+    LIBS.set_I4(MOVEMATRIX); //
+
+    // --- PERBAIKAN: Tambahkan animasi float dari file Golbat ---
+    /*================= ANIMASI FLOAT NAIK-TURUN (BARU) =================*/
+    // Parameter untuk gerakan naik-turun
+    var floatSpeed = 1.5; // Seberapa cepat naik-turun
+    var floatAmplitude = 0.2; // Seberapa jauh naik-turunnya
+
+    // Hitung posisi Y baru menggunakan sinus (berdasarkan 'time')
+    var floatY = Math.sin(time * floatSpeed) * floatAmplitude;
+
+    // Terapkan translasi Y ke MATRIKS GLOBAL (MOVEMATRIX)
+    LIBS.translateY(MOVEMATRIX, floatY);
+    /*================= AKHIR ANIMASI FLOAT =================*/
+    // -----------------------------------------------------------
 
     /*================= DRAW ENTIRE SCENE GRAPH =================*/
-    zubatModel.draw(MOVEMATRIX, _Mmatrix);
+    zubatModel.draw(MOVEMATRIX, _Mmatrix); //
 
     GL.flush();
     window.requestAnimationFrame(animate);
