@@ -185,25 +185,10 @@ precision mediump float;
   // Golbat Wing
 
   // --- SAYAP KIRI ---
-  var leftWing = new GolbatWing(GL, attribs);
-  // Posisikan sayap kiri relatif terhadap badan
-  LIBS.translateX(leftWing.localMatrix, 0.5); // Geser ke bahu kiri
-  LIBS.translateY(leftWing.localMatrix, 0.1);
-  LIBS.rotateZ(leftWing.localMatrix, 0.3); // Miringkan sedikit
-  LIBS.rotateY(leftWing.localMatrix, -0.2);
-  // Tambahkan sayap kiri sebagai anak dari model utama
-  golbatModel.add(leftWing);
+  var leftWing = new GolbatWing(GL, attribs); // Tambahkan sayap kiri sebagai anak dari model utama
+  golbatModel.add(leftWing); // --- SAYAP KANAN (Dicerminkan) ---
 
-  // --- SAYAP KANAN (Dicerminkan) ---
-  var rightWing = new GolbatWing(GL, attribs);
-  // Gunakan trik skala negatif untuk mencerminkan geometri
-  LIBS.scale(rightWing.localMatrix, -1, 1, 1);
-  // Terapkan transformasi yang sama dengan kiri
-  LIBS.translateX(rightWing.localMatrix, 0.5);
-  LIBS.translateY(rightWing.localMatrix, 0.1);
-  LIBS.rotateZ(rightWing.localMatrix, -0.3);
-  LIBS.rotateY(rightWing.localMatrix, -0.2);
-  // Tambahkan sayap kanan
+  var rightWing = new GolbatWing(GL, attribs); // Tambahkan sayap kanan
   golbatModel.add(rightWing);
 
   /*================ MATRICES & INTERACTION =================*/
@@ -213,7 +198,8 @@ precision mediump float;
   var VIEWMATRIX = LIBS.get_I4();
   LIBS.translateZ(VIEWMATRIX, -12);
   var THETA = 0,
-    PHI = 0;
+    PHI = 0,
+    time = 0; // <-- TAMBAHKAN VARIABEL WAKTU
   var drag = false;
   var x_prev, y_prev;
   var mouseDown = function (e) {
@@ -248,8 +234,38 @@ precision mediump float;
   GL.clearDepth(1.0);
 
   var animate = function () {
+    time += 0.05;
     GL.viewport(0, 0, CANVAS.width, CANVAS.height);
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+
+    /*================= ANIMASI SAYAP =================*/
+    // Tentukan parameter kepakan
+    var flapSpeed = 4.0; // Seberapa cepat mengepak
+    var flapAmplitude = Math.PI / 4; // Seberapa jauh (45 derajat)
+
+    // Hitung sudut kepakan saat ini menggunakan sinus
+    var flapAngle = Math.sin(time * flapSpeed) * flapAmplitude;
+
+    // --- Atur ulang & Terapkan Transformasi Sayap Kiri ---
+    // Kita harus membangun ulang matriks LOKAL setiap frame
+    LIBS.set_I4(leftWing.localMatrix); // Reset
+    LIBS.translateX(leftWing.localMatrix, 0.5); // Geser ke bahu kiri
+    LIBS.translateY(leftWing.localMatrix, 0.1);
+    // Tambahkan sudut kepakan (flapAngle) ke rotasi Z dasar
+    LIBS.rotateZ(leftWing.localMatrix, 0.3); // <-- INI ANIMASINYA
+    LIBS.rotateY(leftWing.localMatrix, -0.2 + flapAngle);
+    LIBS.rotateX(leftWing.localMatrix, 0.7);
+
+    // --- Atur ulang & Terapkan Transformasi Sayap Kanan ---
+    LIBS.set_I4(rightWing.localMatrix); // Reset
+    LIBS.scale(rightWing.localMatrix, -1, 1, 1); // Cerminkan
+    LIBS.translateX(rightWing.localMatrix, 0.5); // Geser ke bahu kanan (koordinat cermin)
+    LIBS.translateY(rightWing.localMatrix, 0.1);
+    // Rotasi Z harus berlawanan ARAH (-flapAngle) karena pencerminan
+    LIBS.rotateZ(rightWing.localMatrix, -0.3); // <-- INI ANIMASINYA
+    LIBS.rotateY(rightWing.localMatrix, -0.2 - flapAngle);
+    LIBS.rotateX(rightWing.localMatrix, 0.7);
+    /*================= AKHIR ANIMASI =================*/
 
     // Set matriks global
     LIBS.set_I4(MOVEMATRIX);
