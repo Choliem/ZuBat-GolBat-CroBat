@@ -10,16 +10,13 @@
  * 6. ✅ Better tooth anatomy (fang-like with subtle curve)
  * 7. ✅ Comprehensive documentation
  *
- * USAGE:
- *   const tooth = new ZubatTooth(GL, attribs, {
- *     height: 0.35,
- *     baseRadius: 0.2,
- *     bluntness: 0.0,      // 0.0 = sharp, 1.0 = flat tip
- *     segments: 160,       // Angular resolution
- *     rings: 8,            // Height resolution
- *     widthRatio: 0.7,     // Width compression (< 1.0 = thinner)
- *     curvature: 0.1       // Subtle curve amount
- *   });
+ * ===================================================================
+ * PERMINTAAN PENGGUNA (22/10/2025):
+ * - Mengembalikan logika geometri ke bentuk 'before_ZubatTooth.js'
+ * - Menghapus 'curvature'
+ * - Menggunakan formula normal yang lama
+ * - Mereplikasi bug 'cap' (ujung) yang lama agar bentuknya identik
+ * ===================================================================
  */
 
 import { Node } from "./Node.js";
@@ -40,6 +37,7 @@ export class ZubatTooth extends Node {
     const opts = { ...ZubatTooth.DEFAULT_OPTIONS, ...options };
 
     // 1. Generate geometry data (pure function, no side effects)
+    //    (Fungsi ini sekarang dimodifikasi untuk meniru 'before_ZubatTooth.js')
     const toothData = this._generateToothGeometry(opts);
 
     // 2. Buat SceneObject dari data
@@ -61,17 +59,16 @@ export class ZubatTooth extends Node {
   static DEFAULT_OPTIONS = {
     height: 0.35, // Tinggi gigi
     baseRadius: 0.2, // Radius pangkal
-    bluntness: 0.0, // 0.0=lancip, 1.0=tumpul
+    bluntness: 0.05, // 0.0=lancip, 1.0=tumpul
     segments: 160, // Resolusi angular (smoothness)
-    rings: 8, // Resolusi vertikal
-    widthRatio: 0.7, // Kompresi lebar (< 1.0 = lebih tipis)
-    curvature: 0.1, // Kelengkungan subtle (0.0=lurus)
+    rings: 1, // Resolusi vertikal
+    widthRatio: 0.5, // Kompresi lebar (< 1.0 = lebih tipis)
+    curvature: 0.1, // (Parameter ini sekarang akan diabaikan oleh _generateToothGeometry)
     color: [0.98, 0.9, 0.85], // Warna tulang/gading
   };
 
   /**
-   * Generate tooth geometry dengan smooth normals.
-   * Menggunakan parabolic taper untuk bentuk yang lebih organik.
+   * Generate tooth geometry (DIMODIFIKASI AGAR SAMA DENGAN 'before_ZubatTooth.js')
    *
    * @param {Object} opts - Shape parameters
    * @returns {Object} { vertices: Array, faces: Array }
@@ -85,58 +82,57 @@ export class ZubatTooth extends Node {
       bluntness,
       segments,
       rings,
-      widthRatio,
-      curvature,
+      widthRatio, // Ini 0.7, sama dengan 'x *= 0.7' di file lama
+      // curvature, // --- PERUBAHAN: Parameter ini sengaja diabaikan ---
       color,
     } = opts;
 
-    // Calculate tip radius dari bluntness
+    // Calculate tip radius (Sama seperti)
     const tipRadius = baseRadius * bluntness;
 
     // --- VERTEX GENERATION (Body) ---
     // Loop dari base (y=0) ke tip (y=height)
     for (let j = 0; j <= rings; j++) {
-      const y = (j / rings) * height; // Y position dari bottom ke top
-      const t = j / rings; // Normalized position [0=base, 1=tip]
+      const y = (j / rings) * height; //
+      const t = j / rings; //
 
-      // Parabolic taper: radius grows faster near base
-      // Formula: r(t) = tipRadius + (baseRadius - tipRadius) × (1-t)²
+      // Parabolic taper (Sama seperti)
       const parabolicCurve = Math.pow(1 - t, 2);
       const currentRadius =
         tipRadius + (baseRadius - tipRadius) * parabolicCurve;
 
-      // Subtle curve: tooth slightly bends forward
-      const xOffset = curvature * Math.sin(t * Math.PI);
+      // --- PERUBAHAN: 'curvature' / 'xOffset' dihapus ---
+      // const xOffset = curvature * Math.sin(t * Math.PI); // <-- DIHAPUS
 
       // Generate ring of vertices
       for (let i = 0; i <= segments; i++) {
-        const angle = (i / segments) * 2 * Math.PI;
+        const angle = (i / segments) * 2 * Math.PI; //
 
-        // Position with width compression & curvature
-        let x = Math.cos(angle) * currentRadius * widthRatio;
-        const z = Math.sin(angle) * currentRadius;
-        x += xOffset; // Apply curve
+        // Position with width compression
+        let x = Math.cos(angle) * currentRadius * widthRatio; //
+        const z = Math.sin(angle) * currentRadius; //
+        // x += xOffset; // <-- DIHAPUS
 
         vertices.push(x, y, z); // Position
         vertices.push(...color); // Color
 
-        // Smooth normal calculation
-        // Normal points outward from tooth surface
-        const tangentY = (baseRadius - currentRadius) * 0.5; // Slope contribution
-        const normalX = Math.cos(angle) * widthRatio;
-        const normalY = tangentY;
-        const normalZ = Math.sin(angle);
+        // --- PERUBAHAN: Normal calculation dari 'before_ZubatTooth.js' ---
+        //
+        const normalX = x;
+        const normalY = 0.05 * (baseRadius - currentRadius);
+        const normalZ = z;
 
-        // Normalize
-        const len = Math.sqrt(
-          normalX * normalX + normalY * normalY + normalZ * normalZ
-        );
+        // Kita tetap normalisasi (praktik baik), tapi menggunakan VEKTOR dari file lama
+        const len =
+          Math.sqrt(
+            normalX * normalX + normalY * normalY + normalZ * normalZ
+          ) || 1;
         vertices.push(normalX / len, normalY / len, normalZ / len);
       }
     }
 
     // --- FACE GENERATION (Body) ---
-    // Connect rings dengan triangles
+    // (Logika ini sama persis dengan)
     for (let j = 0; j < rings; j++) {
       for (let i = 0; i < segments; i++) {
         const idx1 = j * (segments + 1) + i;
@@ -144,44 +140,44 @@ export class ZubatTooth extends Node {
         const idx3 = idx1 + 1;
         const idx4 = idx2 + 1;
 
-        // Two triangles per quad
         faces.push(idx1, idx2, idx3);
         faces.push(idx2, idx4, idx3);
       }
     }
 
-    // --- CAP: BASE (Bottom) ---
+    // --- PERUBAHAN: CAP: BASE (Bottom) ---
+    // (Mereplikasi bug dari)
     const baseCenterIndex = vertices.length / 9;
     vertices.push(0, 0, 0); // Position at base center
     vertices.push(...color); // Color
     vertices.push(0, -1, 0); // Normal pointing down
 
-    // Triangle fan dari center ke base ring
-    const baseRingStartIndex = rings * (segments + 1);
+    // Triangle fan dari center ke *TIP* ring (bug dari)
     for (let i = 0; i < segments; i++) {
       faces.push(
-        baseRingStartIndex + i + 1, // Next vertex di base ring
-        baseRingStartIndex + i, // Current vertex di base ring
+        i + 1, // Next vertex di tip ring
+        i, // Current vertex di tip ring
         baseCenterIndex // Center point
       );
     }
 
-    // --- CAP: TIP (Top) ---
-    // --- CAP: TIP (Top) ---
+    // --- PERUBAHAN: CAP: TIP (Top) ---
+    // (Mereplikasi bug dari)
     const tipCenterIndex = vertices.length / 9;
 
-    // Hitung xOffset khusus untuk tip (di mana t = 1.0)
-    const xOffsetAtTip = curvature * Math.sin(1.0 * Math.PI);
+    // --- PERUBAHAN: 'xOffsetAtTip' dihapus ---
+    // const xOffsetAtTip = curvature * Math.sin(1.0 * Math.PI); // <-- DIHAPUS
 
-    vertices.push(xOffsetAtTip, height, 0); // Position at tip (with curve offset)
+    vertices.push(0, height, 0); // Position at tip
     vertices.push(...color);
     vertices.push(0, 1, 0); // Normal pointing up
 
-    // Triangle fan dari center ke tip ring
+    // Triangle fan dari center ke *BASE* ring (bug dari)
+    const topRingStartIndex = rings * (segments + 1); //
     for (let i = 0; i < segments; i++) {
       faces.push(
-        i, // Current vertex di tip ring
-        i + 1, // Next vertex di tip ring
+        topRingStartIndex + i, // Current vertex di base ring
+        topRingStartIndex + i + 1, // Next vertex di base ring
         tipCenterIndex // Center point
       );
     }
@@ -191,7 +187,7 @@ export class ZubatTooth extends Node {
 
   /**
    * HELPER: Buat tooth variant dengan preset parameters.
-   * Useful untuk quick instantiation dengan style yang berbeda.
+   * (Fungsi ini tidak diubah)
    */
   static createVariant(GL, attribs, variant = "default") {
     const variants = {
