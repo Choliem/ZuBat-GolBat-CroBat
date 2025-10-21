@@ -8,7 +8,10 @@ export class Axes {
     this.GL = GL;
     this.attribs = attribs;
 
-    var vertices = [-30, 0, 0, 10, 0, 0, 30, 0, 0, 10, 0, 0, 0, -30, 0, 0, 10, 0, 0, 30, 0, 0, 10, 0, 0, 0, -30, 0, 0, 10, 0, 0, 30, 0, 0, 10, 0];
+    var vertices = [
+      -30, 0, 0, 10, 0, 0, 30, 0, 0, 10, 0, 0, 0, -30, 0, 0, 10, 0, 0, 30, 0, 0,
+      10, 0, 0, 0, -30, 0, 0, 10, 0, 0, 30, 0, 0, 10, 0,
+    ];
     this.sceneObject = new SceneObject(GL, vertices, [], attribs);
     this.sceneObject.vertexCount = 6; // 6 titik untuk 3 garis
   }

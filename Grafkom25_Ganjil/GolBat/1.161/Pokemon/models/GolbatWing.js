@@ -19,7 +19,7 @@ export class GolbatWing extends Node {
     // --- Warna ---
     const OUTER_COLOR = [60 / 255, 60 / 255, 124 / 255]; // Biru
     const INNER_COLOR = [170 / 255, 120 / 255, 200 / 255]; // Ungu
-    const BONE_COLOR = [40 / 255, 40 / 255, 80 / 255]; // Tulang (lebih gelap)
+    const BONE_COLOR = [0.35, 0.55, 0.95]; // Tulang (lebih gelap)
 
     // --- Detail & Bentuk ---
     const TOTAL_POINTS = 60; // Jumlah total titik di sepanjang tepi
@@ -104,10 +104,21 @@ export class GolbatWing extends Node {
     );
 
     // 3. Buat Tulang (HANYA di tepi atas)
-    this._generateTube(topCenterline, TUBE_SEGMENTS, BONE_THICKNESS.top, BONE_COLOR);
+    this._generateTube(
+      topCenterline,
+      TUBE_SEGMENTS,
+      BONE_THICKNESS.top,
+      BONE_COLOR
+    );
 
     // 4. Buat Membran Dua Lapis
-    this._generateDoubleSidedMembrane(topCenterline, bottomCenterline, OUTER_COLOR, INNER_COLOR, MEMBRANE_THICKNESS);
+    this._generateDoubleSidedMembrane(
+      topCenterline,
+      bottomCenterline,
+      OUTER_COLOR,
+      INNER_COLOR,
+      MEMBRANE_THICKNESS
+    );
 
     // 5. Buat SceneObject
     const sceneObj = new SceneObject(GL, this.vertices, this.faces, attribs);
@@ -150,7 +161,9 @@ export class GolbatWing extends Node {
         const proportion = segmentLengths[i] / totalLength;
         numPointsInThisSegment = Math.round(proportion * (totalPoints - 1));
       } else {
-        numPointsInThisSegment = Math.round((totalPoints - 1) / bezierSegmentsCPs.length);
+        numPointsInThisSegment = Math.round(
+          (totalPoints - 1) / bezierSegmentsCPs.length
+        );
       }
 
       // Alokasikan sisa titik ke segmen terakhir
@@ -168,7 +181,8 @@ export class GolbatWing extends Node {
 
     // Pastikan jumlah titik pas
     if (centerline.length > totalPoints) centerline.length = totalPoints;
-    while (centerline.length < totalPoints) centerline.push([...bezierSegmentsCPs[bezierSegmentsCPs.length - 1][3]]);
+    while (centerline.length < totalPoints)
+      centerline.push([...bezierSegmentsCPs[bezierSegmentsCPs.length - 1][3]]);
 
     return centerline;
   }
@@ -181,7 +195,13 @@ export class GolbatWing extends Node {
 
   // ======================== FUNGSI HELPER (TIDAK BERUBAH) =========================
   // ... (Salin semua fungsi helper lainnya dari _generateDoubleSidedMembrane hingga _generateTube)
-  _generateDoubleSidedMembrane(centerline1, centerline2, outerColor, innerColor, thickness) {
+  _generateDoubleSidedMembrane(
+    centerline1,
+    centerline2,
+    outerColor,
+    innerColor,
+    thickness
+  ) {
     if (centerline1.length !== centerline2.length) {
       console.error("Membrane centerlines must have the same length.");
       return;
@@ -193,33 +213,67 @@ export class GolbatWing extends Node {
       const p1 = centerline1[i];
       const p2 = centerline2[i];
       const vecMembrane = this._subtractVectors(p1, p2);
-      let vecForward = i < numPoints - 1 ? this._subtractVectors(centerline1[i + 1], p1) : this._subtractVectors(p1, centerline1[i - 1]);
-      let normal = this._normalizeVector(this._crossProduct(vecMembrane, vecForward));
+      let vecForward =
+        i < numPoints - 1
+          ? this._subtractVectors(centerline1[i + 1], p1)
+          : this._subtractVectors(p1, centerline1[i - 1]);
+      let normal = this._normalizeVector(
+        this._crossProduct(vecMembrane, vecForward)
+      );
       if (normal[2] > 0) {
         normal = this._scaleVector(normal, -1.0);
       }
       const outerOffset = this._scaleVector(normal, halfThickness);
       const p1_outer = this._addVectors(p1, outerOffset);
-      this.vertices.push(p1_outer[0], p1_outer[1], p1_outer[2], ...outerColor, ...normal);
+      this.vertices.push(
+        p1_outer[0],
+        p1_outer[1],
+        p1_outer[2],
+        ...outerColor,
+        ...normal
+      );
       const p2_outer = this._addVectors(p2, outerOffset);
-      this.vertices.push(p2_outer[0], p2_outer[1], p2_outer[2], ...outerColor, ...normal);
+      this.vertices.push(
+        p2_outer[0],
+        p2_outer[1],
+        p2_outer[2],
+        ...outerColor,
+        ...normal
+      );
     }
     const baseVertexIndexInner = Math.floor(this.vertices.length / 9);
     for (let i = 0; i < numPoints; i++) {
       const p1 = centerline1[i];
       const p2 = centerline2[i];
       const vecMembrane = this._subtractVectors(p1, p2);
-      let vecForward = i < numPoints - 1 ? this._subtractVectors(centerline1[i + 1], p1) : this._subtractVectors(p1, centerline1[i - 1]);
-      let normal = this._normalizeVector(this._crossProduct(vecMembrane, vecForward));
+      let vecForward =
+        i < numPoints - 1
+          ? this._subtractVectors(centerline1[i + 1], p1)
+          : this._subtractVectors(p1, centerline1[i - 1]);
+      let normal = this._normalizeVector(
+        this._crossProduct(vecMembrane, vecForward)
+      );
       if (normal[2] > 0) {
         normal = this._scaleVector(normal, -1.0);
       }
       const innerNormal = this._scaleVector(normal, -1.0);
       const innerOffset = this._scaleVector(innerNormal, halfThickness);
       const p1_inner = this._addVectors(p1, innerOffset);
-      this.vertices.push(p1_inner[0], p1_inner[1], p1_inner[2], ...innerColor, ...innerNormal);
+      this.vertices.push(
+        p1_inner[0],
+        p1_inner[1],
+        p1_inner[2],
+        ...innerColor,
+        ...innerNormal
+      );
       const p2_inner = this._addVectors(p2, innerOffset);
-      this.vertices.push(p2_inner[0], p2_inner[1], p2_inner[2], ...innerColor, ...innerNormal);
+      this.vertices.push(
+        p2_inner[0],
+        p2_inner[1],
+        p2_inner[2],
+        ...innerColor,
+        ...innerNormal
+      );
     }
     for (let i = 0; i < numPoints - 1; i++) {
       const otl = baseVertexIndexOuter + i * 2 + 0;
@@ -239,8 +293,16 @@ export class GolbatWing extends Node {
   _getBezierControlPoints(curvePart) {
     const p0 = curvePart.startPoint;
     const p3 = curvePart.endPoint;
-    const p1 = [p0[0] + curvePart.startHandle[0], p0[1] + curvePart.startHandle[1], p0[2] + curvePart.startHandle[2]];
-    const p2 = [p3[0] + curvePart.endHandle[0], p3[1] + curvePart.endHandle[1], p3[2] + curvePart.endHandle[2]];
+    const p1 = [
+      p0[0] + curvePart.startHandle[0],
+      p0[1] + curvePart.startHandle[1],
+      p0[2] + curvePart.startHandle[2],
+    ];
+    const p2 = [
+      p3[0] + curvePart.endHandle[0],
+      p3[1] + curvePart.endHandle[1],
+      p3[2] + curvePart.endHandle[2],
+    ];
     return [p0, p1, p2, p3];
   }
   _getPointOnBezierCurve(controlPoints, t) {
@@ -271,7 +333,11 @@ export class GolbatWing extends Node {
     return len > 1e-6 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 0, 0];
   }
   _crossProduct(a, b) {
-    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
   }
   _generateTube(path, tubeSegments, thicknessProfile, color) {
     if (path.length < 2) return;
@@ -282,25 +348,53 @@ export class GolbatWing extends Node {
       const t = vertexCount > 1 ? i / (vertexCount - 1) : 0;
       let currentThickness;
       if (Array.isArray(thicknessProfile)) {
-        if (t < 0.5) currentThickness = thicknessProfile[0] * (1.0 - t * 2.0) + thicknessProfile[1] * (t * 2.0);
-        else currentThickness = thicknessProfile[1] * (1.0 - (t - 0.5) * 2.0) + thicknessProfile[2] * ((t - 0.5) * 2.0);
+        if (t < 0.5)
+          currentThickness =
+            thicknessProfile[0] * (1.0 - t * 2.0) +
+            thicknessProfile[1] * (t * 2.0);
+        else
+          currentThickness =
+            thicknessProfile[1] * (1.0 - (t - 0.5) * 2.0) +
+            thicknessProfile[2] * ((t - 0.5) * 2.0);
       } else {
         currentThickness = thicknessProfile;
       }
       let tangent;
       if (i === 0) tangent = this._subtractVectors(path[1], point);
-      else if (i === vertexCount - 1) tangent = this._subtractVectors(point, path[i - 1]);
-      else tangent = this._normalizeVector(this._addVectors(this._subtractVectors(path[i + 1], point), this._subtractVectors(point, path[i - 1])));
+      else if (i === vertexCount - 1)
+        tangent = this._subtractVectors(point, path[i - 1]);
+      else
+        tangent = this._normalizeVector(
+          this._addVectors(
+            this._subtractVectors(path[i + 1], point),
+            this._subtractVectors(point, path[i - 1])
+          )
+        );
       tangent = this._normalizeVector(tangent);
       const upApprox = Math.abs(tangent[1]) > 0.99 ? [1, 0, 0] : [0, 1, 0];
-      const normal = this._normalizeVector(this._crossProduct(tangent, upApprox));
-      const binormal = this._normalizeVector(this._crossProduct(tangent, normal));
+      const normal = this._normalizeVector(
+        this._crossProduct(tangent, upApprox)
+      );
+      const binormal = this._normalizeVector(
+        this._crossProduct(tangent, normal)
+      );
       for (let j = 0; j <= tubeSegments; j++) {
         const angle = (j / tubeSegments) * 2 * Math.PI;
-        const offset = this._addVectors(this._scaleVector(normal, Math.cos(angle) * currentThickness), this._scaleVector(binormal, Math.sin(angle) * currentThickness));
+        const offset = this._addVectors(
+          this._scaleVector(normal, Math.cos(angle) * currentThickness),
+          this._scaleVector(binormal, Math.sin(angle) * currentThickness)
+        );
         const vertexPos = this._addVectors(point, offset);
         const vertexNormal = this._normalizeVector(offset);
-        this.vertices.push(vertexPos[0], vertexPos[1], vertexPos[2], ...color, vertexNormal[0], vertexNormal[1], vertexNormal[2]);
+        this.vertices.push(
+          vertexPos[0],
+          vertexPos[1],
+          vertexPos[2],
+          ...color,
+          vertexNormal[0],
+          vertexNormal[1],
+          vertexNormal[2]
+        );
       }
     }
     for (let i = 0; i < vertexCount - 1; i++) {

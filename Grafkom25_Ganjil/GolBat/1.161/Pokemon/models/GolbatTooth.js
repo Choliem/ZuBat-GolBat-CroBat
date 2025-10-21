@@ -41,7 +41,12 @@ export class GolbatTooth extends Node {
 
     var toothColor = [1.0, 1.0, 1.0];
     var toothPyramid = generatePyramid(toothColor);
-    var sceneObj = new SceneObject(GL, toothPyramid.vertices, toothPyramid.faces, attribs);
+    var sceneObj = new SceneObject(
+      GL,
+      toothPyramid.vertices,
+      toothPyramid.faces,
+      attribs
+    );
     this.setGeometry(sceneObj);
   }
 }

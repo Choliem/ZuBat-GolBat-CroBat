@@ -92,7 +92,7 @@ export class GolbatUpperBody extends Node {
   constructor(GL, attribs) {
     super(); // Panggil konstruktor Node
 
-    var bodyColor = [60 / 255, 60 / 255, 124 / 255];
+    var bodyColor = [0.35, 0.55, 0.95];
 
     var bodyParams = {
       top: Math.PI / 8,
@@ -113,7 +113,12 @@ export class GolbatUpperBody extends Node {
     );
 
     // Buat SceneObject dan tetapkan ke Node ini
-    var sceneObj = new SceneObject(GL, bodyShape.vertices, bodyShape.faces, attribs);
+    var sceneObj = new SceneObject(
+      GL,
+      bodyShape.vertices,
+      bodyShape.faces,
+      attribs
+    );
     this.setGeometry(sceneObj);
   }
 }
