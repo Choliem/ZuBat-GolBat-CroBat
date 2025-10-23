@@ -355,13 +355,23 @@ function main() {
     GL.shaderSource(shader, source);
     GL.compileShader(shader);
     if (!GL.getShaderParameter(shader, GL.COMPILE_STATUS)) {
-      alert("ERROR IN " + typeString + " SHADER: " + GL.getShaderInfoLog(shader));
+      alert(
+        "ERROR IN " + typeString + " SHADER: " + GL.getShaderInfoLog(shader)
+      );
       return false;
     }
     return shader;
   };
-  var shader_vertex = compile_shader(shader_vertex_source, GL.VERTEX_SHADER, "VERTEX");
-  var shader_fragment = compile_shader(shader_fragment_source, GL.FRAGMENT_SHADER, "FRAGMENT");
+  var shader_vertex = compile_shader(
+    shader_vertex_source,
+    GL.VERTEX_SHADER,
+    "VERTEX"
+  );
+  var shader_fragment = compile_shader(
+    shader_fragment_source,
+    GL.FRAGMENT_SHADER,
+    "FRAGMENT"
+  );
 
   var SHADER_PROGRAM = GL.createProgram();
   GL.attachShader(SHADER_PROGRAM, shader_vertex);
@@ -369,7 +379,9 @@ function main() {
   GL.linkProgram(SHADER_PROGRAM);
   if (!GL.getProgramParameter(SHADER_PROGRAM, GL.LINK_STATUS)) {
     alert("Could not initialise shaders. See console for details.");
-    console.error("Shader Linker Error: " + GL.getProgramInfoLog(SHADER_PROGRAM));
+    console.error(
+      "Shader Linker Error: " + GL.getProgramInfoLog(SHADER_PROGRAM)
+    );
     return;
   }
 
@@ -391,7 +403,10 @@ function main() {
 
     // Uniforms Lighting Gabungan
     _ambientColor: GL.getUniformLocation(SHADER_PROGRAM, "ambientColor"), // <-- Ganti nama
-    _moonLightDirection: GL.getUniformLocation(SHADER_PROGRAM, "u_moonLightDirection"),
+    _moonLightDirection: GL.getUniformLocation(
+      SHADER_PROGRAM,
+      "u_moonLightDirection"
+    ),
     _lightDirection: GL.getUniformLocation(SHADER_PROGRAM, "lightDirection"), // <-- BARU
     _lightColor: GL.getUniformLocation(SHADER_PROGRAM, "lightColor"), // <-- BARU
     _useLighting: GL.getUniformLocation(SHADER_PROGRAM, "u_useLighting"), // <-- BARU
@@ -407,10 +422,21 @@ function main() {
     image.onload = function () {
       GL.bindTexture(GL.TEXTURE_2D, texture);
       GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, true);
-      GL.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, image);
+      GL.texImage2D(
+        GL.TEXTURE_2D,
+        0,
+        GL.RGBA,
+        GL.RGBA,
+        GL.UNSIGNED_BYTE,
+        image
+      );
       GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
       if (use_mipmaps) {
-        GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_LINEAR);
+        GL.texParameteri(
+          GL.TEXTURE_2D,
+          GL.TEXTURE_MIN_FILTER,
+          GL.LINEAR_MIPMAP_LINEAR
+        );
         GL.generateMipmap(GL.TEXTURE_2D);
       } else {
         GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
@@ -426,7 +452,17 @@ function main() {
     var texture = GL.createTexture();
     GL.bindTexture(GL.TEXTURE_2D, texture);
     var pixel = new Uint8Array([20, 40, 80, 200]);
-    GL.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, 1, 1, 0, GL.RGBA, GL.UNSIGNED_BYTE, pixel);
+    GL.texImage2D(
+      GL.TEXTURE_2D,
+      0,
+      GL.RGBA,
+      1,
+      1,
+      0,
+      GL.RGBA,
+      GL.UNSIGNED_BYTE,
+      pixel
+    );
     return texture;
   };
   var cube_texture = load_texture("night.png", GL.CLAMP_TO_EDGE, false);
@@ -439,10 +475,28 @@ function main() {
   const islandRadius = scale * 0.7;
   const texture_repeat = 20;
   var skyboxObj = Skybox.createSceneObject(GL, attribs, cube_texture, scale);
-  var islandData = Island.createSceneObject(GL, attribs, ground_texture, scale, gridSize, islandRadius, texture_repeat);
+  var islandData = Island.createSceneObject(
+    GL,
+    attribs,
+    ground_texture,
+    scale,
+    gridSize,
+    islandRadius,
+    texture_repeat
+  );
   var waterData = Water.createSceneObject(GL, attribs, water_texture, scale);
-  var treeData = Trees.createSceneObject(GL, attribs, islandRadius, islandData.getIslandHeight_func, waterData.waterLevel);
-  var spiderData = Spiders.createSceneObjects(GL, attribs, treeData.validTreePositions);
+  var treeData = Trees.createSceneObject(
+    GL,
+    attribs,
+    islandRadius,
+    islandData.getIslandHeight_func,
+    waterData.waterLevel
+  );
+  var spiderData = Spiders.createSceneObjects(
+    GL,
+    attribs,
+    treeData.validTreePositions
+  );
 
   const pokemonBaseRadius = 300;
   const pokemonBaseHeight = 50;
@@ -451,7 +505,17 @@ function main() {
   const pokemonBaseColor = [0.4, 0.4, 0.4];
   const pokemonSpikeColor = [0.2, 0.2, 0.2];
   const pokemonBaseYPosition = waterData.waterLevel + 300;
-  var pokemonBaseObj = PokemonBase.createSceneObject(GL, attribs, pokemonBaseRadius, pokemonBaseHeight, pokemonSpikeHeight, pokemonNumSpikes, pokemonBaseColor, pokemonSpikeColor, pokemonBaseYPosition);
+  var pokemonBaseObj = PokemonBase.createSceneObject(
+    GL,
+    attribs,
+    pokemonBaseRadius,
+    pokemonBaseHeight,
+    pokemonSpikeHeight,
+    pokemonNumSpikes,
+    pokemonBaseColor,
+    pokemonSpikeColor,
+    pokemonBaseYPosition
+  );
 
   /*======================== MEMBANGUN SCENE GRAPH (Gabungan) ======================== */
   var islandNode = new Node();
@@ -528,7 +592,12 @@ function main() {
   // --- AKHIR KODE ZUBAT ---
 
   /*================= MATRIKS & KONTROL KAMERA (Sama) =================*/
-  var PROJMATRIX = LIBS.get_projection(40, CANVAS.width / CANVAS.height, 10, 12000);
+  var PROJMATRIX = LIBS.get_projection(
+    40,
+    CANVAS.width / CANVAS.height,
+    10,
+    12000
+  );
   var MOVEMATRIX = LIBS.get_I4();
   var VIEWMATRIX = LIBS.get_I4();
   var SKYBOX_VMATRIX = LIBS.get_I4();
@@ -586,12 +655,23 @@ function main() {
   GL.clearDepth(1.0);
 
   var time_prev = 0;
-  // Variabel untuk animasi flip Crobat
-  let lastFlipTime = 0;
-  let flipStartTime = 0;
+
+  // ===================================================================
+  // === PARAMETER ANIMASI TERBANG CROBAT (ADJUST DISINI) ===
+  // ===================================================================
+  let crobatFlyState = "FORWARD"; // States: 'FORWARD', 'TURNING_AT_PLUS', 'BACKWARD', 'TURNING_AT_MINUS', 'RETURN', 'FLIPPING'
+  let crobatPosZ = 0; // Posisi Z saat ini
+  let crobatRotationY = 0; // Rotasi Y (arah hadap)
+  let turnStartTime = 0; // Waktu mulai putar
+  let flipCount = 0; // Jumlah flip yang sudah dilakukan
   let isFlipping = false;
-  const flipInterval = 15000;
-  const flipDuration = 1000;
+  let flipStartTime = 0;
+
+  // ADJUST PARAMETER DISINI:
+  const TURN_DURATION = 800; // Durasi putar 180° (ms) - UBAH INI untuk kecepatan putar
+  const Z_LIMIT = 2000; // Jarak terbang (+/-) - UBAH INI untuk jarak terbang
+  const flipDuration = 1000; // Durasi satu flip (ms) - UBAH INI untuk kecepatan flip
+  // ===================================================================
 
   var animate = function (time) {
     GL.viewport(0, 0, CANVAS.width, CANVAS.height);
@@ -654,31 +734,106 @@ function main() {
     var crobatTime = time / 100.0; // Gunakan 'time' dari environment
     var wings = crobatData.wings;
 
-    // --- Animasi Float ---
+    // --- Animasi Float (Naik-Turun) ---
     var floatAmplitude = 20; // Amplitudo lebih besar
     var floatY = Math.sin(crobatTime * 0.6) * floatAmplitude;
 
-    // --- Animasi Flip ---
-    const currentTime = time; // 'time' adalah performance.now()
-    let flipAngle = 0.0;
-    if (!isFlipping && currentTime - lastFlipTime > flipInterval) {
-      isFlipping = true;
-      flipStartTime = currentTime;
-      lastFlipTime = currentTime;
-    }
-    if (isFlipping) {
-      let flipProgress = (currentTime - flipStartTime) / flipDuration;
-      if (flipProgress >= 1.0) {
-        flipProgress = 1.0;
-        isFlipping = false;
-      }
-      flipAngle = flipProgress * -Math.PI * 2.0;
+    // --- STATE MACHINE: ANIMASI TERBANG ---
+    const flySpeed = 15 * (dt / 16.67); // UBAH ANGKA 15 untuk kecepatan terbang
+    const currentTime = time;
+
+    switch (crobatFlyState) {
+      case "FORWARD":
+        // Terbang maju (positif Z)
+        crobatPosZ += flySpeed;
+        if (crobatPosZ >= Z_LIMIT) {
+          crobatPosZ = Z_LIMIT;
+          crobatFlyState = "TURNING_AT_PLUS";
+          turnStartTime = currentTime;
+        }
+        break;
+
+      case "TURNING_AT_PLUS":
+        // Putar balik 180° di batas +Z
+        let turnProgress1 = (currentTime - turnStartTime) / TURN_DURATION;
+        if (turnProgress1 >= 1.0) {
+          turnProgress1 = 1.0;
+          crobatRotationY = Math.PI; // 180 derajat
+          crobatFlyState = "BACKWARD";
+        } else {
+          crobatRotationY = turnProgress1 * Math.PI;
+        }
+        break;
+
+      case "BACKWARD":
+        // Terbang mundur (negatif Z)
+        crobatPosZ -= flySpeed;
+        if (crobatPosZ <= -Z_LIMIT) {
+          crobatPosZ = -Z_LIMIT;
+          crobatFlyState = "TURNING_AT_MINUS";
+          turnStartTime = currentTime;
+        }
+        break;
+
+      case "TURNING_AT_MINUS":
+        // Putar balik 180° di batas -Z
+        let turnProgress2 = (currentTime - turnStartTime) / TURN_DURATION;
+        if (turnProgress2 >= 1.0) {
+          turnProgress2 = 1.0;
+          crobatRotationY = 0; // Kembali ke arah semula
+          crobatFlyState = "RETURN";
+        } else {
+          crobatRotationY = Math.PI * (1.0 - turnProgress2);
+        }
+        break;
+
+      case "RETURN":
+        // Kembali ke posisi awal (Z = 0)
+        crobatPosZ += flySpeed;
+        if (crobatPosZ >= 0) {
+          crobatPosZ = 0;
+          crobatFlyState = "FLIPPING";
+          flipCount = 0;
+          isFlipping = false;
+        }
+        break;
+
+      case "FLIPPING":
+        // Lakukan 2 flip, kemudian lanjut terbang
+        if (flipCount >= 2) {
+          crobatFlyState = "FORWARD";
+        }
+        break;
     }
 
-    // Terapkan float + flip ke 'crobatAnimatorNode'
+    // --- Animasi Flip (Hanya saat state FLIPPING) ---
+    let flipAngle = 0.0;
+    if (crobatFlyState === "FLIPPING") {
+      if (!isFlipping && flipCount < 2) {
+        isFlipping = true;
+        flipStartTime = currentTime;
+      }
+
+      if (isFlipping) {
+        let flipProgress = (currentTime - flipStartTime) / flipDuration;
+        if (flipProgress >= 1.0) {
+          flipProgress = 1.0;
+          isFlipping = false;
+          flipCount++;
+          // Beri jeda singkat antar flip
+          flipStartTime = currentTime + 200; // UBAH ANGKA 200 untuk jeda antar flip (ms)
+        }
+        flipAngle = flipProgress * -Math.PI * 2.0;
+      }
+    }
+
+    // Terapkan Transformasi ke 'crobatAnimatorNode'
+    // URUTAN: Translate Z (posisi) → Rotate Y (arah) → Translate Y (float) → Rotate X (flip)
     LIBS.set_I4(crobatAnimatorNode.localMatrix);
-    LIBS.translateY(crobatAnimatorNode.localMatrix, -2250 + floatY); // Posisi dasar 150 di atas base
-    LIBS.rotateX(crobatAnimatorNode.localMatrix, flipAngle);
+    LIBS.translateZ(crobatAnimatorNode.localMatrix, crobatPosZ); // Posisi terbang
+    LIBS.rotateY(crobatAnimatorNode.localMatrix, crobatRotationY); // Arah hadap
+    LIBS.translateY(crobatAnimatorNode.localMatrix, -2250 + floatY); // Posisi vertikal + float
+    LIBS.rotateX(crobatAnimatorNode.localMatrix, flipAngle); // Flip
 
     // --- Animasi Kepak Sayap ---
     var flapSpeed = 0.6;
