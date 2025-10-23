@@ -2,6 +2,7 @@ export class Node {
   constructor() {
     this.childs = [];
     this.localMatrix = LIBS.get_I4();
+    this.worldMatrix = LIBS.get_I4();
     this.sceneObject = null;
   }
 
@@ -31,6 +32,22 @@ export class Node {
     // 3. Panggil draw() untuk semua anak (rekursif)
     for (var child of this.childs) {
       child.draw(finalMatrix, uniforms);
+    }
+  }
+  updateWorldMatrix(parentWorldMatrix) {
+    // 1. Hitung world matrix node ini
+    if (this.localMatrix) {
+      this.worldMatrix = LIBS.multiply(parentWorldMatrix, this.localMatrix);
+    } else {
+      // Fallback jika tidak ada local matrix
+      this.worldMatrix = parentWorldMatrix;
+    }
+
+    // 2. Panggil update secara rekursif untuk semua children
+    if (this.children) {
+      for (let child of this.children) {
+        child.updateWorldMatrix(this.worldMatrix);
+      }
     }
   }
 }
