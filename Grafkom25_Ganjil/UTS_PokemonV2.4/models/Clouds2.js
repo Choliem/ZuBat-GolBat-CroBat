@@ -1,7 +1,5 @@
-// models/Clouds.js (atau Clouds2.js)
-
 import { SceneObject } from "./SceneObject.js";
-import { Node } from "./Node.js"; 
+import { Node } from "./Node.js";
 
 export const Clouds = {
   // --- FUNGSI HELPER GEOMETRI (Sama) ---
@@ -52,7 +50,7 @@ export const Clouds = {
 
   // --- FUNGSI UTAMA (DIGANTI TOTAL) ---
   createSceneObjects: function (GL, attribs, numClouds, skyRadius, skyHeight) {
-    let cloudNodes = []; 
+    let cloudNodes = [];
     let cloudAnimData = [];
 
     const CLOUD_COLOR = [0.3, 0.3, 0.45];
@@ -61,23 +59,36 @@ export const Clouds = {
     // --- PENGATURAN BATAS KECEPATAN ---
     // Ubah nilai ini sesuai keinginan Anda
     const MIN_CLOUD_SPEED = 0.05; // Batas bawah (misal: lebih lambat)
-    const MAX_CLOUD_SPEED = 0.1;  // Batas atas (misal: jauh lebih lambat dari 0.5)
+    const MAX_CLOUD_SPEED = 0.1; // Batas atas (misal: jauh lebih lambat dari 0.5)
     // --- AKHIR PENGATURAN ---
 
     // --- Definisi 3 Template Awan (Sama) ---
     const cloudTemplate1 = [
-      { x: -90, y: 0, z: 5, r: 50 }, { x: -40, y: 0, z: -5, r: 50 }, { x: 10, y: 0, z: 0, r: 50 },
-      { x: 60, y: 0, z: 5, r: 50 }, { x: -70, y: 40, z: -3, r: 50 }, { x: -10, y: 45, z: 3, r: 50 },
-      { x: 40, y: 40, z: 0, r: 50 }
+      { x: -90, y: 0, z: 5, r: 50 },
+      { x: -40, y: 0, z: -5, r: 50 },
+      { x: 10, y: 0, z: 0, r: 50 },
+      { x: 60, y: 0, z: 5, r: 50 },
+      { x: -70, y: 40, z: -3, r: 50 },
+      { x: -10, y: 45, z: 3, r: 50 },
+      { x: 40, y: 40, z: 0, r: 50 },
     ];
     const cloudTemplate2 = [
-      { x: -40, y: 0, z: 0, r: 50 }, { x: 10, y: 0, z: 5, r: 50 }, { x: 60, y: 0, z: -3, r: 50 },
-      { x: -20, y: 40, z: 2, r: 50 }, { x: 30, y: 40, z: -2, r: 50 }
+      { x: -40, y: 0, z: 0, r: 50 },
+      { x: 10, y: 0, z: 5, r: 50 },
+      { x: 60, y: 0, z: -3, r: 50 },
+      { x: -20, y: 40, z: 2, r: 50 },
+      { x: 30, y: 40, z: -2, r: 50 },
     ];
     const cloudTemplate3 = [
-      { x: -100, y: 0, z: -2, r: 50 }, { x: -50, y: 0, z: 3, r: 60 }, { x: 0, y: 0, z: -5, r: 50 },
-      { x: 50, y: 0, z: 0, r: 60 }, { x: 100, y: 0, z: 5, r: 50 }, { x: -80, y: 40, z: 0, r: 50 },
-      { x: -20, y: 45, z: -4, r: 60 }, { x: 30, y: 40, z: 4, r: 50 }, { x: 80, y: 35, z: 0, r: 50 }
+      { x: -100, y: 0, z: -2, r: 50 },
+      { x: -50, y: 0, z: 3, r: 60 },
+      { x: 0, y: 0, z: -5, r: 50 },
+      { x: 50, y: 0, z: 0, r: 60 },
+      { x: 100, y: 0, z: 5, r: 50 },
+      { x: -80, y: 40, z: 0, r: 50 },
+      { x: -20, y: 45, z: -4, r: 60 },
+      { x: 30, y: 40, z: 4, r: 50 },
+      { x: 80, y: 35, z: 0, r: 50 },
     ];
     const allTemplates = [cloudTemplate1, cloudTemplate2, cloudTemplate3];
 
@@ -86,7 +97,7 @@ export const Clouds = {
       let cloud_vertices = [];
       let cloud_faces = [];
       let current_offset = 0;
-      
+
       let cloudX = (Math.random() - 0.5) * 2 * skyRadius;
       let cloudY = skyHeight + (Math.random() - 0.5) * 400;
       let cloudZ = (Math.random() - 0.5) * 2 * skyRadius;
@@ -112,26 +123,24 @@ export const Clouds = {
         cloud_vertices.push(...sphereGeom.vertices);
         current_offset = cloud_vertices.length / 8;
       }
-      
+
       let cloudObj = new SceneObject(GL, cloud_vertices, cloud_faces, attribs, "POS_COL_UV");
       let cloudNode = new Node();
       cloudNode.setGeometry(cloudObj);
-      
+
       cloudNode.localMatrix[12] = cloudX;
       cloudNode.localMatrix[13] = cloudY;
       cloudNode.localMatrix[14] = cloudZ;
-      
-      cloudNodes.push(cloudNode);
-      
-      // 7. Buat dan simpan data animasi acak
-      let direction = Math.random() < 0.5 ? 1.0 : -1.0; 
-      
-      // --- INILAH BARIS YANG DIUBAH ---
-      // Formula baru: MIN + (RANDOM * (MAX - MIN))
-      let speed = MIN_CLOUD_SPEED + Math.random() * (MAX_CLOUD_SPEED - MIN_CLOUD_SPEED);
-      // --- AKHIR PERUBAHAN ---
 
-      let startOffset = Math.random() * 10000; 
+      cloudNodes.push(cloudNode);
+
+      // 7. Buat dan simpan data animasi acak
+      let direction = Math.random() < 0.5 ? 1.0 : -1.0;
+
+      // Formula: MIN + (RANDOM * (MAX - MIN))
+      let speed = MIN_CLOUD_SPEED + Math.random() * (MAX_CLOUD_SPEED - MIN_CLOUD_SPEED);
+
+      let startOffset = Math.random() * 10000;
 
       cloudAnimData.push({
         node: cloudNode,
@@ -140,12 +149,12 @@ export const Clouds = {
         baseZ: cloudZ,
         speed: speed,
         direction: direction,
-        startOffset: startOffset
+        startOffset: startOffset,
       });
     }
 
     console.log("Generated " + numClouds + " individual cloud objects.");
-    
+
     return { cloudNodes: cloudNodes, cloudAnimData: cloudAnimData };
   },
 };

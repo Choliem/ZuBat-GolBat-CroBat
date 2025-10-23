@@ -1,16 +1,4 @@
-/*
- * models/CrobatWing.js - Refactored for SceneObject
- *
- * PERBAIKAN: Semua fungsi helper (_generateBezierCenterline, _generateTube,
- * _subtractVectors, dll.) telah dipindahkan ke luar dari class body
- * untuk menghindari error 'must call super constructor before using 'this''.
- */
 import { SceneObject } from "../SceneObject.js";
-
-// =========================================================================
-// === HELPER FUNCTIONS (MOVED OUTSIDE THE CLASS) ===
-// === 'this' dihapus dari semua pemanggilan fungsi ini. ===
-// =========================================================================
 
 function _generateBezierCenterline(bezierSegmentsCPs, totalPoints) {
   const centerline = [];
@@ -212,20 +200,12 @@ function _generateTube(
     }
   }
 }
-
-// =========================================================================
 // === KELAS UTAMA CROBAT WING ===
-// =========================================================================
-
 export class CrobatWing extends SceneObject {
   constructor(GL, attribs) {
     // 1. Buat geometri DULU
     let vertices = [];
     let faces = [];
-
-    // =========================================================================
-    // == PARAMETER SAYAP CROBAT (Tidak berubah) ==
-    // =========================================================================
     const OUTER_COLOR = [0.5, 0.8, 0.9];
     const INNER_COLOR = [0.37, 0.23, 0.5];
     const BONE_COLOR = INNER_COLOR;
@@ -280,8 +260,6 @@ export class CrobatWing extends SceneObject {
     ];
 
     // ======================== PEMBUATAN MESH =========================
-
-    // !! PERBAIKAN: Hapus 'this.' dari semua pemanggilan !!
     const topBoneCenterline = _generateBezierCenterline(
       TOP_BONE_CURVE.map((p) => _getBezierControlPoints(p)),
       TOTAL_POINTS
@@ -299,7 +277,7 @@ export class CrobatWing extends SceneObject {
     _generateTube(topBoneCenterline, TUBE_SEGMENTS, BONE_THICKNESS_PROFILE, BONE_COLOR, vertices, faces);
     _generateDoubleSidedMembrane(membraneTopCenterline, bottomMembraneCenterline, OUTER_COLOR, INNER_COLOR, MEMBRANE_THICKNESS, vertices, faces);
 
-    // 2. Panggil super() di AKHIR (Sekarang aman)
+    // 2. Panggil super() di AKHIR
     super(GL, vertices, faces, attribs, "POS_COL_NORM");
   }
 }

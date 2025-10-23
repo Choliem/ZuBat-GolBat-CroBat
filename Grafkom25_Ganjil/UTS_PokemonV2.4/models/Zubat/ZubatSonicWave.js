@@ -1,22 +1,5 @@
-/*
- * ===================================================================
- * KRITERIA 1: ZubatSonicWave
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (GABUNGAN TORUS/CINCIN)
- *
- * ALGORITMA:
- * 1. Membuat beberapa (numRings) mesh "Torus" (donat) tipis.
- * 2. Setiap torus dibuat pada jarak 'ringSpacing' dan
- * radiusnya membesar sebesar 'radiusGrowth'.
- * 3. Semua data vertex dan face dari semua torus digabungkan
- * menjadi satu SceneObject yang efisien.
- */
-
-// --- PERBAIKAN PATH IMPORT ---
-import { Node } from "../Node.js"; // <-- Naik satu level
-import { SceneObject } from "../SceneObject.js"; // <-- Naik satu level
-// --- AKHIR PERBAIKAN ---
+import { Node } from "../Node.js";
+import { SceneObject } from "../SceneObject.js";
 
 export class ZubatSonicWave extends Node {
   constructor(GL, attribs, options = {}) {

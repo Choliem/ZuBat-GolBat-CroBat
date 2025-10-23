@@ -1,12 +1,6 @@
-/*
- * GolbatEye.js
- * Bentuk mata Golbat: Setengah elips dengan bagian atas MIRING (MARAH).
- * PERBAIKAN: Iris hitam sampai ke bawah.
- */
 import { SceneObject } from "../SceneObject.js";
 import { Node } from "../Node.js";
 
-// Fungsi untuk menghasilkan bentuk mata (tidak berubah)
 function generateGolbatEyeShape(width, height, tilt, segments, color) {
   var vertices = [];
   var faces = [];
@@ -45,9 +39,6 @@ function generateGolbatEyeShape(width, height, tilt, segments, color) {
 
   return { vertices, faces };
 }
-
-// --- FUNGSI IRIS DIPERBARUI ---
-// Sekarang menerima eyeWidth dan eyeHeight
 function generateIrisShape(x_offset, y_offset_top, size, color, eyeWidth, eyeHeight) {
   var vertices = [];
   var faces = [];

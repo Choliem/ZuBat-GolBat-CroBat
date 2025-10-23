@@ -1,5 +1,3 @@
-// models/SmokeParticles.js
-
 import { SceneObject } from "./SceneObject.js";
 import { Node } from "./Node.js";
 
@@ -14,9 +12,6 @@ export const SmokeParticles = {
   PARTICLE_FADE_START_TIME: 0.7, // Mulai menghilang di 70% sisa hidup
   LERP: (a, b, t) => a + (b - a) * t, // Helper LERP
 
-  /**
-   * (Pribadi) Membuat tekstur asap secara dinamis
-   */
   _createSmokeTexture: function (GL) {
     var texture = GL.createTexture();
     var canvas = document.createElement("canvas");
@@ -42,18 +37,9 @@ export const SmokeParticles = {
     GL.bindTexture(GL.TEXTURE_2D, null);
     return texture;
   },
-
-  /**
-   * (Pribadi) Membuat geometri quad untuk satu partikel
-   */
   _createSmokeGeometry: function (GL, attribs, texture) {
     const particleSize = 100;
-    const smokeVertices = [
-      -particleSize, -particleSize, 0, 0, 0,
-       particleSize, -particleSize, 0, 1, 0,
-       particleSize,  particleSize, 0, 1, 1,
-      -particleSize,  particleSize, 0, 0, 1,
-    ];
+    const smokeVertices = [-particleSize, -particleSize, 0, 0, 0, particleSize, -particleSize, 0, 1, 0, particleSize, particleSize, 0, 1, 1, -particleSize, particleSize, 0, 0, 1];
     const smokeFaces = [0, 1, 2, 0, 2, 3];
 
     return new SceneObject(
@@ -66,10 +52,6 @@ export const SmokeParticles = {
       GL.TRIANGLES
     );
   },
-
-  /**
-   * (Pribadi) Me-reset status partikel (saat mati / awal)
-   */
   _resetParticle: function (particle) {
     const { baseX, baseY, baseZ, craterRadius } = particle.baseInfo;
 
@@ -88,11 +70,6 @@ export const SmokeParticles = {
 
     particle.baseScale = 1.0 + Math.random() * 0.8;
   },
-
-  /**
-   * (Publik) Inisialisasi seluruh sistem partikel.
-   * craterInfos adalah array: [{ pos: {x,y,z}, radius, count }, ...]
-   */
   init: function (GL, attribs, craterInfos) {
     // 1. Buat aset bersama (tekstur dan geometri)
     const smokeTexture = this._createSmokeTexture(GL);
@@ -105,7 +82,7 @@ export const SmokeParticles = {
     // 3. Buat partikel untuk setiap kawah
     for (const info of craterInfos) {
       const { pos, radius, count } = info;
-      
+
       for (let i = 0; i < count; i++) {
         let node = new Node();
         node.setGeometry(this.smokeParticleGeom); // Bagikan geometri
@@ -113,7 +90,8 @@ export const SmokeParticles = {
 
         let particleState = {
           node: node,
-          baseInfo: { // Info statis
+          baseInfo: {
+            // Info statis
             baseX: pos.x,
             baseY: pos.y,
             baseZ: pos.z,
@@ -128,10 +106,6 @@ export const SmokeParticles = {
     // Kembalikan node induk agar bisa digambar di main.js
     return this.globalSmokeRootNode;
   },
-
-  /**
-   * (Publik) Dipanggil setiap frame dari animate() di main.js
-   */
   update: function (dt, THETA, PHI) {
     if (!this.particleData) return; // Belum siap
 
@@ -155,9 +129,7 @@ export const SmokeParticles = {
       // 3. Hitung Skala (Fade-out)
       let currentScale = particle.baseScale;
       if (progress > this.PARTICLE_FADE_START_TIME) {
-        let fadeProgress =
-          (progress - this.PARTICLE_FADE_START_TIME) /
-          (1.0 - this.PARTICLE_FADE_START_TIME);
+        let fadeProgress = (progress - this.PARTICLE_FADE_START_TIME) / (1.0 - this.PARTICLE_FADE_START_TIME);
         currentScale = this.LERP(particle.baseScale, 0.0, fadeProgress);
       }
 
@@ -167,11 +139,11 @@ export const SmokeParticles = {
       LIBS.translateX(m, posX);
       LIBS.translateY(m, posY);
       LIBS.translateZ(m, posZ);
-      
+
       // Billboarding
       LIBS.rotateY(m, THETA);
       LIBS.rotateX(m, PHI);
-      
+
       LIBS.scale(m, currentScale, currentScale, currentScale);
     }
   },

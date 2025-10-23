@@ -1,4 +1,3 @@
-// models/CrobatPupil.js
 import { SceneObject } from "../SceneObject.js";
 
 export class CrobatPupil extends SceneObject {

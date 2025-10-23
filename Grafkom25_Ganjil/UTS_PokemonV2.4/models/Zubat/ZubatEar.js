@@ -1,20 +1,3 @@
-/*
- * ===================================================================
- * KRITERIA 1: Telinga Zubat
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (DEFORMED PARAMETRIC SURFACE)
- *
- * ALGORITMA:
- * 1. Membuat 'cincin' (rings) vertex dari bawah ke atas.
- * 2. Bentuk setiap cincin dikontrol secara parametrik oleh:
- * - 'widthProfile': Mengatur lebar (melebar di tengah, menyempit di ujung)
- * - 'curveProfile': Membuat telinga melengkung ke belakang
- * 3. Vertex di sisi dalam (sin(angle) > 0) ditarik (deformasi)
- * menuju 'cavityTarget' untuk membuat rongga telinga.
- * 4. Warna diubah menjadi 'innerColor' di dalam rongga.
- */
-
 import { Node } from "../Node.js";
 import { SceneObject } from "../SceneObject.js";
 
@@ -26,10 +9,6 @@ export class ZubatEar extends Node {
     const sceneObj = new SceneObject(GL, earData.vertices, earData.faces, attribs, "POS_COL_NORM");
     this.setGeometry(sceneObj);
   }
-
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
-   */
   static DEFAULT_OPTIONS = {
     // Dimensi
     height: 2.0,
@@ -52,10 +31,6 @@ export class ZubatEar extends Node {
     cavityTarget: [0.0, 1.0, -0.1], // Titik target tarikan
     cavityRimSharpness: 2.0, // Ketajaman tepi rongga (>1 lebih tajam)
   };
-
-  /**
-   * ALGORITMA: Generate ear geometry (Deformed Parametric Surface)
-   */
   _generateEarGeometry(opts) {
     const vertices = [];
     const faces = [];

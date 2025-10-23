@@ -1,22 +1,3 @@
-/*
- * ===================================================================
- * KRITERIA 1: Sayap Zubat
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (OBJEK BERBASIS KURVA)
- *
- * ALGORITMA:
- * 1. Mendefinisikan 2 set Kurva Bézier orde 3 (topBoneCurve, midBoneCurve)
- * sebagai kerangka utama sayap.
- * 2. Menghasilkan jalur/path 3D (centerline) dari kurva-kurva tersebut
- * via _generateBezierPath.
- * 3. Membuat "tulang" dengan menghasilkan mesh tabung (tube) di sepanjang
- * jalur/path tersebut via _generateTube.
- * 4. Membuat "membran" dua sisi (luar biru, dalam pink) dengan
- * menghubungkan vertex antara path tulang atas dan tulang tengah
- * via _generateMembrane.
- */
-
 import { Node } from "../Node.js";
 import { SceneObject } from "../SceneObject.js";
 
@@ -31,9 +12,7 @@ export class ZubatWing extends Node {
     this.setGeometry(sceneObj);
   }
 
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
-   */
+  //KRITERIA 3 & 4: Default options untuk parameter//
   static DEFAULT_OPTIONS = {
     // KRITERIA 3: Parameter Warna
     boneColor: [0.45, 0.65, 1.0], // Biru muda
@@ -87,9 +66,7 @@ export class ZubatWing extends Node {
     ],
   };
 
-  /**
-   * ALGORITMA: Gabungkan semua geometri (tulang + membran)
-   */
+  //ALGORITMA: Gabungkan semua geometri (tulang + membran)//
   _generateWingGeometry(opts) {
     const allVertices = [];
     const allFaces = [];
@@ -231,9 +208,7 @@ export class ZubatWing extends Node {
     return { vertices, faces };
   }
 
-  /**
-   * ALGORITMA: Generate membran 2 sisi (Luar & Dalam)
-   */
+  //ALGORITMA: Generate membran 2 sisi (Luar & Dalam)//
   _generateMembrane(path1, path2, outerColor, innerColor, thickness) {
     const vertices = [];
     const faces = [];

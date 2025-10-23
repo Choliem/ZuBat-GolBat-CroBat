@@ -1,13 +1,4 @@
-// models/CrobatMouthAndTeeth.js
 import { SceneObject } from "../SceneObject.js";
-
-// =========================================================================
-// === FUNGSI HELPER (DIPINDAHKAN KE LUAR CLASS) ===
-// =========================================================================
-
-/**
- * Membuat mesh mulut/outline yang melengkung (cembung).
- */
 function createMouthShape(vertices, faces, width, height, segments, color, zOffset, curveAmount) {
   const baseIndex = vertices.length / 9;
 
@@ -41,10 +32,6 @@ function createMouthShape(vertices, faces, width, height, segments, color, zOffs
     faces.push(baseIndex, baseIndex + i + 1, baseIndex + i + 2);
   }
 }
-
-/**
- * Membuat mesh untuk gigi.
- */
 function createTeeth(vertices, faces, color, zOffset) {
   const LINE_WIDTH = 0.03;
   const LINE_HEIGHT = 0.25;
@@ -86,10 +73,7 @@ function createTeeth(vertices, faces, color, zOffset) {
   }
 }
 
-// =========================================================================
 // === CLASS UTAMA ===
-// =========================================================================
-
 export class CrobatMouthAndTeeth extends SceneObject {
   constructor(GL, attribs) {
     let vertices = [];

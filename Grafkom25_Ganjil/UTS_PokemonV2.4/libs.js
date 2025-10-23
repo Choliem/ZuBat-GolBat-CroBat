@@ -76,7 +76,7 @@ var LIBS = {
     m[9] = c * m[9] + s * mv8;
   },
 
-  // --- FUNGSI TRANSLATE YANG LEBIH BAIK ---
+  // --- FUNGSI TRANSLATE ---
   translateX: function (m, t) {
     m[12] += m[0] * t;
     m[13] += m[1] * t;
@@ -96,7 +96,7 @@ var LIBS = {
     m[15] += m[11] * t;
   },
 
-  // --- FUNGSI SCALE YANG SUDAH DIPERBAIKI ---
+  // --- FUNGSI SCALE ---
   scale: function (m, sx, sy, sz) {
     if (sy === undefined) sy = sx;
     if (sz === undefined) sz = sx;

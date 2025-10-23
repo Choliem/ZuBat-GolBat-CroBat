@@ -1,8 +1,6 @@
-// Import SceneObject dari folder yang sama
 import { SceneObject } from "./SceneObject.js";
 
 export const Spiders = {
-  // --- FUNGSI HELPER GEOMETRI ---
   _createSphereGeometry: function (radius, latSegments, longSegments, color, yOffset = 0) {
     let vertices = [];
     let faces = [];
@@ -97,7 +95,6 @@ export const Spiders = {
     }
     return { vertices, faces };
   },
-  // --- AKHIR FUNGSI HELPER ---
 
   _createSpiderGeometry: function (headRadius, bodyRadius, legLength, legRadius, color, translationX, translationY, translationZ) {
     let spider_vertices = [];

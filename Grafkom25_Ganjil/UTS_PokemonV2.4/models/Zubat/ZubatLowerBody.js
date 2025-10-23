@@ -1,17 +1,3 @@
-/*
- * ===================================================================
- * KRITERIA 1: Badan Bawah Zubat (dengan Kaki)
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (DEFORMED SPHERE)
- *
- * ALGORITMA:
- * 1. Membuat mesh bola (sphere).
- * 2. Vertex yang berada di area "kaki" (y < 0 && z < 0) akan
- * dideformasi/ditarik posisinya menuju 'legTargets'
- * untuk mensimulasikan bentuk kaki yang runcing.
- */
-
 import { Node } from "../Node.js";
 import { SceneObject } from "../SceneObject.js";
 
@@ -24,10 +10,6 @@ export class ZubatLowerBody extends Node {
     this.setGeometry(sceneObj);
     this._applyBodyTransformation(opts);
   }
-
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
-   */
   static DEFAULT_OPTIONS = {
     scaleFactor: 2.5,
     radius: 1.0,
@@ -49,10 +31,6 @@ export class ZubatLowerBody extends Node {
     legPullRadius: 0.2, // Radius area yang ditarik
     legPullSharpness: 3.0, // Ketajaman tarikan (makin >1 makin runcing)
   };
-
-  /**
-   * ALGORITMA: Generate body geometry (Deformed Sphere)
-   */
   _generateBodyGeometry(opts) {
     const vertices = [];
     const faces = [];
@@ -130,10 +108,6 @@ export class ZubatLowerBody extends Node {
     }
     return { vertices, faces };
   }
-
-  /**
-   * Terapkan transformasi lokal ke badan bawah (hanya skala)
-   */
   _applyBodyTransformation(opts) {
     const { scaleFactor } = opts;
     const scaleMatrix = LIBS.get_I4();

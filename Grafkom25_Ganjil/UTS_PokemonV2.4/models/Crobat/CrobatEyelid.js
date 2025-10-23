@@ -1,4 +1,3 @@
-// models/CrobatEyelid.js
 import { SceneObject } from "../SceneObject.js";
 
 export class CrobatEyelid extends SceneObject {

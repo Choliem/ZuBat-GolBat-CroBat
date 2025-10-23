@@ -1,9 +1,5 @@
-/*
- * GolbatLowerBody.js
- * Node komposit yang membangun hierarki kakinya sendiri.
- */
 import { SceneObject } from "../SceneObject.js";
-import { Node } from "../Node.js"; // <-- Impor Node
+import { Node } from "../Node.js";
 
 // --- FUNGSI GENERATOR LOKAL ---
 

@@ -1,5 +1,3 @@
-// models/crobat/CrobatFactory.js
-
 import { Node } from "../Node.js";
 import { CrobatBody } from "./CrobatBody.js";
 import { CrobatEar } from "./CrobatEar.js";
@@ -10,9 +8,6 @@ import { CrobatSclera } from "./CrobatSclera.js";
 import { CrobatPupil } from "./CrobatPupil.js";
 import { CrobatFoot } from "./CrobatFoot.js";
 
-/**
- * Fungsi helper untuk membangun Scene Graph Crobat.
- */
 export function createCrobatSceneGraph(GL, attribs) {
   const rootNode = new Node();
   const bodyNode = new Node();

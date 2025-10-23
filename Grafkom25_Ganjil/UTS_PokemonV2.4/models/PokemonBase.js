@@ -1,13 +1,7 @@
-// models/PokemonBase.js
-
 import { SceneObject } from "./SceneObject.js";
 
 export const PokemonBase = {
-  // ===================================================================
-  // FUNGSI HELPER GEOMETRI (TETAP SAMA)
-  // ===================================================================
   _createConeGeometry: function (radius, height, segments, color, yOffset = 0) {
-    // ... (Kode _createConeGeometry TIDAK BERUBAH dari jawaban sebelumnya) ...
     let vertices = [];
     let faces = [];
     let angleStep = (Math.PI * 2) / segments;
@@ -34,7 +28,6 @@ export const PokemonBase = {
   },
 
   _createOctagonalTop: function (radius, height, color, yOffset) {
-    // ... (Kode _createOctagonalTop TIDAK BERUBAH dari jawaban sebelumnya) ...
     let vertices = [];
     let faces = [];
     const segments = 8;
@@ -66,7 +59,7 @@ export const PokemonBase = {
   },
 
   // ===================================================================
-  // FUNGSI _createSpikes YANG DIPERBARUI UNTUK INNER SPIKES
+  // FUNGSI _createSpikes INNER SPIKES
   // ===================================================================
   _createSpikes: function (baseRadius, initialSpikeHeight, numSpikesOuter, color, yOffset) {
     let vertices = [];
@@ -125,9 +118,6 @@ export const PokemonBase = {
     }
     return { vertices, faces };
   },
-  // ===================================================================
-  // AKHIR FUNGSI YANG DIPERBARUI
-  // ===================================================================
 
   createGeometry: function (baseRadius, baseHeight, spikeHeight, numSpikesOuter, baseColor, spikeColor, yPosition) {
     let combined_vertices = [];
@@ -155,12 +145,6 @@ export const PokemonBase = {
     // Parameter numSpikes diubah menjadi numSpikesOuter saat memanggil createGeometry
     const geom = this.createGeometry(baseRadius, baseHeight, spikeHeight, numSpikesOuter, baseColor, spikeColor, yPosition);
 
-    return new SceneObject(
-      GL,
-      geom.vertices,
-      geom.faces,
-      attribs,
-      "POS_COL_UV" // Layout: Position, Color, (dummy) UV
-    );
+    return new SceneObject(GL, geom.vertices, geom.faces, attribs, "POS_COL_UV");
   },
 };

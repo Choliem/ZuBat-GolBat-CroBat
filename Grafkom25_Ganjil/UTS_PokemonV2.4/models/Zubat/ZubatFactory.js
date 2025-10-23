@@ -1,14 +1,8 @@
-// models/Zubat/ZubatFactory.js
-
 import { Node } from "../Node.js";
 import { ZubatLowerBody } from "./ZubatLowerBody.js";
 import { ZubatUpperBody } from "./ZubatUpperBody.js";
 import { ZubatEar } from "./ZubatEar.js";
 import { ZubatWing } from "./ZubatWing.js";
-
-/**
- * Fungsi helper untuk membangun Scene Graph Zubat.
- */
 export function createZubatSceneGraph(GL, attribs) {
   const zubatModel = new Node();
 

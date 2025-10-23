@@ -1,4 +1,3 @@
-// Import SceneObject dari folder yang sama
 import { SceneObject } from "./SceneObject.js";
 
 export const Water = {

@@ -1,8 +1,6 @@
-// Import SceneObject dari folder yang sama
 import { SceneObject } from "./SceneObject.js";
 
 export const Trees = {
-  // --- FUNGSI HELPER GEOMETRI ---
   _createCylinderGeometry: function (radius, height, segments, color, yOffset = 0) {
     let vertices = [];
     let faces = [];
@@ -71,7 +69,6 @@ export const Trees = {
     }
     return { vertices, faces };
   },
-  // --- AKHIR FUNGSI HELPER ---
 
   createGeometry: function (islandRadius, getIslandHeight, waterLevel) {
     var tree_vertices = [];
@@ -150,13 +147,7 @@ export const Trees = {
   createSceneObject: function (GL, attribs, islandRadius, getIslandHeight, waterLevel) {
     var geom = this.createGeometry(islandRadius, getIslandHeight, waterLevel);
 
-    var sceneObj = new SceneObject(
-      GL,
-      geom.vertices,
-      geom.faces,
-      attribs,
-      "POS_COL_UV" // Layout: Posisi, Warna, dan UV
-    );
+    var sceneObj = new SceneObject(GL, geom.vertices, geom.faces, attribs, "POS_COL_UV");
     return {
       sceneObject: sceneObj,
       validTreePositions: geom.validTreePositions,

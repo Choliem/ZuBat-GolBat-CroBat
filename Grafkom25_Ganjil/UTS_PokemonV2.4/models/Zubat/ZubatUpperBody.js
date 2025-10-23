@@ -1,22 +1,3 @@
-/*
- * ===================================================================
- * KRITERIA 1: Badan Atas Zubat (dengan Mulut)
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (DEFORMED SPHERE)
- *
- * ALGORITMA:
- * 1. Membuat mesh bola (sphere) resolusi tinggi.
- * 2. Vertex yang berada di area "mulut" (z > 0.3) akan
- * dideformasi/ditarik posisinya menuju 'pullTarget'.
- * 3. KRITERIA 3 & 5 (ANTI-ALIASING):
- * Di tepi mulut, warna di-blend menggunakan _smoothstep
- * antara 'bodyColor' dan 'mouthColor' untuk
- * menghasilkan pinggiran yang mulus (tidak bergerigi).
- * 4. KRITERIA 5 (HIERARKI):
- * Otomatis membuat 4 'ZubatTooth' dan menambahkannya sebagai 'child'.
- */
-
 import { Node } from "../Node.js";
 import { SceneObject } from "../SceneObject.js";
 import { ZubatTooth } from "./ZubatTooth.js";
@@ -35,19 +16,11 @@ export class ZubatUpperBody extends Node {
       this._attachTeeth(GL, attribs, opts);
     }
   }
-
-  /**
-   * Helper untuk interpolasi smooth (mirip GLSL smoothstep)
-   * KRITERIA 4: t=0 -> kembali 0, t=1 -> kembali 1. Transisi mulus.
-   */
   _smoothstep(edge0, edge1, x) {
     const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
     return t * t * (3 - 2 * t);
   }
 
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
-   */
   static DEFAULT_OPTIONS = {
     scaleFactor: 2.5,
     radius: 1.0,
@@ -85,10 +58,6 @@ export class ZubatUpperBody extends Node {
       lower: { height: 0.35, bluntness: 0.0, curvature: 0.15 },
     },
   };
-
-  /**
-   * ALGORITMA: Generate body geometry (Deformed Sphere + Anti-Aliasing)
-   */
   _generateBodyGeometry(opts) {
     const vertices = [];
     const faces = [];
@@ -196,10 +165,6 @@ export class ZubatUpperBody extends Node {
     }
     return { vertices, faces };
   }
-
-  /**
-   * Terapkan transformasi lokal ke badan atas (skala, rotasi, posisi)
-   */
   _applyBodyTransformation(opts) {
     const { scaleFactor } = opts;
     const scaleMatrix = LIBS.get_I4();
@@ -213,12 +178,6 @@ export class ZubatUpperBody extends Node {
     // Matriks akhir: T * R * S
     this.localMatrix = LIBS.multiply(translationMatrix, LIBS.multiply(rotationMatrix, scaleMatrix));
   }
-
-  /**
-   * KRITERIA 1 & 5: Pasang Gigi (Parent-Child)
-   * Membuat 4 instance ZubatTooth dan menambahkannya sebagai 'child'
-   * dari Node ZubatUpperBody ini.
-   */
   _attachTeeth(GL, attribs, opts) {
     const { teethOptions } = opts;
 

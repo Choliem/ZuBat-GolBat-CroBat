@@ -1,10 +1,6 @@
-/*
- * GolbatTooth.js
- */
 import { SceneObject } from "../SceneObject.js";
-import { Node } from "../Node.js"; // <-- Impor Node
+import { Node } from "../Node.js";
 
-// (Fungsi generatePyramid tetap sama di sini...)
 function generatePyramid(color) {
   var vertices = [];
   var faces = [0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2];
@@ -33,11 +29,9 @@ function generatePyramid(color) {
   return { vertices: vertices, faces: faces };
 }
 
-// export class GolbatTooth { // <-- LAMA
 export class GolbatTooth extends Node {
-  // <-- BARU
   constructor(GL, attribs) {
-    super(); // <-- Panggil konstruktor Node
+    super();
 
     var toothColor = [1.0, 1.0, 1.0];
     var toothPyramid = generatePyramid(toothColor);

@@ -1,12 +1,5 @@
-/*
- * GolbatEar.js
- * Model telinga dua sisi (pink di dalam, biru di luar)
- * dengan busur 75% (sisi terpotong 25%).
- *
- * PERBAIKAN: Menghapus insetFactor agar pink dan biru sama besar.
- */
 import { SceneObject } from "../SceneObject.js";
-import { Node } from "../Node.js"; // <-- Impor Node
+import { Node } from "../Node.js";
 
 function generateEllipticParaboloid(a, b, stack, step, colorInside, colorOutside) {
   var vertices = [];
@@ -69,7 +62,7 @@ function generateEllipticParaboloid(a, b, stack, step, colorInside, colorOutside
     }
   }
 
-  // --- Buat FACES (Urutan sudah diperbaiki untuk CCW) ---
+  // --- Buat FACES ---
 
   // 1. Faces untuk LENGKUNGAN TELINGA (75%)
   for (var i = 0; i < stack; i++) {

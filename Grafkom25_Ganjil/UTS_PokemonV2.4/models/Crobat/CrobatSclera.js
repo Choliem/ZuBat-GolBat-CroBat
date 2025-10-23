@@ -1,4 +1,3 @@
-// models/CrobatSclera.js
 import { SceneObject } from "../SceneObject.js";
 
 export class CrobatSclera extends SceneObject {

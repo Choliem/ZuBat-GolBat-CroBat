@@ -25,8 +25,6 @@ import { createZubatSceneGraph } from "./models/Zubat/ZubatFactory.js";
 
 // 4. IMPORT UTILS
 import { compile_shader, load_texture, createWaterTexture } from "./utils/webglUtils.js";
-
-// --- FUNGSI createCrobatSceneGraph, createGolbatSceneGraph, createZubatSceneGraph DIHAPUS DARI SINI ---
 // --- Mereka sekarang ada di file Factory masing-masing ---
 
 function main() {
@@ -1094,10 +1092,8 @@ function main() {
       anim.node.localMatrix[12] = newX;
       // Y dan Z (13, 14) tetap sama seperti saat dibuat
     }
-
     // ---Update Animasi Partikel Asap ---
     SmokeParticles.update(dt, THETA, PHI);
-    // --- Akhir Update Asap ---
     globalCloudRootNode.draw(MOVEMATRIX, uniforms);
 
     GL.enable(GL.BLEND);
@@ -1111,8 +1107,6 @@ function main() {
     GL.flush();
     window.requestAnimationFrame(animate);
   };
-
   animate(0); // Mulai loop animasi
 }
-
 main();

@@ -1,10 +1,4 @@
-// models/CrobatFoot.js
 import { SceneObject } from "../SceneObject.js";
-
-// =========================================================================
-// === FUNGSI HELPER (DIPINDAHKAN KE LUAR CLASS) ===
-// =========================================================================
-
 function createPalm(radius, height, color, vertices, faces) {
   const segments = 12;
   // Gunakan array 'vertices' lokal, bukan 'this.vertices'
@@ -24,10 +18,6 @@ function createPalm(radius, height, color, vertices, faces) {
     faces.push(baseIndex, baseIndex + i + 1, baseIndex + i + 2);
   }
 }
-
-// ===================================================================
-// GANTI FUNGSI LAMA ANDA DENGAN YANG INI
-// ===================================================================
 function createToe(position, rotationZ, height, radius, color, vertices, faces) {
   const segments = 10;
   const baseIndex = vertices.length / 9;
@@ -68,11 +58,7 @@ function createToe(position, rotationZ, height, radius, color, vertices, faces) 
     }
   }
 }
-// ===================================================================
-
-// =========================================================================
 // === CLASS UTAMA ===
-// =========================================================================
 
 export class CrobatFoot extends SceneObject {
   constructor(GL, attribs) {
@@ -100,13 +86,11 @@ export class CrobatFoot extends SceneObject {
     ];
 
     for (const data of toeData) {
-      // 3. Panggil helper (tanpa 'this') dan berikan array
+      // 3. Panggil helper
       createToe(data.pos, data.rotZ, data.height, data.radius, FOOT_COLOR, vertices, faces);
     }
 
     // 4. Panggil super() di AKHIR dengan array yang sudah terisi
     super(GL, vertices, faces, attribs, "POS_COL_NORM");
-
-    // 5. Hapus this.setup()
   }
 }

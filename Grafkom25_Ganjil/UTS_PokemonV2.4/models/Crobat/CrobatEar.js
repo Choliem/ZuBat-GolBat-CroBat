@@ -1,4 +1,3 @@
-// models/CrobatEar.js
 import { SceneObject } from "../SceneObject.js";
 
 export class CrobatEar extends SceneObject {

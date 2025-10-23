@@ -1,19 +1,11 @@
-/*
- * GolbatUpperBody.js
- */
 import { SceneObject } from "../SceneObject.js";
-import { Node } from "../Node.js"; // <-- Impor Node
+import { Node } from "../Node.js";
 
-/**
- * Fungsi helper untuk signed power: sign(base) * abs(base)^exp
- */
 function signedPow(base, exp) {
   return Math.sign(base) * Math.pow(Math.abs(base), exp);
 }
 
-/**
- * Membuat bentuk superellipsoid (kotak bulat).
- */
+//Membuat bentuk superellipsoid (kotak bulat)//
 function generateRoundedBox(a, b_axis, c, stack, step, color, params) {
   var vertices = [];
   var faces = [];
@@ -47,24 +39,16 @@ function generateRoundedBox(a, b_axis, c, stack, step, color, params) {
 
       // --- LOGIKA MULUT (DIPERBAIKI) ---
       // Kita cek di sekitar v = Math.PI / 2 (DEPAN)
-      if (
-        params &&
-        u > params.bottom &&
-        u < params.top &&
-        Math.abs(v - Math.PI / 2) < params.width // <-- INI PERBAIKANNYA
-      ) {
+      if (params && u > params.bottom && u < params.top && Math.abs(v - Math.PI / 2) < params.width) {
         z *= params.indent; // Terapkan lekukan
         r = mouth_r;
         g = mouth_g;
         b_comp = mouth_b;
       }
-      // -------------------------------
-
       // --- NORMAL UNTUK SUPERELLIPSOID ---
       var nx = (1 / a) * signedPow(cos_v, 2 - exp) * cos_u;
       var ny = (1 / b_axis) * sin_u;
       var nz = (1 / c) * signedPow(sin_v, 2 - exp) * cos_u;
-      // -----------------------------------
 
       var normal_len = Math.sqrt(nx * nx + ny * ny + nz * nz);
       if (normal_len == 0) normal_len = 1;
@@ -111,8 +95,6 @@ export class GolbatUpperBody extends Node {
       bodyColor,
       bodyParams
     );
-
-    // Buat SceneObject dan tetapkan ke Node ini
     var sceneObj = new SceneObject(GL, bodyShape.vertices, bodyShape.faces, attribs, "POS_COL_NORM");
     this.setGeometry(sceneObj);
   }

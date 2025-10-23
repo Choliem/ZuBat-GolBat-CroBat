@@ -1,20 +1,3 @@
-/*
- * ===================================================================
- * KRITERIA 1: Gigi Zubat
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (QUADRIC SURFACE - PARABOLOID)
- * Ini adalah objek Quadric WAJIB (Bukan Ellipsoid/Cylinder).
- *
- * ALGORITMA:
- * 1. Membuat 'cincin' (rings) vertex dari pangkal (y=0) ke ujung (y=height).
- * 2. Radius setiap cincin dikontrol oleh FUNGSI KUADRAT (Pangkat 2):
- * 'parabolicCurve = Math.pow(1 - t, 2)'
- * 3. Fungsi kuadrat ini menghasilkan bentuk 3D 'Paraboloid'.
- * 4. (Catatan) Penutup (Cap) atas dan bawah sengaja mereplikasi "bug"
- * dari versi lama untuk mendapatkan bentuk yang diinginkan.
- */
-
 import { Node } from "../Node.js";
 import { SceneObject } from "../SceneObject.js";
 
@@ -30,9 +13,6 @@ export class ZubatTooth extends Node {
     this.setGeometry(sceneObj);
   }
 
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
-   */
   static DEFAULT_OPTIONS = {
     height: 0.35, // Tinggi gigi
     baseRadius: 0.2, // Radius pangkal
@@ -43,9 +23,6 @@ export class ZubatTooth extends Node {
     color: [0.98, 0.9, 0.85], // KRITERIA 3: Warna gading
   };
 
-  /**
-   * ALGORITMA: Generate geometry (Paraboloid)
-   */
   _generateToothGeometry(opts) {
     const vertices = [];
     const faces = [];

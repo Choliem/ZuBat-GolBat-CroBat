@@ -1,23 +1,5 @@
-/*
- * ===================================================================
- * KRITERIA 1: GolbatSonicWave
- * ===================================================================
- *
- * KRITERIA 2 & 5: JENIS OBJEK (GABUNGAN TORUS/CINCIN)
- *
- * ALGORITMA:
- * 1. Membuat beberapa (numRings) mesh "Torus" (donat) tipis.
- * 2. Setiap torus dibuat pada jarak 'ringSpacing' dan
- * radiusnya membesar sebesar 'radiusGrowth'.
- * 3. Semua data vertex dan face dari semua torus digabungkan
- * menjadi satu SceneObject yang efisien.
- */
-
-// --- PERBAIKAN PATH IMPORT ---
-import { Node } from "../Node.js"; // <-- Naik satu level
-import { SceneObject } from "../SceneObject.js"; // <-- Naik satu level
-// --- AKHIR PERBAIKAN ---
-
+import { Node } from "../Node.js";
+import { SceneObject } from "../SceneObject.js";
 export class GolbatSonicWave extends Node {
   constructor(GL, attribs, options = {}) {
     super();
@@ -27,24 +9,12 @@ export class GolbatSonicWave extends Node {
     const allRingsData = this._generateAllRings(opts);
 
     // 2. Buat satu SceneObject dari data gabungan
-    // --- PERBAIKAN LAYOUT ---
-    // Gunakan layout 'POS_COL_NORM' agar sesuai dengan shader
-    const sceneObj = new SceneObject(
-      GL,
-      allRingsData.vertices,
-      allRingsData.faces,
-      attribs,
-      "POS_COL_NORM" // <-- Ubah layout ke POS_COL_NORM
-    );
-    // --- AKHIR PERBAIKAN ---
+    const sceneObj = new SceneObject(GL, allRingsData.vertices, allRingsData.faces, attribs, "POS_COL_NORM");
 
     // 3. Attach ke Node
     this.setGeometry(sceneObj);
   }
 
-  /**
-   * KRITERIA 3 & 4: Default options untuk parameter
-   */
   static DEFAULT_OPTIONS = {
     numRings: 1, // Default hanya 1 ring untuk animasi partikel
     ringSpacing: 0.8, // Jarak antar cincin (di sumbu Z)
@@ -55,10 +25,6 @@ export class GolbatSonicWave extends Node {
     tubeSegments: 8, // Resolusi tabung (seberapa halus)
     color: [0.5, 0.8, 1.0], // KRITERIA 3: Warna gelombang
   };
-
-  /**
-   * ALGORITMA: Gabungkan beberapa geometri Torus
-   */
   _generateAllRings(opts) {
     const allVertices = [];
     const allFaces = [];
@@ -85,11 +51,6 @@ export class GolbatSonicWave extends Node {
     }
     return { vertices: allVertices, faces: allFaces };
   }
-
-  /**
-   * ALGORITMA: Generate geometry 1 Torus (Cincin)
-   * Sekarang juga menghasilkan Normal
-   */
   _generateTorus(radius, zOffset, opts) {
     const vertices = [];
     const faces = [];
