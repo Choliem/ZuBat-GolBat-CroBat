@@ -1,10 +1,3 @@
-/*
- * GolbatWing.js - Improvement V2
- * - Tepi Atas & Bawah: Keduanya menggunakan Kurva Bezier.
- * - Memperkenalkan BOTTOM_CURVE_SEGMENTS untuk membran bawah yang melengkung.
- * - Memperbaiki _generateBezierCenterline agar alokasi titik proporsional.
- * - Memperbaiki bug ujung sayap yang berlubang.
- */
 import { SceneObject } from "../SceneObject.js";
 import { Node } from "../Node.js";
 
@@ -114,12 +107,7 @@ export class GolbatWing extends Node {
     this.setGeometry(sceneObj); // Set geometri untuk Node ini
   }
 
-  // ======================== FUNGSI HELPER YANG DIPERBAIKI =========================
-
-  /**
-   * Menghasilkan titik-titik di sepanjang serangkaian kurva Bezier.
-   * DIPERBAIKI: Mengalokasikan titik secara proporsional berdasarkan estimasi panjang kurva.
-   */
+  // ======================== FUNGSI HELPER  =========================
   _generateBezierCenterline(bezierSegmentsCPs, totalPoints) {
     const centerline = [];
     if (bezierSegmentsCPs.length === 0) return [];
@@ -173,14 +161,10 @@ export class GolbatWing extends Node {
     return centerline;
   }
 
-  // _generateLinearCenterline() tidak diperlukan lagi
-
   _vectorLength(v) {
     return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   }
 
-  // ======================== FUNGSI HELPER (TIDAK BERUBAH) =========================
-  // ... (Salin semua fungsi helper lainnya dari _generateDoubleSidedMembrane hingga _generateTube)
   _generateDoubleSidedMembrane(centerline1, centerline2, outerColor, innerColor, thickness) {
     if (centerline1.length !== centerline2.length) {
       console.error("Membrane centerlines must have the same length.");

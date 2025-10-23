@@ -1,8 +1,4 @@
-// ===================================================================
-// main2.js - IMPROVED ANIMATION (All Pokemon Sonic Waves)
-// ===================================================================
-
-// 1. IMPORT SEMUA MODULES
+// 1. IMPORT MODULES UTAMA
 import { Node } from "./models/Node.js";
 import { SceneObject } from "./models/SceneObject.js";
 import { Shaders } from "./models/Shaders.js";
@@ -14,328 +10,24 @@ import { Spiders } from "./models/Spiders.js";
 import { PokemonBase } from "./models/PokemonBase.js";
 import { Volcano } from "./models/Volcano.js";
 import { SmokeParticles } from "./models/SmokeParticles.js";
-// --- TAMBAHAN: IMPORT SONIC WAVE ---
-import { ZubatSonicWave } from "./models/Zubat/ZubatSonicWave.js";
-// --- BARU: Import Golbat & Crobat Sonic Wave ---
-import { GolbatSonicWave } from "./models/Golbat/GolbatSonicWave.js"; // Pastikan path benar
-import { CrobatSonicWave } from "./models/Crobat/CrobatSonicWave.js"; // Pastikan path benar
-
-// --- IMPORT CROBAT ---
-import { CrobatBody } from "./models/crobat/CrobatBody.js";
-import { CrobatEar } from "./models/crobat/CrobatEar.js";
-import { CrobatMouthAndTeeth } from "./models/crobat/CrobatMouthAndTeeth.js";
-import { CrobatWing } from "./models/crobat/CrobatWing.js";
-import { CrobatEyelid } from "./models/crobat/CrobatEyelid.js";
-import { CrobatSclera } from "./models/crobat/CrobatSclera.js";
-import { CrobatPupil } from "./models/crobat/CrobatPupil.js";
-import { CrobatFoot } from "./models/crobat/CrobatFoot.js";
 import { Clouds } from "./models/Clouds2.js";
-// --- AKHIR IMPORT CROBAT ---
 
-import { GolbatUpperBody } from "./models/Golbat/GolbatUpperBody.js";
-import { GolbatLowerBody } from "./models/Golbat/GolbatLowerBody.js";
-import { GolbatEar } from "./models/Golbat/GolbatEar.js";
-import { GolbatTooth } from "./models/Golbat/GolbatTooth.js";
-import { GolbatWing } from "./models/Golbat/GolbatWing.js";
-import { GolbatEye } from "./models/Golbat/GolbatEye.js";
+// 2. IMPORT SONIC WAVES (Masih dibutuhkan untuk spawn)
+import { ZubatSonicWave } from "./models/Zubat/ZubatSonicWave.js";
+import { GolbatSonicWave } from "./models/Golbat/GolbatSonicWave.js";
+import { CrobatSonicWave } from "./models/Crobat/CrobatSonicWave.js";
 
-import { ZubatLowerBody } from "./models/Zubat/ZubatLowerBody.js";
-import { ZubatUpperBody } from "./models/Zubat/ZubatUpperBody.js";
-import { ZubatEar } from "./models/Zubat/ZubatEar.js";
-import { ZubatWing } from "./models/Zubat/ZubatWing.js";
+// 3. IMPORT SCENE GRAPH FACTORIES
+// (Impor bagian-bagian Pokémon individu seperti CrobatBody, dll. dihapus)
+import { createCrobatSceneGraph } from "./models/Crobat/CrobatFactory.js"; // Path 'crobat' huruf kecil sesuai aslinya
+import { createGolbatSceneGraph } from "./models/Golbat/GolbatFactory.js";
+import { createZubatSceneGraph } from "./models/Zubat/ZubatFactory.js";
 
-/**
- * Fungsi helper untuk membangun Scene Graph Crobat.
- */
-function createCrobatSceneGraph(GL, attribs) {
-  // ... (Kode createCrobatSceneGraph tidak berubah) ...
-  const rootNode = new Node();
-  const bodyNode = new Node();
-  rootNode.add(bodyNode);
-  const leftEyeNode = new Node();
-  const leftEyelidNode = new Node();
-  const leftScleraNode = new Node();
-  const leftPupilNode = new Node();
-  bodyNode.add(leftEyeNode);
-  leftEyeNode.add(leftEyelidNode);
-  leftEyeNode.add(leftScleraNode);
-  leftEyeNode.add(leftPupilNode);
-  const rightEyeNode = new Node();
-  const rightEyelidNode = new Node();
-  const rightScleraNode = new Node();
-  const rightPupilNode = new Node();
-  bodyNode.add(rightEyeNode);
-  rightEyeNode.add(rightEyelidNode);
-  rightEyeNode.add(rightScleraNode);
-  rightEyeNode.add(rightPupilNode);
-  const leftEarNode = new Node();
-  const rightEarNode = new Node();
-  bodyNode.add(leftEarNode);
-  bodyNode.add(rightEarNode);
-  const mouthNode = new Node();
-  bodyNode.add(mouthNode);
-  const upperLeftWingNode = new Node();
-  const upperRightWingNode = new Node();
-  const lowerLeftWingNode = new Node();
-  const lowerRightWingNode = new Node();
-  bodyNode.add(upperLeftWingNode);
-  bodyNode.add(upperRightWingNode);
-  bodyNode.add(lowerLeftWingNode);
-  bodyNode.add(lowerRightWingNode);
-  const leftFootNode = new Node();
-  const rightFootNode = new Node();
-  bodyNode.add(leftFootNode);
-  bodyNode.add(rightFootNode);
+// 4. IMPORT UTILS
+import { compile_shader, load_texture, createWaterTexture } from "./utils/webglUtils.js";
 
-  bodyNode.setGeometry(new CrobatBody(GL, attribs, 1.5, 100, 100));
-  leftEyelidNode.setGeometry(new CrobatEyelid(GL, attribs));
-  leftScleraNode.setGeometry(new CrobatSclera(GL, attribs));
-  leftPupilNode.setGeometry(new CrobatPupil(GL, attribs));
-  rightEyelidNode.setGeometry(new CrobatEyelid(GL, attribs));
-  rightScleraNode.setGeometry(new CrobatSclera(GL, attribs));
-  rightPupilNode.setGeometry(new CrobatPupil(GL, attribs));
-  leftEarNode.setGeometry(new CrobatEar(GL, attribs));
-  rightEarNode.setGeometry(new CrobatEar(GL, attribs));
-  mouthNode.setGeometry(new CrobatMouthAndTeeth(GL, attribs));
-  upperLeftWingNode.setGeometry(new CrobatWing(GL, attribs));
-  upperRightWingNode.setGeometry(new CrobatWing(GL, attribs));
-  lowerLeftWingNode.setGeometry(new CrobatWing(GL, attribs));
-  lowerRightWingNode.setGeometry(new CrobatWing(GL, attribs));
-  leftFootNode.setGeometry(new CrobatFoot(GL, attribs));
-  rightFootNode.setGeometry(new CrobatFoot(GL, attribs));
-
-  LIBS.scale(bodyNode.localMatrix, 0.84, 0.93, 0.8);
-  LIBS.rotateX(bodyNode.localMatrix, 0.3);
-  LIBS.translateX(leftEyeNode.localMatrix, -0.55);
-  LIBS.translateY(leftEyeNode.localMatrix, 0.55);
-  LIBS.translateZ(leftEyeNode.localMatrix, 1.2825);
-  LIBS.rotateX(leftEyeNode.localMatrix, -0.2);
-  LIBS.rotateY(leftEyeNode.localMatrix, -0.5);
-  LIBS.rotateZ(leftEyeNode.localMatrix, -0.35);
-  LIBS.scale(leftEyelidNode.localMatrix, -1.3, 1.3, 1.0);
-  LIBS.rotateZ(leftEyelidNode.localMatrix, 0);
-  LIBS.translateZ(leftEyelidNode.localMatrix, 0);
-  LIBS.scale(leftScleraNode.localMatrix, 1.3, 1.3, 1.0);
-  LIBS.scale(leftPupilNode.localMatrix, 1.3, 1.3, 1.0);
-  LIBS.translateZ(leftPupilNode.localMatrix, 0.02);
-  LIBS.translateX(rightEyeNode.localMatrix, 0.55);
-  LIBS.translateY(rightEyeNode.localMatrix, 0.55);
-  LIBS.translateZ(rightEyeNode.localMatrix, 1.2825);
-  LIBS.rotateX(rightEyeNode.localMatrix, -0.2);
-  LIBS.rotateY(rightEyeNode.localMatrix, 0.5);
-  LIBS.rotateZ(rightEyeNode.localMatrix, 0.35);
-  LIBS.scale(rightEyelidNode.localMatrix, 1.3, 1.3, 1.0);
-  LIBS.rotateZ(rightEyelidNode.localMatrix, 0);
-  LIBS.translateZ(rightEyelidNode.localMatrix, 0.01);
-  LIBS.scale(rightScleraNode.localMatrix, 1.3, 1.3, 1.0);
-  LIBS.scale(rightPupilNode.localMatrix, 1.3, 1.3, 1.0);
-  LIBS.translateZ(rightPupilNode.localMatrix, 0.02);
-  LIBS.scale(leftEarNode.localMatrix, 0.4, 0.8, 0.4);
-  LIBS.rotateX(leftEarNode.localMatrix, -0.3);
-  LIBS.rotateZ(leftEarNode.localMatrix, 0.25);
-  LIBS.translateX(leftEarNode.localMatrix, -0.45);
-  LIBS.translateY(leftEarNode.localMatrix, 0.75);
-  LIBS.scale(rightEarNode.localMatrix, 0.4, 0.8, 0.4);
-  LIBS.rotateX(rightEarNode.localMatrix, -0.3);
-  LIBS.rotateZ(rightEarNode.localMatrix, -0.25);
-  LIBS.translateX(rightEarNode.localMatrix, 0.45);
-  LIBS.translateY(rightEarNode.localMatrix, 0.75);
-  LIBS.rotateX(mouthNode.localMatrix, -0.275);
-  LIBS.translateY(mouthNode.localMatrix, -0.5);
-  LIBS.translateZ(mouthNode.localMatrix, 1.2953);
-  LIBS.scale(leftFootNode.localMatrix, 0.96, 0.96, 0.96);
-  LIBS.rotateX(leftFootNode.localMatrix, 3.9);
-  LIBS.rotateY(leftFootNode.localMatrix, 0.3);
-  LIBS.translateX(leftFootNode.localMatrix, -0.4);
-  LIBS.translateY(leftFootNode.localMatrix, 1.5);
-  LIBS.translateZ(leftFootNode.localMatrix, -0.53);
-  LIBS.scale(rightFootNode.localMatrix, 0.96, 0.96, 0.96);
-  LIBS.rotateX(rightFootNode.localMatrix, 3.9);
-  LIBS.rotateY(rightFootNode.localMatrix, -0.3);
-  LIBS.translateX(rightFootNode.localMatrix, 0.4);
-  LIBS.translateY(rightFootNode.localMatrix, 1.5);
-  LIBS.translateZ(rightFootNode.localMatrix, -0.53);
-
-  return {
-    root: rootNode,
-    wings: {
-      upperLeft: upperLeftWingNode,
-      upperRight: upperRightWingNode,
-      lowerLeft: lowerLeftWingNode,
-      lowerRight: lowerRightWingNode,
-    },
-  };
-}
-
-/**
- * Fungsi helper untuk membangun Scene Graph Golbat.
- */
-function createGolbatSceneGraph(GL, attribs) {
-  // ... (Kode createGolbatSceneGraph tidak berubah) ...
-  var golbatModel = new Node();
-  var golbatUpperBody = new GolbatUpperBody(GL, attribs);
-  var golbatLowerBody = new GolbatLowerBody(GL, attribs);
-  golbatModel.add(golbatUpperBody);
-  golbatModel.add(golbatLowerBody);
-
-  var leftEar = new GolbatEar(GL, attribs);
-  LIBS.translateX(leftEar.localMatrix, -0.45);
-  LIBS.translateY(leftEar.localMatrix, 1.5);
-  LIBS.rotateX(leftEar.localMatrix, Math.PI / 2);
-  LIBS.rotateZ(leftEar.localMatrix, Math.PI / 10);
-  LIBS.scale(leftEar.localMatrix, 0.2, 0.2, 0.4);
-
-  var rightEar = new GolbatEar(GL, attribs);
-  LIBS.translateX(rightEar.localMatrix, 0.45);
-  LIBS.translateY(rightEar.localMatrix, 1.5);
-  LIBS.rotateX(rightEar.localMatrix, Math.PI / 2);
-  LIBS.rotateZ(rightEar.localMatrix, -Math.PI / 10);
-  LIBS.scale(rightEar.localMatrix, 0.2, 0.2, 0.4);
-
-  golbatModel.add(leftEar);
-  golbatModel.add(rightEar);
-
-  var toothTopLeft = new GolbatTooth(GL, attribs);
-  LIBS.translateY(toothTopLeft.localMatrix, 0.65);
-  LIBS.translateZ(toothTopLeft.localMatrix, 0.4);
-  LIBS.translateX(toothTopLeft.localMatrix, -0.5);
-  LIBS.rotateZ(toothTopLeft.localMatrix, Math.PI);
-  LIBS.rotateY(toothTopLeft.localMatrix, 60);
-  LIBS.rotateX(toothTopLeft.localMatrix, -0.5);
-  LIBS.scale(toothTopLeft.localMatrix, 0.35, 0.35, 0.35);
-
-  var toothTopRight = new GolbatTooth(GL, attribs);
-  LIBS.translateY(toothTopRight.localMatrix, 0.65);
-  LIBS.translateZ(toothTopRight.localMatrix, 0.36);
-  LIBS.translateX(toothTopRight.localMatrix, 0.55);
-  LIBS.rotateZ(toothTopRight.localMatrix, Math.PI);
-  LIBS.rotateY(toothTopRight.localMatrix, 60);
-  LIBS.rotateX(toothTopRight.localMatrix, -0.5);
-  LIBS.scale(toothTopRight.localMatrix, 0.35, 0.35, 0.35);
-
-  var toothBottomLeft = new GolbatTooth(GL, attribs);
-  LIBS.translateY(toothBottomLeft.localMatrix, -0.85);
-  LIBS.translateZ(toothBottomLeft.localMatrix, 0.35);
-  LIBS.translateX(toothBottomLeft.localMatrix, -0.5);
-  LIBS.rotateY(toothBottomLeft.localMatrix, 60);
-  LIBS.rotateX(toothBottomLeft.localMatrix, 0.5);
-  LIBS.scale(toothBottomLeft.localMatrix, 0.35, 0.35, 0.35);
-
-  var toothBottomRight = new GolbatTooth(GL, attribs);
-  LIBS.translateY(toothBottomRight.localMatrix, -0.85);
-  LIBS.translateZ(toothBottomRight.localMatrix, 0.35);
-  LIBS.translateX(toothBottomRight.localMatrix, 0.5);
-  LIBS.rotateY(toothBottomRight.localMatrix, 60);
-  LIBS.rotateX(toothBottomRight.localMatrix, 0.5);
-  LIBS.scale(toothBottomRight.localMatrix, 0.35, 0.35, 0.35);
-
-  golbatUpperBody.add(toothTopLeft);
-  golbatUpperBody.add(toothTopRight);
-  golbatUpperBody.add(toothBottomLeft);
-  golbatUpperBody.add(toothBottomRight);
-
-  var leftEye = new GolbatEye(GL, attribs);
-  LIBS.translateY(leftEye.localMatrix, 0.9);
-  LIBS.translateX(leftEye.localMatrix, -0.3);
-  LIBS.translateZ(leftEye.localMatrix, 0.65);
-  LIBS.rotateX(leftEye.localMatrix, -0.5);
-  LIBS.scale(leftEye.localMatrix, 0.2, 0.2, 0.2);
-
-  var rightEye = new GolbatEye(GL, attribs);
-  LIBS.translateY(rightEye.localMatrix, 0.9);
-  LIBS.translateX(rightEye.localMatrix, 0.3);
-  LIBS.translateZ(rightEye.localMatrix, 0.65);
-  LIBS.rotateX(rightEye.localMatrix, -0.5);
-  LIBS.scale(rightEye.localMatrix, -0.2, 0.2, 0.2);
-
-  golbatModel.add(leftEye);
-  golbatModel.add(rightEye);
-
-  var leftWing = new GolbatWing(GL, attribs);
-  golbatModel.add(leftWing);
-  var rightWing = new GolbatWing(GL, attribs);
-  golbatModel.add(rightWing);
-
-  return {
-    root: golbatModel,
-    wings: {
-      left: leftWing,
-      right: rightWing,
-    },
-  };
-}
-
-/**
- * Fungsi helper untuk membangun Scene Graph Zubat.
- */
-function createZubatSceneGraph(GL, attribs) {
-  // ... (Kode createZubatSceneGraph tidak berubah) ...
-  const zubatModel = new Node();
-
-  const zubatUpperBody = new ZubatUpperBody(GL, attribs, {
-    scaleFactor: 2.5,
-    latBands: 50,
-    longBands: 50,
-    attachTeeth: true,
-    teethOptions: { segments: 160, rings: 1, bluntness: 0.2 },
-  });
-  const zubatLowerBody = new ZubatLowerBody(GL, attribs, {
-    scaleFactor: 2.5,
-    latBands: 50,
-    longBands: 50,
-  });
-  zubatModel.add(zubatUpperBody);
-  zubatModel.add(zubatLowerBody);
-
-  const leftEar = new ZubatEar(GL, attribs, {
-    segments: 20,
-    rings: 10,
-    bluntness: 0.3,
-  });
-  LIBS.translateY(leftEar.localMatrix, 4.3);
-  LIBS.translateX(leftEar.localMatrix, -1.5);
-  LIBS.translateZ(leftEar.localMatrix, 1.1);
-  LIBS.rotateZ(leftEar.localMatrix, 3.5);
-  LIBS.rotateY(leftEar.localMatrix, -0.2);
-
-  const rightEar = new ZubatEar(GL, attribs, {
-    segments: 20,
-    rings: 10,
-    bluntness: 0.3,
-  });
-  LIBS.translateY(rightEar.localMatrix, 4.3);
-  LIBS.translateX(rightEar.localMatrix, 1.5);
-  LIBS.translateZ(rightEar.localMatrix, 1.1);
-  LIBS.rotateZ(rightEar.localMatrix, -3.5);
-  LIBS.rotateY(rightEar.localMatrix, 0.2);
-
-  zubatModel.add(leftEar);
-  zubatModel.add(rightEar);
-
-  const leftWing = new ZubatWing(GL, attribs);
-  LIBS.translateY(leftWing.localMatrix, 0.0);
-  LIBS.translateX(leftWing.localMatrix, 1.1);
-  LIBS.rotateZ(leftWing.localMatrix, 0.4);
-  LIBS.rotateY(leftWing.localMatrix, 0.2);
-
-  const rightWing = new ZubatWing(GL, attribs);
-  LIBS.scale(rightWing.localMatrix, -1, 1, 1);
-  LIBS.translateY(rightWing.localMatrix, 0.0);
-  LIBS.translateX(rightWing.localMatrix, 1.2);
-  LIBS.rotateZ(rightWing.localMatrix, -0.4);
-  LIBS.rotateY(rightWing.localMatrix, -0.2);
-
-  zubatModel.add(leftWing);
-  zubatModel.add(rightWing);
-
-  return {
-    root: zubatModel,
-    wings: {
-      left: leftWing,
-      right: rightWing,
-    },
-  };
-}
+// --- FUNGSI createCrobatSceneGraph, createGolbatSceneGraph, createZubatSceneGraph DIHAPUS DARI SINI ---
+// --- Mereka sekarang ada di file Factory masing-masing ---
 
 function main() {
   var CANVAS = document.getElementById("mycanvas");
@@ -355,28 +47,12 @@ function main() {
   var shader_vertex_source = Shaders.vertex_source;
   var shader_fragment_source = Shaders.fragment_source;
 
-  var compile_shader = function (source, type, typeString) {
-    var shader = GL.createShader(type);
-    GL.shaderSource(shader, source);
-    GL.compileShader(shader);
-    if (!GL.getShaderParameter(shader, GL.COMPILE_STATUS)) {
-      alert(
-        "ERROR IN " + typeString + " SHADER: " + GL.getShaderInfoLog(shader)
-      );
-      return false;
-    }
-    return shader;
-  };
-  var shader_vertex = compile_shader(
-    shader_vertex_source,
-    GL.VERTEX_SHADER,
-    "VERTEX"
-  );
-  var shader_fragment = compile_shader(
-    shader_fragment_source,
-    GL.FRAGMENT_SHADER,
-    "FRAGMENT"
-  );
+  // --- FUNGSI compile_shader DIHAPUS DARI SINI ---
+  // Sekarang diimpor dari webglUtils.js
+
+  // Pemanggilan diupdate untuk menyertakan GL
+  var shader_vertex = compile_shader(GL, shader_vertex_source, GL.VERTEX_SHADER, "VERTEX");
+  var shader_fragment = compile_shader(GL, shader_fragment_source, GL.FRAGMENT_SHADER, "FRAGMENT");
 
   var SHADER_PROGRAM = GL.createProgram();
   GL.attachShader(SHADER_PROGRAM, shader_vertex);
@@ -384,9 +60,7 @@ function main() {
   GL.linkProgram(SHADER_PROGRAM);
   if (!GL.getProgramParameter(SHADER_PROGRAM, GL.LINK_STATUS)) {
     alert("Could not initialise shaders. See console for details.");
-    console.error(
-      "Shader Linker Error: " + GL.getProgramInfoLog(SHADER_PROGRAM)
-    );
+    console.error("Shader Linker Error: " + GL.getProgramInfoLog(SHADER_PROGRAM));
     return;
   }
 
@@ -406,10 +80,7 @@ function main() {
     _useTexture: GL.getUniformLocation(SHADER_PROGRAM, "u_useTexture"),
     _isWeb: GL.getUniformLocation(SHADER_PROGRAM, "u_isWeb"),
     _ambientColor: GL.getUniformLocation(SHADER_PROGRAM, "ambientColor"),
-    _moonLightDirection: GL.getUniformLocation(
-      SHADER_PROGRAM,
-      "u_moonLightDirection"
-    ),
+    _moonLightDirection: GL.getUniformLocation(SHADER_PROGRAM, "u_moonLightDirection"),
     _lightDirection: GL.getUniformLocation(SHADER_PROGRAM, "lightDirection"),
     _lightColor: GL.getUniformLocation(SHADER_PROGRAM, "lightColor"),
     _useLighting: GL.getUniformLocation(SHADER_PROGRAM, "u_useLighting"),
@@ -418,61 +89,13 @@ function main() {
   GL.useProgram(SHADER_PROGRAM);
 
   /*========================= TEXTURES =========================*/
-  var load_texture = function (image_URL, wrapping, use_mipmaps) {
-    var texture = GL.createTexture();
-    var image = new Image();
-    image.src = image_URL;
-    image.onload = function () {
-      GL.bindTexture(GL.TEXTURE_2D, texture);
-      GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, true);
-      GL.texImage2D(
-        GL.TEXTURE_2D,
-        0,
-        GL.RGBA,
-        GL.RGBA,
-        GL.UNSIGNED_BYTE,
-        image
-      );
-      GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
-      if (use_mipmaps) {
-        GL.texParameteri(
-          GL.TEXTURE_2D,
-          GL.TEXTURE_MIN_FILTER,
-          GL.LINEAR_MIPMAP_LINEAR
-        );
-        GL.generateMipmap(GL.TEXTURE_2D);
-      } else {
-        GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
-      }
-      var wrap_mode = wrapping || GL.CLAMP_TO_EDGE;
-      GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, wrap_mode);
-      GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, wrap_mode);
-      GL.bindTexture(GL.TEXTURE_2D, null);
-    };
-    return texture;
-  };
-  var createWaterTexture = function () {
-    var texture = GL.createTexture();
-    GL.bindTexture(GL.TEXTURE_2D, texture);
-    var pixel = new Uint8Array([20, 40, 80, 200]);
-    GL.texImage2D(
-      GL.TEXTURE_2D,
-      0,
-      GL.RGBA,
-      1,
-      1,
-      0,
-      GL.RGBA,
-      GL.UNSIGNED_BYTE,
-      pixel
-    );
-    return texture;
-  };
+  // --- FUNGSI load_texture & createWaterTexture DIHAPUS DARI SINI ---
+  // Sekarang diimpor dari webglUtils.js
 
-  // Menggunakan .png sesuai path yang benar
-  var cube_texture = load_texture("night.png", GL.CLAMP_TO_EDGE, false);
-  var ground_texture = load_texture("grass1.png", GL.REPEAT, true);
-  var water_texture = createWaterTexture();
+  // Pemanggilan diupdate untuk menyertakan GL
+  var cube_texture = load_texture(GL, "night.png", GL.CLAMP_TO_EDGE, false);
+  var ground_texture = load_texture(GL, "grass1.png", GL.REPEAT, true);
+  var water_texture = createWaterTexture(GL);
 
   /*======================== MEMBUAT SCENE OBJECTS ======================== */
   const scale = 3000;
@@ -480,40 +103,16 @@ function main() {
   const islandRadius = scale * 0.7;
   const texture_repeat = 20;
   var skyboxObj = Skybox.createSceneObject(GL, attribs, cube_texture, scale);
-  var islandData = Island.createSceneObject(
-    GL,
-    attribs,
-    ground_texture,
-    scale,
-    gridSize,
-    islandRadius,
-    texture_repeat
-  );
+  var islandData = Island.createSceneObject(GL, attribs, ground_texture, scale, gridSize, islandRadius, texture_repeat);
   var waterData = Water.createSceneObject(GL, attribs, water_texture, scale);
-  var treeData = Trees.createSceneObject(
-    GL,
-    attribs,
-    islandRadius,
-    islandData.getIslandHeight_func,
-    waterData.waterLevel
-  );
-  var spiderData = Spiders.createSceneObjects(
-    GL,
-    attribs,
-    treeData.validTreePositions
-  );
+  var treeData = Trees.createSceneObject(GL, attribs, islandRadius, islandData.getIslandHeight_func, waterData.waterLevel);
+  var spiderData = Spiders.createSceneObjects(GL, attribs, treeData.validTreePositions);
 
   // -- CLOUD --
   const numClouds = 45;
   const skyRadius = scale * 2.5;
   const skyHeight = 500;
-  var cloudData = Clouds.createSceneObjects(
-    GL,
-    attribs,
-    numClouds,
-    skyRadius,
-    skyHeight
-  );
+  var cloudData = Clouds.createSceneObjects(GL, attribs, numClouds, skyRadius, skyHeight);
 
   // -- POKEMON BASE --
   const pokemonBaseRadius = 300;
@@ -523,32 +122,15 @@ function main() {
   const pokemonBaseColor = [0.4, 0.4, 0.4];
   const pokemonSpikeColor = [0.2, 0.2, 0.2];
   const pokemonBaseYPosition = waterData.waterLevel + 300;
-  var pokemonBaseObj = PokemonBase.createSceneObject(
-    GL,
-    attribs,
-    pokemonBaseRadius,
-    pokemonBaseHeight,
-    pokemonSpikeHeight,
-    pokemonNumSpikes,
-    pokemonBaseColor,
-    pokemonSpikeColor,
-    pokemonBaseYPosition
-  );
+  var pokemonBaseObj = PokemonBase.createSceneObject(GL, attribs, pokemonBaseRadius, pokemonBaseHeight, pokemonSpikeHeight, pokemonNumSpikes, pokemonBaseColor, pokemonSpikeColor, pokemonBaseYPosition);
 
-  // --- TAMBAHKAN BLOK INI: MEMBUAT GUNUNG BERAPI ---
+  // --- MEMBUAT GUNUNG BERAPI ---
   const volcanoBaseRadius = 1500; // Radius alas
   const volcanoHeight = 2000; // Ketinggian
   const volcanoSegments = 20; // Segi-20 (cukup low-poly untuk latar)
-  var volcanoObj = Volcano.createSceneObject(
-    GL,
-    attribs,
-    volcanoBaseRadius,
-    volcanoHeight,
-    volcanoSegments
-  );
-  // --- AKHIR TAMBAHAN ---
+  var volcanoObj = Volcano.createSceneObject(GL, attribs, volcanoBaseRadius, volcanoHeight, volcanoSegments);
 
-  // --- BARU: GUNUNG BERAPI 2 (Kiri) ---
+  // --- GUNUNG BERAPI 2 (Kiri) ---
   const volcanoBaseRadius2 = 1800; // Radius alas (sedikit lebih besar)
   const volcanoHeight2 = 2300; // Ketinggian (sedikit lebih tinggi)
   var volcanoObj2 = Volcano.createSceneObject(
@@ -558,7 +140,6 @@ function main() {
     volcanoHeight2,
     volcanoSegments // Segments bisa sama
   );
-  // --- AKHIR TAMBAHAN ---
 
   /*======================== MEMBANGUN SCENE GRAPH ======================== */
   var islandNode = new Node();
@@ -601,7 +182,7 @@ function main() {
   var crobatAnimatorNode = new Node();
   pokemonBaseNode1.add(crobatAnimatorNode);
 
-  var crobatData = createCrobatSceneGraph(GL, attribs);
+  var crobatData = createCrobatSceneGraph(GL, attribs); // Pemanggilan fungsi yang diimpor
   var crobatRootNode = crobatData.root;
   LIBS.scale(crobatRootNode.localMatrix, 60, 60, 60);
   crobatAnimatorNode.add(crobatRootNode);
@@ -619,7 +200,7 @@ function main() {
   var golbatAnimatorNode = new Node();
   pokemonBaseNode2.add(golbatAnimatorNode);
 
-  var golbatData = createGolbatSceneGraph(GL, attribs);
+  var golbatData = createGolbatSceneGraph(GL, attribs); // Pemanggilan fungsi yang diimpor
   var golbatRootNode = golbatData.root;
   LIBS.scale(golbatRootNode.localMatrix, 45, 45, 45); // Scale Golbat
   golbatAnimatorNode.add(golbatRootNode);
@@ -637,7 +218,7 @@ function main() {
   var zubatAnimatorNode = new Node();
   pokemonBaseNode3.add(zubatAnimatorNode);
 
-  var zubatData = createZubatSceneGraph(GL, attribs);
+  var zubatData = createZubatSceneGraph(GL, attribs); // Pemanggilan fungsi yang diimpor
   var zubatRootNode = zubatData.root;
   LIBS.scale(zubatRootNode.localMatrix, 20, 20, 20); // Scale Zubat
   zubatAnimatorNode.add(zubatRootNode);
@@ -663,21 +244,13 @@ function main() {
   /*================= AKHIR INISIALISASI ASAP =================*/
 
   /*================= MATRIKS & KONTROL KAMERA =================*/
-  var PROJMATRIX = LIBS.get_projection(
-    40,
-    CANVAS.width / CANVAS.height,
-    10,
-    12000
-  );
+  var PROJMATRIX = LIBS.get_projection(40, CANVAS.width / CANVAS.height, 10, 12000);
   var MOVEMATRIX = LIBS.get_I4();
   var VIEWMATRIX = LIBS.get_I4();
   var SKYBOX_VMATRIX = LIBS.get_I4();
   var camX = 0,
     camZ = 2000,
     camY = -2000;
-  // let cameraMode = "f";
-  // const LOCK_ON_OFFSET_Y = 500;
-  // const LOCK_ON_OFFSET_Z = 2000;
   var keys = {};
   var THETA = 0,
     PHI = 0;
@@ -736,7 +309,7 @@ function main() {
   let isZubatAutoAttacking = false;
   let isKeyZPressed = false; // Tombol 'Z' untuk Zubat
 
-  // --- BARU: Variabel State untuk Animasi Sonic Wave (Golbat) ---
+  // ---Variabel State untuk Animasi Sonic Wave (Golbat) ---
   let golbatActiveWaves = [];
   let golbatLastWaveSpawnTime = 0;
   const golbatWaveSpawnInterval = 350; // Sedikit lebih cepat dari Zubat
@@ -757,7 +330,7 @@ function main() {
   let isGolbatAutoAttacking = false;
   let isKeyGPressed = false;
 
-  // --- BARU: Variabel State untuk Animasi Sonic Wave (Crobat) ---
+  // --- Variabel State untuk Animasi Sonic Wave (Crobat) ---
   let crobatActiveWaves = [];
   let crobatLastWaveSpawnTime = 0;
   const crobatWaveSpawnInterval = 300; // Paling cepat
@@ -787,7 +360,7 @@ function main() {
     zubatActiveWaves.push(wave);
     zubatLastWaveSpawnTime = spawnTime;
   }
-  // --- BARU: Fungsi Helper untuk Spawn Gelombang (Golbat) ---
+  // --- Fungsi Helper untuk Spawn Gelombang (Golbat) ---
   function spawnNewGolbatWave(spawnTime) {
     const wave = new GolbatSonicWave(GL, attribs, golbatWaveOptions); // Gunakan class Golbat
     wave.spawnTime = spawnTime;
@@ -796,7 +369,7 @@ function main() {
     golbatActiveWaves.push(wave); // Gunakan manager & array Golbat
     golbatLastWaveSpawnTime = spawnTime;
   }
-  // --- BARU: Fungsi Helper untuk Spawn Gelombang (Crobat) ---
+  // --- Fungsi Helper untuk Spawn Gelombang (Crobat) ---
   function spawnNewCrobatWave(spawnTime) {
     const wave = new CrobatSonicWave(GL, attribs, crobatWaveOptions); // Gunakan class Crobat
     wave.spawnTime = spawnTime;
@@ -811,7 +384,7 @@ function main() {
     keys[e.key] = true; // Hanya simpan status tombol
     const keyLower = e.key.toLowerCase(); // Handle Caps Lock
 
-    // --- LOGIKA BARU UNTUK TRIGGER SERANGAN ---
+    // --- LOGIKA UNTUK TRIGGER SERANGAN ---
 
     // Zubat ('Z' / '1')
     if (keyLower === "z") {
@@ -917,11 +490,7 @@ function main() {
   let currentPokemonYRotation = [0, 0, 0];
   let targetPokemonYRotation = [0, 0, 0];
   const baseNodes = [pokemonBaseNode3, pokemonBaseNode2, pokemonBaseNode1];
-  const animatorNodes = [
-    zubatAnimatorNode,
-    golbatAnimatorNode,
-    crobatAnimatorNode,
-  ];
+  const animatorNodes = [zubatAnimatorNode, golbatAnimatorNode, crobatAnimatorNode];
   const idleFlapData = [zubatData.wings, golbatData.wings, crobatData.wings];
   const IDLE_Y_OFFSET = -2250;
   const LIFT_Y_OFFSET = -1500;
@@ -939,8 +508,7 @@ function main() {
   const DURATION_RETURN_TURN_2 = 1000;
   const DURATION_RETURN = 3000;
   const LERP = (a, b, t) => a + (b - a) * t;
-  const calculateAngle = (fromX, fromZ, toX, toZ) =>
-    Math.atan2(toX - fromX, toZ - fromZ);
+  const calculateAngle = (fromX, fromZ, toX, toZ) => Math.atan2(toX - fromX, toZ - fromZ);
 
   // ========================================================
   // === LOOP ANIMASI UTAMA ===
@@ -1093,16 +661,8 @@ function main() {
     // --- 3. Logika FSM Pokemon AKTIF ---
     let activeNode = animatorNodes[activePokemonIndex];
     let activeBase = baseNodes[activePokemonIndex];
-    let activeBasePos = [
-      activeBase.localMatrix[12],
-      activeBase.localMatrix[13],
-      activeBase.localMatrix[14],
-    ];
-    let centerPos = [
-      baseNodes[2].localMatrix[12],
-      baseNodes[2].localMatrix[13],
-      baseNodes[2].localMatrix[14],
-    ];
+    let activeBasePos = [activeBase.localMatrix[12], activeBase.localMatrix[13], activeBase.localMatrix[14]];
+    let centerPos = [baseNodes[2].localMatrix[12], baseNodes[2].localMatrix[13], baseNodes[2].localMatrix[14]];
     let timeInStage = time - stageStartTime;
     LIBS.set_I4(activeNode.localMatrix);
     let currentX = 0,
@@ -1110,15 +670,9 @@ function main() {
       currentZ = 0;
     let currentRotationY = 0,
       currentRotationX = 0;
-    let progress,
-      startAngle,
-      endAngle,
-      targetLocalX,
-      targetLocalZ,
-      centerToBaseAngle;
+    let progress, startAngle, endAngle, targetLocalX, targetLocalZ, centerToBaseAngle;
 
     switch (animationStage) {
-      // ... (Kode FSM Stages tidak berubah) ...
       case "IDLE": {
         let floatY = idleFloats[activePokemonIndex],
           flipAngle = idleFlipAngles[activePokemonIndex];
@@ -1136,19 +690,11 @@ function main() {
         progress = Math.min(1.0, timeInStage / DURATION_LIFT_OFF);
         currentY = LERP(IDLE_Y_OFFSET, LIFT_Y_OFFSET, progress);
         LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.rotateY(
-          activeNode.localMatrix,
-          currentPokemonYRotation[activePokemonIndex]
-        );
+        LIBS.rotateY(activeNode.localMatrix, currentPokemonYRotation[activePokemonIndex]);
         if (progress >= 1.0) {
           targetLocalX = centerPos[0] - activeBasePos[0];
           targetLocalZ = centerPos[2] - activeBasePos[2];
-          targetPokemonYRotation[activePokemonIndex] = calculateAngle(
-            0,
-            0,
-            targetLocalX,
-            targetLocalZ
-          );
+          targetPokemonYRotation[activePokemonIndex] = calculateAngle(0, 0, targetLocalX, targetLocalZ);
           animationStage = "TURN_TO_CENTER";
           stageStartTime = time;
         }
@@ -1385,17 +931,12 @@ function main() {
         const M_translate_local = LIBS.get_I4();
         LIBS.translateY(M_translate_local, spawnOffsetY);
         LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim);
-        const M_LocalTransform = LIBS.multiply(
-          M_translate_local,
-          LIBS.multiply(M_rotate, M_scale)
-        );
+        const M_LocalTransform = LIBS.multiply(M_translate_local, LIBS.multiply(M_rotate, M_scale));
         wave.localMatrix = LIBS.multiply(zubatWorldMatrix, M_LocalTransform); // Menggunakan multiply
       }
     }
     if (wavesToRemove.length > 0) {
-      zubatSonicAttackManager.childs = zubatActiveWaves.filter(
-        (w) => !wavesToRemove.includes(w)
-      );
+      zubatSonicAttackManager.childs = zubatActiveWaves.filter((w) => !wavesToRemove.includes(w));
       zubatActiveWaves = zubatSonicAttackManager.childs;
     }
 
@@ -1429,17 +970,12 @@ function main() {
         const M_translate_local = LIBS.get_I4();
         LIBS.translateY(M_translate_local, spawnOffsetY);
         LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim);
-        const M_LocalTransform = LIBS.multiply(
-          M_translate_local,
-          LIBS.multiply(M_rotate, M_scale)
-        );
+        const M_LocalTransform = LIBS.multiply(M_translate_local, LIBS.multiply(M_rotate, M_scale));
         wave.localMatrix = LIBS.multiply(golbatWorldMatrix, M_LocalTransform); // Menggunakan multiply
       }
     }
     if (wavesToRemove.length > 0) {
-      golbatSonicAttackManager.childs = golbatActiveWaves.filter(
-        (w) => !wavesToRemove.includes(w)
-      );
+      golbatSonicAttackManager.childs = golbatActiveWaves.filter((w) => !wavesToRemove.includes(w));
       golbatActiveWaves = golbatSonicAttackManager.childs;
     }
 
@@ -1473,18 +1009,13 @@ function main() {
         const M_translate_local = LIBS.get_I4();
         LIBS.translateY(M_translate_local, spawnOffsetY);
         LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim);
-        const M_LocalTransform = LIBS.multiply(
-          M_translate_local,
-          LIBS.multiply(M_rotate, M_scale)
-        );
+        const M_LocalTransform = LIBS.multiply(M_translate_local, LIBS.multiply(M_rotate, M_scale));
         wave.localMatrix = LIBS.multiply(crobatWorldMatrix, M_LocalTransform); // Menggunakan multiply
       }
     }
 
     if (wavesToRemove.length > 0) {
-      crobatSonicAttackManager.childs = crobatActiveWaves.filter(
-        (w) => !wavesToRemove.includes(w)
-      );
+      crobatSonicAttackManager.childs = crobatActiveWaves.filter((w) => !wavesToRemove.includes(w));
       crobatActiveWaves = crobatSonicAttackManager.childs;
     }
 
@@ -1548,6 +1079,25 @@ function main() {
     pokemonBaseNode1.draw(MOVEMATRIX, uniforms);
     pokemonBaseNode2.draw(MOVEMATRIX, uniforms);
     pokemonBaseNode3.draw(MOVEMATRIX, uniforms); // Ini akan menggambar Zubat + Sonic Waves
+
+    // CLOUD ANIMATION
+    const cloudDriftAmount = 2000; // Seberapa jauh mereka bergerak dari basis
+    // Loop melalui data animasi untuk setiap awan
+    for (const anim of cloudData.cloudAnimData) {
+      // Hitung pergerakan sinus berdasarkan waktu, offset, dan kecepatan
+      let timeWithOffset = time + anim.startOffset;
+      let drift = Math.sin(timeWithOffset * anim.speed * 0.001) * cloudDriftAmount;
+      // Hitung posisi X baru
+      let newX = anim.baseX + drift * anim.direction;
+      // Perbarui posisi X di matriks lokal node secara langsung
+      // (Matriks translasi menyimpan X, Y, Z di index 12, 13, 14)
+      anim.node.localMatrix[12] = newX;
+      // Y dan Z (13, 14) tetap sama seperti saat dibuat
+    }
+
+    // ---Update Animasi Partikel Asap ---
+    SmokeParticles.update(dt, THETA, PHI);
+    // --- Akhir Update Asap ---
     globalCloudRootNode.draw(MOVEMATRIX, uniforms);
 
     GL.enable(GL.BLEND);

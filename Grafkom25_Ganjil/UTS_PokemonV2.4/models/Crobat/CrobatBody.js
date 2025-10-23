@@ -1,4 +1,3 @@
-// File: models/CrobatBody.js
 import { SceneObject } from "../SceneObject.js";
 
 export class CrobatBody extends SceneObject {
