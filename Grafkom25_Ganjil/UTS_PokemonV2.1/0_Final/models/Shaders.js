@@ -1,27 +1,36 @@
 export const Shaders = {
   vertex_source: `
-    attribute vec3 position;
-    attribute vec3 color;
-    attribute vec3 normal;
-    attribute vec2 uv;
-    
-    uniform mat4 Pmatrix, Vmatrix, Mmatrix;
+        attribute vec3 position;
+        attribute vec3 color;
+        attribute vec3 normal;
+        attribute vec2 uv;
+        
+        uniform mat4 Pmatrix, Vmatrix, Mmatrix;
 
-    varying vec3 vColor;
-    varying vec2 vUV;
-    varying vec3 vNormal;
-    varying vec3 vView;
+        varying vec3 vColor;
+        varying vec2 vUV;
+        varying vec3 vNormal;
+        varying vec3 vView;
 
-    uniform bool u_isWeb;
+        uniform bool u_isWeb;
+        uniform bool u_isSkybox; // <-- TAMBAHKAN BARIS INI
 
-    void main(void) {
-        gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.);
-        vNormal = normalize(mat3(Mmatrix) * normal);
-        vView = vec3(Vmatrix * Mmatrix * vec4(position, 1.));
-        vColor = color;
-        vUV = uv;
+        void main(void) {
+            gl_Position = Pmatrix * Vmatrix * Mmatrix * vec4(position, 1.);
+
+            // --- TAMBAHKAN BLOK IF INI ---
+            // Trik ini memaksa Z skybox ke jarak terjauh (1.0)
+            // sehingga tidak akan pernah menutupi objek lain.
+            if (u_isSkybox) {
+                gl_Position.z = gl_Position.w;
+            }
+            // --- AKHIR TAMBAHAN ---
+
+            vNormal = normalize(mat3(Mmatrix) * normal);
+            vView = vec3(Vmatrix * Mmatrix * vec4(position, 1.));
+            vColor = color;
+            vUV = uv;
     }`,
-
   fragment_source: `
     precision mediump float;
     

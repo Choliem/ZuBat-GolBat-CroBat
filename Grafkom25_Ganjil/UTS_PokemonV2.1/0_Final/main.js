@@ -285,14 +285,22 @@ function createZubatSceneGraph(GL, attribs) {
   zubatModel.add(zubatLowerBody);
 
   // --- Telinga ---
-  const leftEar = new ZubatEar(GL, attribs, { segments: 20, rings: 10, bluntness: 0.3 });
+  const leftEar = new ZubatEar(GL, attribs, {
+    segments: 20,
+    rings: 10,
+    bluntness: 0.3,
+  });
   LIBS.translateY(leftEar.localMatrix, 4.3);
   LIBS.translateX(leftEar.localMatrix, -1.5);
   LIBS.translateZ(leftEar.localMatrix, 1.1);
   LIBS.rotateZ(leftEar.localMatrix, 3.5);
   LIBS.rotateY(leftEar.localMatrix, -0.2);
 
-  const rightEar = new ZubatEar(GL, attribs, { segments: 20, rings: 10, bluntness: 0.3 });
+  const rightEar = new ZubatEar(GL, attribs, {
+    segments: 20,
+    rings: 10,
+    bluntness: 0.3,
+  });
   LIBS.translateY(rightEar.localMatrix, 4.3);
   LIBS.translateX(rightEar.localMatrix, 1.5);
   LIBS.translateZ(rightEar.localMatrix, 1.1);
