@@ -1,5 +1,5 @@
 // ===================================================================
-// main2.js - IMPROVED ANIMATION (Versi Transisi Smooth)
+// main2.js - IMPROVED ANIMATION (Versi Transisi Smooth + Sonic Wave Integrated)
 // ===================================================================
 
 // 1. IMPORT SEMUA MODULES
@@ -14,6 +14,8 @@ import { Spiders } from "./models/Spiders.js";
 import { PokemonBase } from "./models/PokemonBase.js";
 import { Volcano } from "./models/Volcano.js";
 import { SmokeParticles } from "./models/SmokeParticles.js";
+// --- TAMBAHAN: IMPORT SONIC WAVE ---
+import { ZubatSonicWave } from "./models/Zubat/ZubatSonicWave.js"; // Path sudah benar
 
 // --- IMPORT CROBAT ---
 import { CrobatBody } from "./models/crobat/CrobatBody.js";
@@ -43,6 +45,7 @@ import { ZubatWing } from "./models/Zubat/ZubatWing.js";
  * Fungsi helper untuk membangun Scene Graph Crobat.
  */
 function createCrobatSceneGraph(GL, attribs) {
+  // ... (Kode createCrobatSceneGraph tidak berubah) ...
   const rootNode = new Node();
   const bodyNode = new Node();
   rootNode.add(bodyNode);
@@ -165,6 +168,7 @@ function createCrobatSceneGraph(GL, attribs) {
  * Fungsi helper untuk membangun Scene Graph Golbat.
  */
 function createGolbatSceneGraph(GL, attribs) {
+  // ... (Kode createGolbatSceneGraph tidak berubah) ...
   var golbatModel = new Node();
   var golbatUpperBody = new GolbatUpperBody(GL, attribs);
   var golbatLowerBody = new GolbatLowerBody(GL, attribs);
@@ -262,6 +266,7 @@ function createGolbatSceneGraph(GL, attribs) {
  * Fungsi helper untuk membangun Scene Graph Zubat.
  */
 function createZubatSceneGraph(GL, attribs) {
+  // ... (Kode createZubatSceneGraph tidak berubah) ...
   const zubatModel = new Node();
 
   const zubatUpperBody = new ZubatUpperBody(GL, attribs, {
@@ -461,7 +466,7 @@ function main() {
     return texture;
   };
 
-  // Menggunakan .jpg sesuai file yang diunggah
+  // Menggunakan .png sesuai path yang benar
   var cube_texture = load_texture("night.png", GL.CLAMP_TO_EDGE, false);
   var ground_texture = load_texture("grass1.png", GL.REPEAT, true);
   var water_texture = createWaterTexture();
@@ -499,7 +504,13 @@ function main() {
   const numClouds = 45;
   const skyRadius = scale * 2.5;
   const skyHeight = 500;
-  var cloudData = Clouds.createSceneObjects(GL, attribs, numClouds, skyRadius, skyHeight);
+  var cloudData = Clouds.createSceneObjects(
+    GL,
+    attribs,
+    numClouds,
+    skyRadius,
+    skyHeight
+  );
 
   // -- POKEMON BASE --
   const pokemonBaseRadius = 300;
@@ -523,8 +534,8 @@ function main() {
 
   // --- TAMBAHKAN BLOK INI: MEMBUAT GUNUNG BERAPI ---
   const volcanoBaseRadius = 1500; // Radius alas
-  const volcanoHeight = 2000;     // Ketinggian
-  const volcanoSegments = 20;       // Segi-20 (cukup low-poly untuk latar)
+  const volcanoHeight = 2000; // Ketinggian
+  const volcanoSegments = 20; // Segi-20 (cukup low-poly untuk latar)
   var volcanoObj = Volcano.createSceneObject(
     GL,
     attribs,
@@ -536,7 +547,7 @@ function main() {
 
   // --- BARU: GUNUNG BERAPI 2 (Kiri) ---
   const volcanoBaseRadius2 = 1800; // Radius alas (sedikit lebih besar)
-  const volcanoHeight2 = 2300;     // Ketinggian (sedikit lebih tinggi)
+  const volcanoHeight2 = 2300; // Ketinggian (sedikit lebih tinggi)
   var volcanoObj2 = Volcano.createSceneObject(
     GL,
     attribs,
@@ -560,16 +571,16 @@ function main() {
   var globalCloudRootNode = new Node(); // Node induk untuk semua awan
   // Tambahkan semua 90 node awan sebagai anak dari induk
   for (const node of cloudData.cloudNodes) {
-      globalCloudRootNode.add(node);
+    globalCloudRootNode.add(node);
   }
   // --- GUNUNG BERAPI 1 (Kanan) ---
   var volcanoNodeRight = new Node();
   volcanoNodeRight.setGeometry(volcanoObj);
   // Posisikan gunung berapi:
   LIBS.translateY(volcanoNodeRight.localMatrix, -2100); // Turunkan sedikit agar dasarnya di bawah air
-  LIBS.translateX(volcanoNodeRight.localMatrix, 1000);  // Geser ke kanan
+  LIBS.translateX(volcanoNodeRight.localMatrix, 1000); // Geser ke kanan
   LIBS.translateZ(volcanoNodeRight.localMatrix, -3300); // Posisikan JAUH di belakang
-  
+
   // --- GUNUNG BERAPI 2 (Kiri) ---
   var volcanoNodeLeft = new Node();
   volcanoNodeLeft.setGeometry(volcanoObj2);
@@ -603,7 +614,7 @@ function main() {
 
   var golbatData = createGolbatSceneGraph(GL, attribs);
   var golbatRootNode = golbatData.root;
-  LIBS.scale(golbatRootNode.localMatrix, 45, 45, 45);
+  LIBS.scale(golbatRootNode.localMatrix, 45, 45, 45); // Scale Golbat
   golbatAnimatorNode.add(golbatRootNode);
 
   // --- NODE POKEMON BASE 3 (ZUBAT) ---
@@ -617,24 +628,31 @@ function main() {
 
   var zubatData = createZubatSceneGraph(GL, attribs);
   var zubatRootNode = zubatData.root;
-  LIBS.scale(zubatRootNode.localMatrix,20, 20, 20);
+  LIBS.scale(zubatRootNode.localMatrix, 20, 20, 20); // Scale Zubat
   zubatAnimatorNode.add(zubatRootNode);
+
+  // --- TAMBAHAN: MANAGER SERANGAN SONIC ---
+  const sonicAttackManager = new Node();
+  // !! PENTING: Attach ke zubatAnimatorNode, bukan zubatRootNode !!
+  zubatAnimatorNode.add(sonicAttackManager);
 
   /*================= INISIALISASI SISTEM ASAP =================*/
   // Definisikan kawah-kawah di sini
   const craterInfos = [
-    { // Gunung KANAN
-      pos: { x: 1000, y: -2100 + (2000 / 2), z: -3300 }, // Posisi Y = Y node + (Tinggi/2)
+    {
+      // Gunung KANAN
+      pos: { x: 1000, y: -2100 + 2000 / 2, z: -3300 }, // Posisi Y = Y node + (Tinggi/2)
       radius: 1500 * 0.4, // Radius = Radius Alas * 0.4 (dari Volcano.js)
-      count: 50 // Jumlah partikel
+      count: 50, // Jumlah partikel
     },
-    { // Gunung KIRI (Asumsi dari langkah sebelumnya)
-      pos: { x: -1400, y: -2550 + (2300 / 2), z: -3600 },
+    {
+      // Gunung KIRI (Asumsi dari langkah sebelumnya)
+      pos: { x: -1400, y: -2550 + 2300 / 2, z: -3600 },
       radius: 1800 * 0.4,
-      count: 30
-    }
+      count: 30,
+    },
   ];
-  
+
   // Panggil init dan simpan node induknya
   var globalSmokeRootNode = SmokeParticles.init(GL, attribs, craterInfos);
   /*================= AKHIR INISIALISASI ASAP =================*/
@@ -653,7 +671,6 @@ function main() {
   var camX = 0,
     camZ = 2000,
     camY = -2000;
-
 
   var keys = {};
   var THETA = 0,
@@ -691,11 +708,47 @@ function main() {
   CANVAS.addEventListener("mouseout", mouseOut, false);
   CANVAS.addEventListener("mousemove", mouseMove, false);
 
+  // --- TAMBAHAN: LISTENER KEYBOARD (Trigger + Kamera) ---
   var keyDown = function (e) {
     keys[e.key] = true;
+
+    // Trigger Kamera (Sama seperti sebelumnya)
+    if (e.key === "f" || e.key === "F") {
+      cameraMode = "f";
+    } else if (e.key === "c" || e.key === "C") {
+      cameraMode = "c";
+    } else if (e.key === "1") {
+      cameraMode = "1";
+    } else if (e.key === "2") {
+      cameraMode = "2";
+    } else if (e.key === "3") {
+      cameraMode = "3";
+    }
+
+    // Trigger Serangan Sonic Wave
+    if (e.key === " " || e.code === "Space") {
+      if (!keys["SpaceProcessed"]) {
+        isAutoAttacking = !isAutoAttacking;
+        keys["SpaceProcessed"] = true;
+      }
+    }
+    if (e.key === "z" || e.code === "KeyZ") {
+      // Menggunakan 'Z'
+      if (isKey1Pressed) return;
+      isKey1Pressed = true;
+      isAutoAttacking = false;
+      spawnNewWave(performance.now());
+    }
   };
+
   var keyUp = function (e) {
     keys[e.key] = false;
+    if (e.key === " " || e.code === "Space") {
+      keys["SpaceProcessed"] = false;
+    }
+    if (e.key === "z" || e.code === "KeyZ") {
+      isKey1Pressed = false;
+    }
   };
 
   window.addEventListener("keydown", keyDown, false);
@@ -716,9 +769,9 @@ function main() {
 
   // --- Konfigurasi Animasi Idle ---
   const idleFlipState = [
-    { isFlppng: false, lastFlipTime: 0, flipStartTime: 0 },
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
+    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 }, // Zubat
+    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 }, // Golbat
+    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 }, // Crobat
   ];
   const flipIntervals = [15000, 18000, 13000];
   const flipDurations = [1000, 1100, 900];
@@ -730,9 +783,9 @@ function main() {
   let animationStage = "IDLE";
   let stageStartTime = 0;
 
-  // --- BARU: Variabel untuk menyimpan status rotasi ---
-  let currentPokemonYRotation = [0, 0, 0]; // Menyimpan rotasi Y saat ini
-  let targetPokemonYRotation = [0, 0, 0]; // Menyimpan rotasi Y tujuan
+  // --- Variabel untuk menyimpan status rotasi ---
+  let currentPokemonYRotation = [0, 0, 0];
+  let targetPokemonYRotation = [0, 0, 0];
 
   const baseNodes = [pokemonBaseNode3, pokemonBaseNode2, pokemonBaseNode1];
   const animatorNodes = [
@@ -750,7 +803,7 @@ function main() {
 
   const DURATION_IDLE = 5000;
   const DURATION_LIFT_OFF = 2000;
-  const DURATION_SMOOTH_TURN = 800; // --- BARU: Durasi untuk putaran transisi ---
+  const DURATION_SMOOTH_TURN = 800;
   const DURATION_MOVE_TO_CENTER = 3000;
   const DURATION_MOVE_TO_ORBIT = 1500;
   const DURATION_TURN = 1000;
@@ -767,6 +820,35 @@ function main() {
     const dz = toZ - fromZ;
     return Math.atan2(dx, dz);
   };
+
+  // --- TAMBAHAN: VARIABEL ANIMASI SONIC WAVE ---
+  let activeWaves = [];
+  let lastWaveSpawnTime = 0;
+  const waveSpawnInterval = 400;
+  const waveLifespan = 2000;
+  const waveMaxScale = 5.0;
+  const waveSpeed = 8.0; // Disesuaikan agar lebih terlihat
+  const waveOptions = {
+    numRings: 1,
+    ringSpacing: 0,
+    baseRadius: 10.5,
+    radiusGrowth: 0,
+    tubeThickness: 0.1, // Dibuat lebih tebal
+    mainSegments: 32,
+    tubeSegments: 8,
+  };
+  let isAutoAttacking = false;
+  let isKey1Pressed = false; // Untuk tombol 'Z'
+
+  // --- Fungsi Helper untuk Spawn Gelombang ---
+  function spawnNewWave(spawnTime) {
+    const wave = new ZubatSonicWave(GL, attribs, waveOptions);
+    wave.spawnTime = spawnTime;
+    wave.lifespan = waveLifespan;
+    sonicAttackManager.add(wave); // Attach ke manager
+    activeWaves.push(wave);
+    lastWaveSpawnTime = spawnTime;
+  }
 
   // ========================================================
   // === LOOP ANIMASI UTAMA ===
@@ -786,44 +868,43 @@ function main() {
     var right_X = Math.cos(THETA);
     var right_Z = -Math.sin(THETA);
 
-
-      if (keys["s"]) {
-        camX += forward_X * currentSpeed;
-        camY += forward_Y * currentSpeed;
-        camZ += forward_Z * currentSpeed;
-      }
-      if (keys["w"]) {
-        camX -= forward_X * currentSpeed;
-        camY -= forward_Y * currentSpeed;
-        camZ -= forward_Z * currentSpeed;
-      }
-      if (keys["a"]) {
-        camX -= right_X * currentSpeed;
-        camZ -= right_Z * currentSpeed;
-      }
-      if (keys["d"]) {
-        camX += right_X * currentSpeed;
-        camZ += right_Z * currentSpeed;
-      }
-      if (keys["e"]) {
-        camY += currentSpeed;
-      }
-      if (keys["q"]) {
-        camY -= currentSpeed;
-      }
-      if (!drag) {
-        dX *= 1 - FRICTION;
-        dY *= 1 - FRICTION;
-        THETA += dX;
-        PHI += dY;
-      }
+    if (keys["s"]) {
+      camX += forward_X * currentSpeed;
+      camY += forward_Y * currentSpeed;
+      camZ += forward_Z * currentSpeed;
+    }
+    if (keys["w"]) {
+      camX -= forward_X * currentSpeed;
+      camY -= forward_Y * currentSpeed;
+      camZ -= forward_Z * currentSpeed;
+    }
+    if (keys["a"]) {
+      camX -= right_X * currentSpeed;
+      camZ -= right_Z * currentSpeed;
+    }
+    if (keys["d"]) {
+      camX += right_X * currentSpeed;
+      camZ += right_Z * currentSpeed;
+    }
+    if (keys["e"]) {
+      camY += currentSpeed;
+    }
+    if (keys["q"]) {
+      camY -= currentSpeed;
+    }
+    if (!drag) {
+      dX *= 1 - FRICTION;
+      dY *= 1 - FRICTION;
+      THETA += dX;
+      PHI += dY;
+    }
 
     var genericTime = time / 100.0;
 
     // --- 1. Animasi Idle Wing Flap (Berlaku untuk semua) ---
     // Zubat (Index 0)
     var floatSpeedZ = 1.5;
-    var floatAmplitudeZ = 0.2 * 30;
+    var floatAmplitudeZ = 0.2 * 30; // Scale Zubat = 20
     idleFloats[0] = Math.sin(genericTime * floatSpeedZ) * floatAmplitudeZ;
     var flapSpeedZ = 1.0;
     var flapAmplitudeZ = 0.15;
@@ -845,7 +926,7 @@ function main() {
 
     // Golbat (Index 1)
     var floatSpeedG = 1.5;
-    var floatAmplitudeG_idle = 0.2 * 80;
+    var floatAmplitudeG_idle = 0.2 * 80; // Scale Golbat = 45
     idleFloats[1] = Math.sin(genericTime * floatSpeedG) * floatAmplitudeG_idle;
     var flapSpeedG = 1.0;
     var flapAmplitudeG = Math.PI / 4;
@@ -868,7 +949,7 @@ function main() {
     LIBS.rotateX(golbatWings.right.localMatrix, 0.7);
 
     // Crobat (Index 2)
-    var floatAmplitudeC = 20;
+    var floatAmplitudeC = 20; // Scale Crobat = 60
     idleFloats[2] = Math.sin(genericTime * 0.6) * floatAmplitudeC;
     var flapSpeedC = 0.6;
     var flapAmplitudeC = Math.PI / 12;
@@ -904,7 +985,7 @@ function main() {
     LIBS.translateY(crobatWings.lowerRight.localMatrix, 3.5);
 
     // --- 2. Logika Idle Flip (Berlaku untuk semua) ---
-    const currentTime = time;
+    const currentTime = time; // Gunakan time dari animate
     for (let i = 0; i < 3; i++) {
       let state = idleFlipState[i];
       let interval = flipIntervals[i];
@@ -945,13 +1026,11 @@ function main() {
     let timeInStage = time - stageStartTime;
     LIBS.set_I4(activeNode.localMatrix);
 
-    let currentX = 0;
-    let currentY = IDLE_Y_OFFSET;
-    let currentZ = 0;
-    let currentRotationY = 0;
-    let currentRotationX = 0;
-
-    // Variabel lokal untuk FSM
+    let currentX = 0,
+      currentY = IDLE_Y_OFFSET,
+      currentZ = 0;
+    let currentRotationY = 0,
+      currentRotationX = 0;
     let progress,
       startAngle,
       endAngle,
@@ -963,31 +1042,25 @@ function main() {
       case "IDLE": {
         let floatY = idleFloats[activePokemonIndex];
         let flipAngle = idleFlipAngles[activePokemonIndex];
-        currentRotationY = currentPokemonYRotation[activePokemonIndex]; // Seharusnya 0
-
+        currentRotationY = currentPokemonYRotation[activePokemonIndex];
         LIBS.translateY(activeNode.localMatrix, IDLE_Y_OFFSET + floatY);
         LIBS.rotateX(activeNode.localMatrix, flipAngle);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
         if (timeInStage > DURATION_IDLE) {
           animationStage = "LIFT_OFF";
           stageStartTime = time;
         }
         break;
       }
-
       case "LIFT_OFF": {
         progress = Math.min(1.0, timeInStage / DURATION_LIFT_OFF);
         currentY = LERP(IDLE_Y_OFFSET, LIFT_Y_OFFSET, progress);
         LIBS.translateY(activeNode.localMatrix, currentY);
-        // Tetap gunakan rotasi Y saat ini (masih 0)
         LIBS.rotateY(
           activeNode.localMatrix,
           currentPokemonYRotation[activePokemonIndex]
         );
-
         if (progress >= 1.0) {
-          // Tentukan target rotasi berikutnya
           targetLocalX = centerPos[0] - activeBasePos[0];
           targetLocalZ = centerPos[2] - activeBasePos[2];
           targetPokemonYRotation[activePokemonIndex] = calculateAngle(
@@ -996,267 +1069,202 @@ function main() {
             targetLocalX,
             targetLocalZ
           );
-
-          animationStage = "TURN_TO_CENTER"; // STATE BARU
+          animationStage = "TURN_TO_CENTER";
           stageStartTime = time;
         }
         break;
       }
-
-      // --- STATE BARU: Berputar di tempat menghadap ke tengah ---
       case "TURN_TO_CENTER": {
         progress = Math.min(1.0, timeInStage / DURATION_SMOOTH_TURN);
         startAngle = currentPokemonYRotation[activePokemonIndex];
         endAngle = targetPokemonYRotation[activePokemonIndex];
         currentRotationY = LERP(startAngle, endAngle, progress);
-
-        LIBS.translateY(activeNode.localMatrix, LIFT_Y_OFFSET); // Tetap di ketinggian LIFT
+        LIBS.translateY(activeNode.localMatrix, LIFT_Y_OFFSET);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
         if (progress >= 1.0) {
-          currentPokemonYRotation[activePokemonIndex] = endAngle; // Simpan rotasi final
+          currentPokemonYRotation[activePokemonIndex] = endAngle;
           animationStage = "MOVE_TO_CENTER";
           stageStartTime = time;
         }
         break;
       }
-
       case "MOVE_TO_CENTER": {
         progress = Math.min(1.0, timeInStage / DURATION_MOVE_TO_CENTER);
         targetLocalX = centerPos[0] - activeBasePos[0];
         targetLocalZ = centerPos[2] - activeBasePos[2];
-
         currentX = LERP(0, targetLocalX, progress);
         currentZ = LERP(0, targetLocalZ, progress);
         currentY = LIFT_Y_OFFSET;
-
-        // HANYA GUNAKAN rotasi yang sudah disimpan (tidak ada snap)
         currentRotationY = currentPokemonYRotation[activePokemonIndex];
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
         if (progress >= 1.0) {
-          // Tentukan target rotasi berikutnya (menghadap Z+)
           targetPokemonYRotation[activePokemonIndex] = 0;
-
-          animationStage = "TURN_TO_ORBIT"; // STATE BARU
+          animationStage = "TURN_TO_ORBIT";
           stageStartTime = time;
         }
         break;
       }
-
-      // --- STATE BARU: Berputar di tempat menghadap ke jalur orbit ---
       case "TURN_TO_ORBIT": {
         progress = Math.min(1.0, timeInStage / DURATION_SMOOTH_TURN);
         startAngle = currentPokemonYRotation[activePokemonIndex];
-        endAngle = targetPokemonYRotation[activePokemonIndex]; // Targetnya adalah 0
+        endAngle = targetPokemonYRotation[activePokemonIndex];
         currentRotationY = LERP(startAngle, endAngle, progress);
-
-        // Tetap di posisi tengah
         currentX = centerPos[0] - activeBasePos[0];
         currentZ = centerPos[2] - activeBasePos[2];
         currentY = LIFT_Y_OFFSET;
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
         if (progress >= 1.0) {
-          currentPokemonYRotation[activePokemonIndex] = endAngle; // Simpan rotasi final (0)
+          currentPokemonYRotation[activePokemonIndex] = endAngle;
           animationStage = "MOVE_TO_ORBIT";
           stageStartTime = time;
         }
         break;
       }
-
       case "MOVE_TO_ORBIT": {
         progress = Math.min(1.0, timeInStage / DURATION_MOVE_TO_ORBIT);
         let startX = centerPos[0] - activeBasePos[0];
         let startZ = centerPos[2] - activeBasePos[2];
         let targetZ = startZ + ORBIT_RADIUS;
-
         currentX = startX;
         currentY = LIFT_Y_OFFSET;
         currentZ = LERP(startZ, targetZ, progress);
-
-        // HANYA GUNAKAN rotasi yang sudah disimpan (0)
         currentRotationY = currentPokemonYRotation[activePokemonIndex];
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
         if (progress >= 1.0) {
           animationStage = "TURN_AND_BEND";
           stageStartTime = time;
         }
         break;
       }
-
       case "TURN_AND_BEND": {
         progress = Math.min(1.0, timeInStage / DURATION_TURN);
-
         currentX = centerPos[0] - activeBasePos[0];
         currentY = LIFT_Y_OFFSET;
         currentZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
-
-        // Berputar dari rotasi terakhir (0) ke 90 derajat
-        startAngle = currentPokemonYRotation[activePokemonIndex]; // DIPERBAIKI (sebelumnya 0)
+        startAngle = currentPokemonYRotation[activePokemonIndex];
         endAngle = Math.PI / 2;
         currentRotationY = LERP(startAngle, endAngle, progress);
         currentRotationX = LERP(0, ORBIT_X_ROTATION, progress);
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
         LIBS.rotateX(activeNode.localMatrix, currentRotationX);
-
         if (progress >= 1.0) {
-          currentPokemonYRotation[activePokemonIndex] = endAngle; // Simpan rotasi (PI/2)
+          currentPokemonYRotation[activePokemonIndex] = endAngle;
           animationStage = "CIRCLING";
           stageStartTime = time;
         }
         break;
       }
-
       case "CIRCLING": {
         progress = (timeInStage % DURATION_CIRCLING) / DURATION_CIRCLING;
         let angle = progress * Math.PI * 2;
-
         let circleX = Math.sin(angle) * ORBIT_RADIUS;
         let circleZ = Math.cos(angle) * ORBIT_RADIUS;
-
         currentX = centerPos[0] - activeBasePos[0] + circleX;
         currentY = LIFT_Y_OFFSET;
         currentZ = centerPos[2] - activeBasePos[2] + circleZ;
-
-        // Rotasi dihitung setiap frame agar smooth mengikuti lingkaran
         let nextAngle = angle + 0.1;
         let nextX = Math.sin(nextAngle) * ORBIT_RADIUS;
         let nextZ = Math.cos(nextAngle) * ORBIT_RADIUS;
         currentRotationY = calculateAngle(circleX, circleZ, nextX, nextZ);
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
         LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION);
-
         if (timeInStage > DURATION_CIRCLING) {
-          // Kita tahu 'CIRCLING' berakhir menghadap 90 derajat (PI/2)
           currentPokemonYRotation[activePokemonIndex] = Math.PI / 2;
           animationStage = "PRE_RETURN_TURN";
           stageStartTime = time;
         }
         break;
       }
-
       case "PRE_RETURN_TURN": {
         progress = Math.min(1.0, timeInStage / DURATION_RETURN_TURN_1);
-
         currentX = centerPos[0] - activeBasePos[0];
         currentY = LIFT_Y_OFFSET;
         currentZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
-
-        // Berputar dari 90 derajat ke 180 derajat (menghadap ke tengah)
-        startAngle = currentPokemonYRotation[activePokemonIndex]; // DIPERBAIKI (sebelumnya PI/2)
+        startAngle = currentPokemonYRotation[activePokemonIndex];
         endAngle = Math.PI;
         currentRotationY = LERP(startAngle, endAngle, progress);
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION); // Tetap miring
-
+        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION);
         if (progress >= 1.0) {
-          currentPokemonYRotation[activePokemonIndex] = endAngle; // Simpan rotasi (PI)
+          currentPokemonYRotation[activePokemonIndex] = endAngle;
           animationStage = "PRE_RETURN_MOVE";
           stageStartTime = time;
         }
         break;
       }
-
       case "PRE_RETURN_MOVE": {
         progress = Math.min(1.0, timeInStage / DURATION_RETURN_MOVE);
-
         let startZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
         let endZ = centerPos[2] - activeBasePos[2];
-
         currentX = centerPos[0] - activeBasePos[0];
         currentY = LIFT_Y_OFFSET;
         currentZ = LERP(startZ, endZ, progress);
-
-        // HANYA GUNAKAN rotasi yang sudah disimpan (PI)
         currentRotationY = currentPokemonYRotation[activePokemonIndex];
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION); // Tetap miring
-
+        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION);
         if (progress >= 1.0) {
           animationStage = "PRE_RETURN_TURN_FINAL";
           stageStartTime = time;
         }
         break;
       }
-
       case "PRE_RETURN_TURN_FINAL": {
         progress = Math.min(1.0, timeInStage / DURATION_RETURN_TURN_2);
-
         currentX = centerPos[0] - activeBasePos[0];
         currentY = LIFT_Y_OFFSET;
         currentZ = centerPos[2] - activeBasePos[2];
-
-        // Berputar dari 180 derajat ke sudut menghadap base asal
-        startAngle = currentPokemonYRotation[activePokemonIndex]; // DIPERBAIKI (sebelumnya PI)
+        startAngle = currentPokemonYRotation[activePokemonIndex];
         centerToBaseAngle = calculateAngle(currentX, currentZ, 0, 0);
         endAngle = centerToBaseAngle;
         currentRotationY = LERP(startAngle, endAngle, progress);
-        currentRotationX = LERP(ORBIT_X_ROTATION, 0, progress); // Luruskan badan
-
+        currentRotationX = LERP(ORBIT_X_ROTATION, 0, progress);
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
         LIBS.rotateX(activeNode.localMatrix, currentRotationX);
-
         if (progress >= 1.0) {
-          currentPokemonYRotation[activePokemonIndex] = endAngle; // Simpan rotasi final
+          currentPokemonYRotation[activePokemonIndex] = endAngle;
           animationStage = "RETURN_TO_BASE";
           stageStartTime = time;
         }
         break;
       }
-
       case "RETURN_TO_BASE": {
         progress = Math.min(1.0, timeInStage / DURATION_RETURN);
-
         let startX = centerPos[0] - activeBasePos[0];
         let startZ = centerPos[2] - activeBasePos[2];
-
         currentX = LERP(startX, 0, progress);
-        currentY = LERP(LIFT_Y_OFFSET, IDLE_Y_OFFSET, progress); // Turun
+        currentY = LERP(LIFT_Y_OFFSET, IDLE_Y_OFFSET, progress);
         currentZ = LERP(startZ, 0, progress);
-
-        // HANYA GUNAKAN rotasi yang sudah disimpan (menghadap base)
         currentRotationY = currentPokemonYRotation[activePokemonIndex];
-
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
         LIBS.translateZ(activeNode.localMatrix, currentZ);
         LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
         if (progress >= 1.0) {
-          currentPokemonYRotation[activePokemonIndex] = 0; // Reset rotasi untuk siklus idle
+          currentPokemonYRotation[activePokemonIndex] = 0;
           animationStage = "IDLE";
           stageStartTime = time;
           activePokemonIndex = (activePokemonIndex + 1) % 3;
@@ -1265,15 +1273,85 @@ function main() {
       }
     }
 
+    // --- TAMBAHAN: ANIMASI SONIC WAVE ATTACK ---
+    const currentTimeForWave = time; // Gunakan 'time' dari animate
+    const timeSinceLastSpawn = currentTimeForWave - lastWaveSpawnTime;
+
+    // Cek trigger untuk spawn gelombang
+    if (isAutoAttacking && timeSinceLastSpawn > waveSpawnInterval) {
+      spawnNewWave(currentTimeForWave);
+    } else if (isKey1Pressed && timeSinceLastSpawn > waveSpawnInterval) {
+      // Untuk 'Z' hold
+      spawnNewWave(currentTimeForWave);
+    }
+
+    // Update dan bersihkan gelombang yang aktif
+    const wavesToRemove = [];
+    for (let wave of activeWaves) {
+      const age = currentTimeForWave - wave.spawnTime;
+      if (age > wave.lifespan) {
+        wavesToRemove.push(wave);
+      } else {
+        const progress = age / wave.lifespan;
+        const currentScale = 1.0 + progress * (waveMaxScale - 1.0); // Mulai dari 1.0
+        const currentZ_anim = progress * waveSpeed;
+
+        // !! PERBAIKAN SKALA & POSISI !!
+        // Kita perlu ZUBAT's world matrix untuk posisi spawn yang benar
+        // 1. Dapatkan world matrix dari zubatAnimatorNode
+        const zubatWorldMatrix = zubatAnimatorNode.worldMatrix;
+
+        // 2. Tentukan posisi spawn relatif terhadap Zubat
+        const spawnOffsetY = 2 * 20; // 2 (Y Anda) * 20 (Skala Zubat)
+        const spawnOffsetZ = 3 * 20; // 3 (Z Anda) * 20 (Skala Zubat)
+
+        // 3. Buat matriks transformasi untuk gelombang
+        const M_scale = LIBS.get_I4();
+        LIBS.scale(M_scale, currentScale, 1.0, currentScale);
+
+        const M_rotate = LIBS.get_I4();
+        // LIBS.rotateX(M_rotate, Math.PI * 2); // Rotasi 360 = tidak ada rotasi
+        // Coba arahkan lurus dulu
+        LIBS.rotateX(M_rotate, Math.PI * 2); // Arahkan ke depan relatif thd Zubat
+
+        const M_translate_local = LIBS.get_I4();
+        LIBS.translateY(M_translate_local, spawnOffsetY); // Posisi Y relatif
+        LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim); // Posisi Z relatif + Gerakan
+
+        // Gabungkan T * R * S secara lokal dulu
+        const M_LocalTransform = LIBS.multiply(
+          M_translate_local,
+          LIBS.multiply(M_rotate, M_scale)
+        );
+
+        // Gabungkan dengan world matrix Zubat agar mengikuti Zubat
+        // Final = World_Zubat * Local_Wave_Transform
+        wave.localMatrix = LIBS.multiply(zubatWorldMatrix, M_LocalTransform);
+        // Catatan: Karena kita set localMatrix gelombang = worldMatrix Zubat * transform lokal,
+        // saat Node.draw() dipanggil, parentMatrix (dari zubatAnimatorNode)
+        // akan dikalikan lagi. Kita perlu sedikit trik.
+        // Opsi 1: Buat sonicAttackManager jadi child root scene (rumit).
+        // Opsi 2 (Lebih mudah): Set parentMatrix jadi Identity saat draw wave.
+        // Kita akan modifikasi Node.js atau buat fungsi draw khusus di ZubatSonicWave.
+        // Untuk sekarang, biarkan begini dulu, nanti diperbaiki jika posisinya salah.
+      }
+    }
+
+    // Hapus gelombang yang sudah mati
+    if (wavesToRemove.length > 0) {
+      sonicAttackManager.childs = activeWaves.filter(
+        (w) => !wavesToRemove.includes(w)
+      );
+      activeWaves = sonicAttackManager.childs;
+    }
+
     // --- 4. Terapkan Animasi Idle ke Pokemon NON-AKTIF ---
     for (let i = 0; i < animatorNodes.length; i++) {
       if (i !== activePokemonIndex) {
         let inactiveNode = animatorNodes[i];
         let floatY = idleFloats[i];
         let flipAngle = idleFlipAngles[i];
-        // Reset rotasi Y jika mereka tidak aktif
         currentPokemonYRotation[i] = 0;
-
         LIBS.set_I4(inactiveNode.localMatrix);
         LIBS.translateY(inactiveNode.localMatrix, IDLE_Y_OFFSET + floatY);
         LIBS.rotateX(inactiveNode.localMatrix, flipAngle);
@@ -1307,60 +1385,46 @@ function main() {
     GL.disable(GL.BLEND);
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, SKYBOX_VMATRIX);
     GL.uniform1i(uniforms._isSkybox, true);
-    skyboxObj.draw(MOVEMATRIX, uniforms);
+    skyboxObj.draw(MOVEMATRIX, uniforms); // Draw Skybox
     GL.uniform1i(uniforms._isSkybox, false);
 
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, VIEWMATRIX);
-    islandNode.draw(MOVEMATRIX, uniforms);
-    treeNode.draw(MOVEMATRIX, uniforms);
-    // --- TAMBAHKAN BARIS INI ---
-    volcanoNodeRight.draw(MOVEMATRIX, uniforms); 
-    volcanoNodeLeft.draw(MOVEMATRIX, uniforms);  
-    pokemonBaseNode1.draw(MOVEMATRIX, uniforms);
-    pokemonBaseNode2.draw(MOVEMATRIX, uniforms);
-    pokemonBaseNode3.draw(MOVEMATRIX, uniforms);
+    islandNode.draw(MOVEMATRIX, uniforms); // Draw Island
+    treeNode.draw(MOVEMATRIX, uniforms); // Draw Trees
+    volcanoNodeRight.draw(MOVEMATRIX, uniforms); // Draw Volcano Right
+    volcanoNodeLeft.draw(MOVEMATRIX, uniforms); // Draw Volcano Left
+    pokemonBaseNode1.draw(MOVEMATRIX, uniforms); // Draw Crobat Base + Crobat
+    pokemonBaseNode2.draw(MOVEMATRIX, uniforms); // Draw Golbat Base + Golbat
+    pokemonBaseNode3.draw(MOVEMATRIX, uniforms); // Draw Zubat Base + Zubat (Termasuk Sonic Waves)
 
-  // CLOUD ANIMATION
-  // --- Animasi Awan Individual ---
-  const cloudDriftAmount = 2000; // Seberapa jauh mereka bergerak dari basis
-
-  // Loop melalui data animasi untuk setiap awan
-  for (const anim of cloudData.cloudAnimData) {
-      // Hitung pergerakan sinus berdasarkan waktu, offset, dan kecepatan
+    // --- Animasi Awan Individual ---
+    const cloudDriftAmount = 2000;
+    for (const anim of cloudData.cloudAnimData) {
       let timeWithOffset = time + anim.startOffset;
-      let drift = Math.sin(timeWithOffset * anim.speed * 0.001) * cloudDriftAmount;
-
-      // Hitung posisi X baru
-      let newX = anim.baseX + (drift * anim.direction);
-
-      // Perbarui posisi X di matriks lokal node secara langsung
-      // (Matriks translasi menyimpan X, Y, Z di index 12, 13, 14)
+      let drift =
+        Math.sin(timeWithOffset * anim.speed * 0.001) * cloudDriftAmount;
+      let newX = anim.baseX + drift * anim.direction;
       anim.node.localMatrix[12] = newX;
-      // Y dan Z (13, 14) tetap sama seperti saat dibuat
-  }
+    }
+    globalCloudRootNode.draw(MOVEMATRIX, uniforms); // Draw Clouds
 
-  // --- BARU: Update Animasi Partikel Asap ---
-  SmokeParticles.update(dt, THETA, PHI);
-  // --- Akhir Update Asap ---
+    GL.enable(GL.BLEND); // Enable blending untuk asap dan air
 
-  globalCloudRootNode.draw(MOVEMATRIX, uniforms); // Gambar node induk (akan menggambar semua 90 anak)
-// --- Akhir Animasi Awan Individual ---
-
-    GL.enable(GL.BLEND);
-    // --- BARU: GAMBAR PARTIKEL ASAP ---
-    // (Kode ini seharusnya sudah ada)
-    GL.depthMask(false);
+    // --- Update Animasi Partikel Asap ---
+    SmokeParticles.update(dt, THETA, PHI);
+    // Gambar Partikel Asap
+    GL.depthMask(false); // Disable depth writing
     globalSmokeRootNode.draw(MOVEMATRIX, uniforms);
-    GL.depthMask(true); 
-    // --- AKHIR TAMBAHAN ---
-    webNode.draw(MOVEMATRIX, uniforms);
-    waterNode.draw(MOVEMATRIX, uniforms);
+    GL.depthMask(true); // Re-enable depth writing
+
+    webNode.draw(MOVEMATRIX, uniforms); // Draw Spider Webs
+    waterNode.draw(MOVEMATRIX, uniforms); // Draw Water
 
     GL.flush();
     window.requestAnimationFrame(animate);
   };
 
-  animate(0);
+  animate(0); // Mulai loop animasi
 }
 
 main();
