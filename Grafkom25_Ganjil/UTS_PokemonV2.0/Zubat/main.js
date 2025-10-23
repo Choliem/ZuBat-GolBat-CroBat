@@ -219,7 +219,7 @@ function main() {
   // Posisi Awal Sayap Kanan (Dicerminkan/Mirrored)
   LIBS.scale(rightWing.localMatrix, -1, 1, 1); // <-- Kunci pencerminan
   LIBS.translateY(rightWing.localMatrix, 0.0);
-  LIBS.translateX(rightWing.localMatrix, -0.5);
+  LIBS.translateX(rightWing.localMatrix, 0.5);
   LIBS.rotateZ(rightWing.localMatrix, -0.4);
   LIBS.rotateY(rightWing.localMatrix, -0.2);
 

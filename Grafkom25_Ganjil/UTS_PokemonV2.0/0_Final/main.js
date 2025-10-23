@@ -756,7 +756,7 @@ function main() {
     LIBS.translateX(golbatWings.left.localMatrix, 0.5);
     LIBS.translateY(golbatWings.left.localMatrix, 0.1);
     LIBS.rotateZ(golbatWings.left.localMatrix, 0.3);
-    LIBS.rotateY(golbatWings.left.localMatrix, -0.2 + flapAngleG);
+    LIBS.rotateY(golbatWings.left.localMatrix, 0.2 + flapAngleG);
     LIBS.rotateX(golbatWings.left.localMatrix, 0.7);
 
     LIBS.set_I4(golbatWings.right.localMatrix);
@@ -804,14 +804,14 @@ function main() {
 
     LIBS.set_I4(zubatWings.left.localMatrix);
     LIBS.translateY(zubatWings.left.localMatrix, 0.0);
-    LIBS.translateX(zubatWings.left.localMatrix, 0.5);
+    LIBS.translateX(zubatWings.left.localMatrix, 1.2);
     LIBS.rotateZ(zubatWings.left.localMatrix, 0.4 + flapAngleZ); // <-- Animasi
     LIBS.rotateY(zubatWings.left.localMatrix, 0.2);
 
     LIBS.set_I4(zubatWings.right.localMatrix);
     LIBS.scale(zubatWings.right.localMatrix, -1, 1, 1);
     LIBS.translateY(zubatWings.right.localMatrix, 0.0);
-    LIBS.translateX(zubatWings.right.localMatrix, -0.5);
+    LIBS.translateX(zubatWings.right.localMatrix, 1.3);
     LIBS.rotateZ(zubatWings.right.localMatrix, -0.4 - flapAngleZ); // <-- Animasi
     LIBS.rotateY(zubatWings.right.localMatrix, -0.2);
     // =================================================================

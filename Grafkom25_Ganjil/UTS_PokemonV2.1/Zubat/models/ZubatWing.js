@@ -17,8 +17,8 @@
  * via _generateMembrane.
  */
 
-import { Node } from "../Node.js";
-import { SceneObject } from "../SceneObject.js";
+import { Node } from "./Node.js";
+import { SceneObject } from "./SceneObject.js";
 
 export class ZubatWing extends Node {
   constructor(GL, attribs, options = {}) {
@@ -27,7 +27,12 @@ export class ZubatWing extends Node {
     // 1. Generate semua bagian sayap (tulang & membran)
     const wingData = this._generateWingGeometry(opts);
     // 2. Buat satu SceneObject gabungan
-    const sceneObj = new SceneObject(GL, wingData.vertices, wingData.faces, attribs, "POS_COL_NORM");
+    const sceneObj = new SceneObject(
+      GL,
+      wingData.vertices,
+      wingData.faces,
+      attribs
+    );
     this.setGeometry(sceneObj);
   }
 
@@ -105,18 +110,42 @@ export class ZubatWing extends Node {
     };
 
     // 1. Generate Tulang Atas (dari kurva)
-    const topBonePath = this._generateBezierPath(opts.topBoneCurve, opts.segmentsPerPart);
-    const topBoneData = this._generateTube(topBonePath, opts.tubeSegments, opts.boneThickness.top, opts.boneColor);
+    const topBonePath = this._generateBezierPath(
+      opts.topBoneCurve,
+      opts.segmentsPerPart
+    );
+    const topBoneData = this._generateTube(
+      topBonePath,
+      opts.tubeSegments,
+      opts.boneThickness.top,
+      opts.boneColor
+    );
     appendPart(topBoneData);
 
     // 2. Generate Tulang Tengah (dari kurva)
-    const midBonePath = this._generateBezierPath(opts.midBoneCurve, opts.segmentsPerPart);
-    const midBoneData = this._generateTube(midBonePath, opts.tubeSegments, opts.boneThickness.mid, opts.boneColor);
+    const midBonePath = this._generateBezierPath(
+      opts.midBoneCurve,
+      opts.segmentsPerPart
+    );
+    const midBoneData = this._generateTube(
+      midBonePath,
+      opts.tubeSegments,
+      opts.boneThickness.mid,
+      opts.boneColor
+    );
     appendPart(midBoneData);
 
     // 3. Generate Tulang Penghubung (lurus)
-    const connectorPath = [opts.topBoneCurve[0].endPoint, opts.midBoneCurve[0].endPoint];
-    const connectorData = this._generateTube(connectorPath, opts.tubeSegments, opts.boneThickness.connector, opts.boneColor);
+    const connectorPath = [
+      opts.topBoneCurve[0].endPoint,
+      opts.midBoneCurve[0].endPoint,
+    ];
+    const connectorData = this._generateTube(
+      connectorPath,
+      opts.tubeSegments,
+      opts.boneThickness.connector,
+      opts.boneColor
+    );
     appendPart(connectorData);
 
     // 4. Generate Membran (di antara 2 path kurva)
@@ -151,8 +180,16 @@ export class ZubatWing extends Node {
   _getBezierControlPoints(curveDef) {
     const p0 = curveDef.startPoint;
     const p3 = curveDef.endPoint;
-    const p1 = [p0[0] + curveDef.startHandle[0], p0[1] + curveDef.startHandle[1], p0[2] + curveDef.startHandle[2]];
-    const p2 = [p3[0] + curveDef.endHandle[0], p3[1] + curveDef.endHandle[1], p3[2] + curveDef.endHandle[2]];
+    const p1 = [
+      p0[0] + curveDef.startHandle[0],
+      p0[1] + curveDef.startHandle[1],
+      p0[2] + curveDef.startHandle[2],
+    ];
+    const p2 = [
+      p3[0] + curveDef.endHandle[0],
+      p3[1] + curveDef.endHandle[1],
+      p3[2] + curveDef.endHandle[2],
+    ];
     return [p0, p1, p2, p3];
   }
 
@@ -163,7 +200,11 @@ export class ZubatWing extends Node {
     const c1 = 3 * mt * mt * t;
     const c2 = 3 * mt * t * t;
     const c3 = t * t * t;
-    return [c0 * p0[0] + c1 * p1[0] + c2 * p2[0] + c3 * p3[0], c0 * p0[1] + c1 * p1[1] + c2 * p2[1] + c3 * p3[1], c0 * p0[2] + c1 * p1[2] + c2 * p2[2] + c3 * p3[2]];
+    return [
+      c0 * p0[0] + c1 * p1[0] + c2 * p2[0] + c3 * p3[0],
+      c0 * p0[1] + c1 * p1[1] + c2 * p2[1] + c3 * p3[1],
+      c0 * p0[2] + c1 * p1[2] + c2 * p2[2] + c3 * p3[2],
+    ];
   }
 
   // --- Fungsi Helper Geometri ---
@@ -181,9 +222,11 @@ export class ZubatWing extends Node {
       let currentThickness;
       if (Array.isArray(thickness)) {
         if (t < 0.5) {
-          currentThickness = thickness[0] + (thickness[1] - thickness[0]) * (t * 2);
+          currentThickness =
+            thickness[0] + (thickness[1] - thickness[0]) * (t * 2);
         } else {
-          currentThickness = thickness[1] + (thickness[2] - thickness[1]) * ((t - 0.5) * 2);
+          currentThickness =
+            thickness[1] + (thickness[2] - thickness[1]) * ((t - 0.5) * 2);
         }
       } else {
         currentThickness = thickness;
@@ -209,9 +252,12 @@ export class ZubatWing extends Node {
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
         const offset = [
-          normal[0] * cos * currentThickness + binormal[0] * sin * currentThickness,
-          normal[1] * cos * currentThickness + binormal[1] * sin * currentThickness,
-          normal[2] * cos * currentThickness + binormal[2] * sin * currentThickness,
+          normal[0] * cos * currentThickness +
+            binormal[0] * sin * currentThickness,
+          normal[1] * cos * currentThickness +
+            binormal[1] * sin * currentThickness,
+          normal[2] * cos * currentThickness +
+            binormal[2] * sin * currentThickness,
         ];
         const vertex = this._add(point, offset);
         const vertexNormal = this._normalize(offset);
@@ -249,7 +295,10 @@ export class ZubatWing extends Node {
 
       // Kalkulasi Normal Permukaan (sudah diperbaiki)
       const vecMembrane = this._subtract(p2, p1); // <-- (p2, p1)
-      const vecForward = i < path1.length - 1 ? this._subtract(path1[i + 1], p1) : this._subtract(p1, path1[i - 1]);
+      const vecForward =
+        i < path1.length - 1
+          ? this._subtract(path1[i + 1], p1)
+          : this._subtract(p1, path1[i - 1]);
       let normal = this._normalize(this._cross(vecMembrane, vecForward));
 
       const outerOffset = this._scale(normal, halfThickness);
@@ -261,8 +310,16 @@ export class ZubatWing extends Node {
 
       // 2. Vertex Sisi Dalam (Pink)
       const innerNormal = this._scale(normal, -1); // Normal dibalik
-      vertices.push(...this._add(p1, innerOffset), ...innerColor, ...innerNormal);
-      vertices.push(...this._add(p2, innerOffset), ...innerColor, ...innerNormal);
+      vertices.push(
+        ...this._add(p1, innerOffset),
+        ...innerColor,
+        ...innerNormal
+      );
+      vertices.push(
+        ...this._add(p2, innerOffset),
+        ...innerColor,
+        ...innerNormal
+      );
     }
 
     // Generate faces
@@ -301,6 +358,10 @@ export class ZubatWing extends Node {
     return len > 1e-6 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 0, 0];
   }
   _cross(a, b) {
-    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
   }
 }
