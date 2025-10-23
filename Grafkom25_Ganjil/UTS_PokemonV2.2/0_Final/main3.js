@@ -458,9 +458,9 @@ function main() {
     return texture;
   };
 
-  // Menggunakan .png sesuai file yang diunggah
-  var cube_texture = load_texture("night.png", GL.CLAMP_TO_EDGE, false);
-  var ground_texture = load_texture("grass1.png", GL.REPEAT, true);
+  // Menggunakan .jpg sesuai file yang diunggah
+  var cube_texture = load_texture("night.jpg", GL.CLAMP_TO_EDGE, false);
+  var ground_texture = load_texture("grass1.jpg", GL.REPEAT, true);
   var water_texture = createWaterTexture();
 
   /*======================== MEMBUAT SCENE OBJECTS ======================== */
