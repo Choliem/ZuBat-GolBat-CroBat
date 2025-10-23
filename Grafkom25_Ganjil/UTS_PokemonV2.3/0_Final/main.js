@@ -12,6 +12,8 @@ import { Water } from "./models/Water.js";
 import { Trees } from "./models/Trees.js";
 import { Spiders } from "./models/Spiders.js";
 import { PokemonBase } from "./models/PokemonBase.js";
+import { Volcano } from "./models/Volcano.js";
+import { SmokeParticles } from "./models/SmokeParticles.js";
 
 // --- IMPORT CROBAT ---
 import { CrobatBody } from "./models/crobat/CrobatBody.js";
@@ -22,6 +24,7 @@ import { CrobatEyelid } from "./models/crobat/CrobatEyelid.js";
 import { CrobatSclera } from "./models/crobat/CrobatSclera.js";
 import { CrobatPupil } from "./models/crobat/CrobatPupil.js";
 import { CrobatFoot } from "./models/crobat/CrobatFoot.js";
+import { Clouds } from "./models/Clouds2.js";
 // --- AKHIR IMPORT CROBAT ---
 
 import { GolbatUpperBody } from "./models/Golbat/GolbatUpperBody.js";
@@ -458,7 +461,7 @@ function main() {
     return texture;
   };
 
-  // Menggunakan .png sesuai file yang diunggah
+  // Menggunakan .jpg sesuai file yang diunggah
   var cube_texture = load_texture("night.png", GL.CLAMP_TO_EDGE, false);
   var ground_texture = load_texture("grass1.png", GL.REPEAT, true);
   var water_texture = createWaterTexture();
@@ -492,6 +495,13 @@ function main() {
     treeData.validTreePositions
   );
 
+  // -- CLOUD --
+  const numClouds = 45;
+  const skyRadius = scale * 2.5;
+  const skyHeight = 500;
+  var cloudData = Clouds.createSceneObjects(GL, attribs, numClouds, skyRadius, skyHeight);
+
+  // -- POKEMON BASE --
   const pokemonBaseRadius = 300;
   const pokemonBaseHeight = 50;
   const pokemonSpikeHeight = 200;
@@ -511,6 +521,31 @@ function main() {
     pokemonBaseYPosition
   );
 
+  // --- TAMBAHKAN BLOK INI: MEMBUAT GUNUNG BERAPI ---
+  const volcanoBaseRadius = 1500; // Radius alas
+  const volcanoHeight = 2000;     // Ketinggian
+  const volcanoSegments = 20;       // Segi-20 (cukup low-poly untuk latar)
+  var volcanoObj = Volcano.createSceneObject(
+    GL,
+    attribs,
+    volcanoBaseRadius,
+    volcanoHeight,
+    volcanoSegments
+  );
+  // --- AKHIR TAMBAHAN ---
+
+  // --- BARU: GUNUNG BERAPI 2 (Kiri) ---
+  const volcanoBaseRadius2 = 1800; // Radius alas (sedikit lebih besar)
+  const volcanoHeight2 = 2300;     // Ketinggian (sedikit lebih tinggi)
+  var volcanoObj2 = Volcano.createSceneObject(
+    GL,
+    attribs,
+    volcanoBaseRadius2,
+    volcanoHeight2,
+    volcanoSegments // Segments bisa sama
+  );
+  // --- AKHIR TAMBAHAN ---
+
   /*======================== MEMBANGUN SCENE GRAPH ======================== */
   var islandNode = new Node();
   islandNode.setGeometry(islandData.sceneObject);
@@ -522,6 +557,27 @@ function main() {
   waterNode.setGeometry(waterData.sceneObject);
   var webNode = new Node();
   webNode.setGeometry(spiderData.webObj);
+  var globalCloudRootNode = new Node(); // Node induk untuk semua awan
+  // Tambahkan semua 90 node awan sebagai anak dari induk
+  for (const node of cloudData.cloudNodes) {
+      globalCloudRootNode.add(node);
+  }
+  // --- GUNUNG BERAPI 1 (Kanan) ---
+  var volcanoNodeRight = new Node();
+  volcanoNodeRight.setGeometry(volcanoObj);
+  // Posisikan gunung berapi:
+  LIBS.translateY(volcanoNodeRight.localMatrix, -2100); // Turunkan sedikit agar dasarnya di bawah air
+  LIBS.translateX(volcanoNodeRight.localMatrix, 1000);  // Geser ke kanan
+  LIBS.translateZ(volcanoNodeRight.localMatrix, -3300); // Posisikan JAUH di belakang
+  
+  // --- GUNUNG BERAPI 2 (Kiri) ---
+  var volcanoNodeLeft = new Node();
+  volcanoNodeLeft.setGeometry(volcanoObj2);
+  // Posisikan gunung berapi:
+  LIBS.translateY(volcanoNodeLeft.localMatrix, -2500); // Sedikit lebih rendah (karena lebih besar)
+  LIBS.translateX(volcanoNodeLeft.localMatrix, -1450); // Jelas di sebelah KIRI
+  LIBS.translateZ(volcanoNodeLeft.localMatrix, -3800); // Sedikit lebih jauh ke belakang
+  // --- AKHIR TAMBAHAN ---
 
   // --- NODE POKEMON BASE 1 (CROBAT) ---
   var pokemonBaseNode1 = new Node();
@@ -547,7 +603,7 @@ function main() {
 
   var golbatData = createGolbatSceneGraph(GL, attribs);
   var golbatRootNode = golbatData.root;
-  LIBS.scale(golbatRootNode.localMatrix, 30, 30, 30);
+  LIBS.scale(golbatRootNode.localMatrix, 45, 45, 45);
   golbatAnimatorNode.add(golbatRootNode);
 
   // --- NODE POKEMON BASE 3 (ZUBAT) ---
@@ -561,8 +617,27 @@ function main() {
 
   var zubatData = createZubatSceneGraph(GL, attribs);
   var zubatRootNode = zubatData.root;
-  LIBS.scale(zubatRootNode.localMatrix, 15, 15, 15);
+  LIBS.scale(zubatRootNode.localMatrix,20, 20, 20);
   zubatAnimatorNode.add(zubatRootNode);
+
+  /*================= INISIALISASI SISTEM ASAP =================*/
+  // Definisikan kawah-kawah di sini
+  const craterInfos = [
+    { // Gunung KANAN
+      pos: { x: 1000, y: -2100 + (2000 / 2), z: -3300 }, // Posisi Y = Y node + (Tinggi/2)
+      radius: 1500 * 0.4, // Radius = Radius Alas * 0.4 (dari Volcano.js)
+      count: 50 // Jumlah partikel
+    },
+    { // Gunung KIRI (Asumsi dari langkah sebelumnya)
+      pos: { x: -1400, y: -2550 + (2300 / 2), z: -3600 },
+      radius: 1800 * 0.4,
+      count: 30
+    }
+  ];
+  
+  // Panggil init dan simpan node induknya
+  var globalSmokeRootNode = SmokeParticles.init(GL, attribs, craterInfos);
+  /*================= AKHIR INISIALISASI ASAP =================*/
 
   /*================= MATRIKS & KONTROL KAMERA =================*/
   var PROJMATRIX = LIBS.get_projection(
@@ -579,9 +654,6 @@ function main() {
     camZ = 2000,
     camY = -2000;
 
-  let cameraMode = "f";
-  const LOCK_ON_OFFSET_Y = 500;
-  const LOCK_ON_OFFSET_Z = 2000;
 
   var keys = {};
   var THETA = 0,
@@ -621,17 +693,6 @@ function main() {
 
   var keyDown = function (e) {
     keys[e.key] = true;
-    if (e.key === "f" || e.key === "F") {
-      cameraMode = "f";
-    } else if (e.key === "c" || e.key === "C") {
-      cameraMode = "c";
-    } else if (e.key === "1") {
-      cameraMode = "1";
-    } else if (e.key === "2") {
-      cameraMode = "2";
-    } else if (e.key === "3") {
-      cameraMode = "3";
-    }
   };
   var keyUp = function (e) {
     keys[e.key] = false;
@@ -725,7 +786,7 @@ function main() {
     var right_X = Math.cos(THETA);
     var right_Z = -Math.sin(THETA);
 
-    if (cameraMode === "f") {
+
       if (keys["s"]) {
         camX += forward_X * currentSpeed;
         camY += forward_Y * currentSpeed;
@@ -756,7 +817,6 @@ function main() {
         THETA += dX;
         PHI += dY;
       }
-    }
 
     var genericTime = time / 100.0;
 
@@ -1226,39 +1286,6 @@ function main() {
     pokemonBaseNode2.updateWorldMatrix(MOVEMATRIX);
     pokemonBaseNode3.updateWorldMatrix(MOVEMATRIX);
 
-    if (cameraMode !== "f") {
-      let targetX = 0;
-      let targetY = 0;
-      let targetZ = 0;
-
-      switch (cameraMode) {
-        case "c":
-          targetX = baseNodes[2].worldMatrix[12];
-          targetY = baseNodes[2].worldMatrix[13];
-          targetZ = baseNodes[2].worldMatrix[14];
-          break;
-        case "1":
-          targetX = animatorNodes[0].worldMatrix[12];
-          targetY = animatorNodes[0].worldMatrix[13];
-          targetZ = animatorNodes[0].worldMatrix[14];
-          break;
-        case "2":
-          targetX = animatorNodes[1].worldMatrix[12];
-          targetY = animatorNodes[1].worldMatrix[13];
-          targetZ = animatorNodes[1].worldMatrix[14];
-          break;
-        case "3":
-          targetX = animatorNodes[2].worldMatrix[12];
-          targetY = animatorNodes[2].worldMatrix[13];
-          targetZ = animatorNodes[2].worldMatrix[14];
-          break;
-      }
-
-      camX = targetX;
-      camY = targetY + LOCK_ON_OFFSET_Y;
-      camZ = targetZ + LOCK_ON_OFFSET_Z;
-    }
-
     // --- 6. Set Uniforms Global ---
     LIBS.set_I4(VIEWMATRIX);
     LIBS.rotateX(VIEWMATRIX, -PHI);
@@ -1286,11 +1313,46 @@ function main() {
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, VIEWMATRIX);
     islandNode.draw(MOVEMATRIX, uniforms);
     treeNode.draw(MOVEMATRIX, uniforms);
+    // --- TAMBAHKAN BARIS INI ---
+    volcanoNodeRight.draw(MOVEMATRIX, uniforms); 
+    volcanoNodeLeft.draw(MOVEMATRIX, uniforms);  
     pokemonBaseNode1.draw(MOVEMATRIX, uniforms);
     pokemonBaseNode2.draw(MOVEMATRIX, uniforms);
     pokemonBaseNode3.draw(MOVEMATRIX, uniforms);
 
+  // CLOUD ANIMATION
+  // --- Animasi Awan Individual ---
+  const cloudDriftAmount = 2000; // Seberapa jauh mereka bergerak dari basis
+
+  // Loop melalui data animasi untuk setiap awan
+  for (const anim of cloudData.cloudAnimData) {
+      // Hitung pergerakan sinus berdasarkan waktu, offset, dan kecepatan
+      let timeWithOffset = time + anim.startOffset;
+      let drift = Math.sin(timeWithOffset * anim.speed * 0.001) * cloudDriftAmount;
+
+      // Hitung posisi X baru
+      let newX = anim.baseX + (drift * anim.direction);
+
+      // Perbarui posisi X di matriks lokal node secara langsung
+      // (Matriks translasi menyimpan X, Y, Z di index 12, 13, 14)
+      anim.node.localMatrix[12] = newX;
+      // Y dan Z (13, 14) tetap sama seperti saat dibuat
+  }
+
+  // --- BARU: Update Animasi Partikel Asap ---
+  SmokeParticles.update(dt, THETA, PHI);
+  // --- Akhir Update Asap ---
+
+  globalCloudRootNode.draw(MOVEMATRIX, uniforms); // Gambar node induk (akan menggambar semua 90 anak)
+// --- Akhir Animasi Awan Individual ---
+
     GL.enable(GL.BLEND);
+    // --- BARU: GAMBAR PARTIKEL ASAP ---
+    // (Kode ini seharusnya sudah ada)
+    GL.depthMask(false);
+    globalSmokeRootNode.draw(MOVEMATRIX, uniforms);
+    GL.depthMask(true); 
+    // --- AKHIR TAMBAHAN ---
     webNode.draw(MOVEMATRIX, uniforms);
     waterNode.draw(MOVEMATRIX, uniforms);
 
