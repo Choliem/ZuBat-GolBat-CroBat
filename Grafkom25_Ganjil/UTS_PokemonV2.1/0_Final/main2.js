@@ -1,5 +1,5 @@
 // ===================================================================
-// main.js - IMPROVED ANIMATION
+// main.js - GABUNGAN
 // ===================================================================
 
 // 1. IMPORT SEMUA MODULES
@@ -38,8 +38,10 @@ import { ZubatWing } from "./models/Zubat/ZubatWing.js";
 
 /**
  * Fungsi helper untuk membangun Scene Graph Crobat.
+ * Disalin dari main.js Crobat.
  */
 function createCrobatSceneGraph(GL, attribs) {
+  // 1. Buat semua node
   const rootNode = new Node();
   const bodyNode = new Node();
   rootNode.add(bodyNode);
@@ -78,6 +80,8 @@ function createCrobatSceneGraph(GL, attribs) {
   bodyNode.add(leftFootNode);
   bodyNode.add(rightFootNode);
 
+  // 2. Pasang Geometri ke Node
+  // (Ini akan otomatis menggunakan SceneObject baru karena file modelnya sudah diedit)
   bodyNode.setGeometry(new CrobatBody(GL, attribs, 1.5, 100, 100));
   leftEyelidNode.setGeometry(new CrobatEyelid(GL, attribs));
   leftScleraNode.setGeometry(new CrobatSclera(GL, attribs));
@@ -95,6 +99,7 @@ function createCrobatSceneGraph(GL, attribs) {
   leftFootNode.setGeometry(new CrobatFoot(GL, attribs));
   rightFootNode.setGeometry(new CrobatFoot(GL, attribs));
 
+  // 3. Atur Transformasi LOKAL untuk node yang STATIS
   LIBS.scale(bodyNode.localMatrix, 0.84, 0.93, 0.8);
   LIBS.rotateX(bodyNode.localMatrix, 0.3);
   LIBS.translateX(leftEyeNode.localMatrix, -0.55);
@@ -147,6 +152,7 @@ function createCrobatSceneGraph(GL, attribs) {
   LIBS.translateY(rightFootNode.localMatrix, 1.5);
   LIBS.translateZ(rightFootNode.localMatrix, -0.53);
 
+  // 4. KEMBALIKAN NODE PENTING
   return {
     root: rootNode,
     wings: {
@@ -159,12 +165,16 @@ function createCrobatSceneGraph(GL, attribs) {
 }
 
 function createGolbatSceneGraph(GL, attribs) {
+  // Buat "akar" dari model Golbat kita
   var golbatModel = new Node();
+
+  // --- Badan & Kaki ---
   var golbatUpperBody = new GolbatUpperBody(GL, attribs);
   var golbatLowerBody = new GolbatLowerBody(GL, attribs);
   golbatModel.add(golbatUpperBody);
   golbatModel.add(golbatLowerBody);
 
+  // --- Telinga ---
   var leftEar = new GolbatEar(GL, attribs);
   LIBS.translateX(leftEar.localMatrix, -0.45);
   LIBS.translateY(leftEar.localMatrix, 1.5);
@@ -182,6 +192,7 @@ function createGolbatSceneGraph(GL, attribs) {
   golbatModel.add(leftEar);
   golbatModel.add(rightEar);
 
+  // --- Gigi (anak dari badan atas) ---
   var toothTopLeft = new GolbatTooth(GL, attribs);
   LIBS.translateY(toothTopLeft.localMatrix, 0.65);
   LIBS.translateZ(toothTopLeft.localMatrix, 0.4);
@@ -221,6 +232,7 @@ function createGolbatSceneGraph(GL, attribs) {
   golbatUpperBody.add(toothBottomLeft);
   golbatUpperBody.add(toothBottomRight);
 
+  // --- Mata ---
   var leftEye = new GolbatEye(GL, attribs);
   LIBS.translateY(leftEye.localMatrix, 0.9);
   LIBS.translateX(leftEye.localMatrix, -0.3);
@@ -233,16 +245,18 @@ function createGolbatSceneGraph(GL, attribs) {
   LIBS.translateX(rightEye.localMatrix, 0.3);
   LIBS.translateZ(rightEye.localMatrix, 0.65);
   LIBS.rotateX(rightEye.localMatrix, -0.5);
-  LIBS.scale(rightEye.localMatrix, -0.2, 0.2, 0.2);
+  LIBS.scale(rightEye.localMatrix, -0.2, 0.2, 0.2); // Dicerminkan
 
   golbatModel.add(leftEye);
   golbatModel.add(rightEye);
 
+  // --- Sayap ---
   var leftWing = new GolbatWing(GL, attribs);
   golbatModel.add(leftWing);
   var rightWing = new GolbatWing(GL, attribs);
   golbatModel.add(rightWing);
 
+  // 4. KEMBALIKAN NODE PENTING
   return {
     root: golbatModel,
     wings: {
@@ -251,10 +265,10 @@ function createGolbatSceneGraph(GL, attribs) {
     },
   };
 }
-
 function createZubatSceneGraph(GL, attribs) {
   const zubatModel = new Node();
 
+  // --- Badan ---
   const zubatUpperBody = new ZubatUpperBody(GL, attribs, {
     scaleFactor: 2.5,
     latBands: 50,
@@ -270,6 +284,7 @@ function createZubatSceneGraph(GL, attribs) {
   zubatModel.add(zubatUpperBody);
   zubatModel.add(zubatLowerBody);
 
+  // --- Telinga ---
   const leftEar = new ZubatEar(GL, attribs, {
     segments: 20,
     rings: 10,
@@ -295,6 +310,7 @@ function createZubatSceneGraph(GL, attribs) {
   zubatModel.add(leftEar);
   zubatModel.add(rightEar);
 
+  // --- Sayap ---
   const leftWing = new ZubatWing(GL, attribs);
   LIBS.translateY(leftWing.localMatrix, 0.0);
   LIBS.translateX(leftWing.localMatrix, 1.1);
@@ -302,7 +318,7 @@ function createZubatSceneGraph(GL, attribs) {
   LIBS.rotateY(leftWing.localMatrix, 0.2);
 
   const rightWing = new ZubatWing(GL, attribs);
-  LIBS.scale(rightWing.localMatrix, -1, 1, 1);
+  LIBS.scale(rightWing.localMatrix, -1, 1, 1); // Cerminkan
   LIBS.translateY(rightWing.localMatrix, 0.0);
   LIBS.translateX(rightWing.localMatrix, 1.2);
   LIBS.rotateZ(rightWing.localMatrix, -0.4);
@@ -310,6 +326,9 @@ function createZubatSceneGraph(GL, attribs) {
 
   zubatModel.add(leftWing);
   zubatModel.add(rightWing);
+
+  // Skala model dasar Zubat (opsional, bisa diatur di luar)
+  // LIBS.scale(zubatModel.localMatrix, 0.5, 0.5, 0.5); // Kita atur skala di luar saja
 
   return {
     root: zubatModel,
@@ -328,6 +347,7 @@ function main() {
   var GL;
   try {
     GL = CANVAS.getContext("webgl", { antialias: true });
+    // Tambahkan ekstensi untuk index 32-bit (dari Crobat)
     GL.getExtension("OES_element_index_uint");
   } catch (e) {
     alert("WebGL context cannot be initialized");
@@ -378,7 +398,7 @@ function main() {
     _position: GL.getAttribLocation(SHADER_PROGRAM, "position"),
     _uv: GL.getAttribLocation(SHADER_PROGRAM, "uv"),
     _color: GL.getAttribLocation(SHADER_PROGRAM, "color"),
-    _normal: GL.getAttribLocation(SHADER_PROGRAM, "normal"),
+    _normal: GL.getAttribLocation(SHADER_PROGRAM, "normal"), // <-- BARU
   };
   var uniforms = {
     _Pmatrix: GL.getUniformLocation(SHADER_PROGRAM, "Pmatrix"),
@@ -388,19 +408,21 @@ function main() {
     _isSkybox: GL.getUniformLocation(SHADER_PROGRAM, "u_isSkybox"),
     _useTexture: GL.getUniformLocation(SHADER_PROGRAM, "u_useTexture"),
     _isWeb: GL.getUniformLocation(SHADER_PROGRAM, "u_isWeb"),
-    _ambientColor: GL.getUniformLocation(SHADER_PROGRAM, "ambientColor"),
+
+    // Uniforms Lighting Gabungan
+    _ambientColor: GL.getUniformLocation(SHADER_PROGRAM, "ambientColor"), // <-- Ganti nama
     _moonLightDirection: GL.getUniformLocation(
       SHADER_PROGRAM,
       "u_moonLightDirection"
     ),
-    _lightDirection: GL.getUniformLocation(SHADER_PROGRAM, "lightDirection"),
-    _lightColor: GL.getUniformLocation(SHADER_PROGRAM, "lightColor"),
-    _useLighting: GL.getUniformLocation(SHADER_PROGRAM, "u_useLighting"),
+    _lightDirection: GL.getUniformLocation(SHADER_PROGRAM, "lightDirection"), // <-- BARU
+    _lightColor: GL.getUniformLocation(SHADER_PROGRAM, "lightColor"), // <-- BARU
+    _useLighting: GL.getUniformLocation(SHADER_PROGRAM, "u_useLighting"), // <-- BARU
     _isUnlit: GL.getUniformLocation(SHADER_PROGRAM, "u_isUnlit"),
   };
   GL.useProgram(SHADER_PROGRAM);
 
-  /*========================= TEXTURES =========================*/
+  /*========================= TEXTURES (Sama) =========================*/
   var load_texture = function (image_URL, wrapping, use_mipmaps) {
     var texture = GL.createTexture();
     var image = new Image();
@@ -455,7 +477,7 @@ function main() {
   var ground_texture = load_texture("grass1.png", GL.REPEAT, true);
   var water_texture = createWaterTexture();
 
-  /*======================== MEMBUAT SCENE OBJECTS ======================== */
+  /*======================== MEMBUAT SCENE OBJECTS (Sama) ======================== */
   const scale = 3000;
   const gridSize = 80;
   const islandRadius = scale * 0.7;
@@ -503,7 +525,7 @@ function main() {
     pokemonBaseYPosition
   );
 
-  /*======================== MEMBANGUN SCENE GRAPH ======================== */
+  /*======================== MEMBANGUN SCENE GRAPH (Gabungan) ======================== */
   var islandNode = new Node();
   islandNode.setGeometry(islandData.sceneObject);
   var treeNode = new Node();
@@ -515,48 +537,69 @@ function main() {
   var webNode = new Node();
   webNode.setGeometry(spiderData.webObj);
 
-  // --- NODE POKEMON BASE 1 (CROBAT) ---
+  // --- NODE POKEMON BASE ---
   var pokemonBaseNode1 = new Node();
   pokemonBaseNode1.setGeometry(pokemonBaseObj);
   LIBS.translateY(pokemonBaseNode1.localMatrix, 350);
 
+  // --- BUAT DAN TAMBAHKAN CROBAT ---
+  // Node ini untuk animasi float + flip
   var crobatAnimatorNode = new Node();
-  pokemonBaseNode1.add(crobatAnimatorNode);
+  pokemonBaseNode1.add(crobatAnimatorNode); // Jadikan anak dari base
 
+  // Panggil builder Crobat
   var crobatData = createCrobatSceneGraph(GL, attribs);
   var crobatRootNode = crobatData.root;
+
+  // Atur skala Crobat (cukup besar agar terlihat)
   LIBS.scale(crobatRootNode.localMatrix, 60, 60, 60);
+
+  // Tambahkan Crobat (yang sudah diskala) ke animatornya
   crobatAnimatorNode.add(crobatRootNode);
+  // Posisi final animator (crobatAnimatorNode) diatur di render loop
+  // --- AKHIR KODE CROBAT ---
 
   // --- NODE POKEMON BASE 2 (GOLBAT) ---
   var pokemonBaseNode2 = new Node();
-  pokemonBaseNode2.setGeometry(pokemonBaseObj);
+  pokemonBaseNode2.setGeometry(pokemonBaseObj); // Pakai geometri base yang sama
+  // Posisikan di tempat lain (misal, geser 800 unit di sumbu X)
   LIBS.translateX(pokemonBaseNode2.localMatrix, 800);
   LIBS.translateY(pokemonBaseNode2.localMatrix, 350);
 
   var golbatAnimatorNode = new Node();
-  pokemonBaseNode2.add(golbatAnimatorNode);
+  pokemonBaseNode2.add(golbatAnimatorNode); // Jadikan anak dari base 2
 
+  // Panggil builder Golbat
   var golbatData = createGolbatSceneGraph(GL, attribs);
   var golbatRootNode = golbatData.root;
-  LIBS.scale(golbatRootNode.localMatrix, 30, 30, 30);
+
+  // Atur skala Golbat (model aslinya kecil, jadi perlu skala besar)
+  LIBS.scale(golbatRootNode.localMatrix, 30, 30, 30); // Coba skala 80
+
   golbatAnimatorNode.add(golbatRootNode);
+  // --- AKHIR KODE GOLBAT ---
 
   // --- NODE POKEMON BASE 3 (ZUBAT) ---
   var pokemonBaseNode3 = new Node();
-  pokemonBaseNode3.setGeometry(pokemonBaseObj);
+  pokemonBaseNode3.setGeometry(pokemonBaseObj); // Pakai geometri base yang sama
+  // Posisikan di tempat lain (misal, geser -800 unit di sumbu X dari origin)
   LIBS.translateX(pokemonBaseNode3.localMatrix, -800);
-  LIBS.translateY(pokemonBaseNode3.localMatrix, 350);
+  LIBS.translateY(pokemonBaseNode3.localMatrix, 350); // Gunakan Y base yang sama
 
   var zubatAnimatorNode = new Node();
-  pokemonBaseNode3.add(zubatAnimatorNode);
+  pokemonBaseNode3.add(zubatAnimatorNode); // Jadikan anak dari base 3
 
+  // Panggil builder Zubat
   var zubatData = createZubatSceneGraph(GL, attribs);
   var zubatRootNode = zubatData.root;
-  LIBS.scale(zubatRootNode.localMatrix, 15, 15, 15);
-  zubatAnimatorNode.add(zubatRootNode);
 
-  /*================= MATRIKS & KONTROL KAMERA =================*/
+  // Atur skala Zubat (model aslinya agak besar, coba skala 30)
+  LIBS.scale(zubatRootNode.localMatrix, 15, 15, 15);
+
+  zubatAnimatorNode.add(zubatRootNode);
+  // --- AKHIR KODE ZUBAT ---
+
+  /*================= MATRIKS & KONTROL KAMERA (Sama) =================*/
   var PROJMATRIX = LIBS.get_projection(
     40,
     CANVAS.width / CANVAS.height,
@@ -570,11 +613,6 @@ function main() {
   var camX = 0,
     camZ = 2000,
     camY = -2000;
-
-  let cameraMode = "f";
-  const LOCK_ON_OFFSET_Y = 500;
-  const LOCK_ON_OFFSET_Z = 2000;
-
   var keys = {};
   var THETA = 0,
     PHI = 0;
@@ -583,7 +621,6 @@ function main() {
   var FRICTION = 0.05;
   var dX = 0,
     dY = 0;
-
   var mouseDown = function (e) {
     drag = true;
     (x_prev = e.pageX), (y_prev = e.pageY);
@@ -605,30 +642,16 @@ function main() {
     (x_prev = e.pageX), (y_prev = e.pageY);
     e.preventDefault();
   };
-
   CANVAS.addEventListener("mousedown", mouseDown, false);
   CANVAS.addEventListener("mouseup", mouseUp, false);
   CANVAS.addEventListener("mouseout", mouseOut, false);
   CANVAS.addEventListener("mousemove", mouseMove, false);
-
   var keyDown = function (e) {
     keys[e.key] = true;
-    if (e.key === "f" || e.key === "F") {
-      cameraMode = "f";
-    } else if (e.key === "c" || e.key === "C") {
-      cameraMode = "c";
-    } else if (e.key === "1") {
-      cameraMode = "1";
-    } else if (e.key === "2") {
-      cameraMode = "2";
-    } else if (e.key === "3") {
-      cameraMode = "3";
-    }
   };
   var keyUp = function (e) {
     keys[e.key] = false;
   };
-
   window.addEventListener("keydown", keyDown, false);
   window.addEventListener("keyup", keyUp, false);
 
@@ -641,57 +664,28 @@ function main() {
 
   var time_prev = 0;
 
-  const idleFlipState = [
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
-  ];
-  const flipIntervals = [15000, 18000, 13000];
-  const flipDurations = [1000, 1100, 900];
-  const idleFlipAngles = [0, 0, 0];
-  const idleFloats = [0, 0, 0];
+  // ===================================================================
+  // === PARAMETER ANIMASI TERBANG CROBAT (ADJUST DISINI) ===
+  // ===================================================================
+  let crobatFlyState = "FORWARD"; // States: 'FORWARD', 'TURNING_AT_PLUS', 'BACKWARD', 'TURNING_AT_MINUS', 'RETURN', 'FLIPPING'
+  let crobatPosZ = 0; // Posisi Z saat ini
+  let crobatRotationY = 0; // Rotasi Y (arah hadap)
+  let turnStartTime = 0; // Waktu mulai putar
+  let flipCount = 0; // Jumlah flip yang sudah dilakukan
+  let isFlipping = false;
+  let flipStartTime = 0;
 
-  let activePokemonIndex = 0;
-  let animationStage = "IDLE";
-  let stageStartTime = 0;
-
-  const baseNodes = [pokemonBaseNode3, pokemonBaseNode2, pokemonBaseNode1];
-  const animatorNodes = [
-    zubatAnimatorNode,
-    golbatAnimatorNode,
-    crobatAnimatorNode,
-  ];
-  const idleFlapData = [zubatData.wings, golbatData.wings, crobatData.wings];
-
-  const IDLE_Y_OFFSET = -2250;
-  const LIFT_Y_OFFSET = -1500;
-  const ORBIT_RADIUS = 600;
-  const ORBIT_X_ROTATION = 0.5;
-
-  const DURATION_IDLE = 5000;
-  const DURATION_LIFT_OFF = 2000;
-  const DURATION_MOVE_TO_CENTER = 3000;
-  const DURATION_MOVE_TO_ORBIT = 1500;
-  const DURATION_TURN = 1000;
-  const DURATION_CIRCLING = 15000;
-  const DURATION_RETURN_TURN_1 = 1000;
-  const DURATION_RETURN_MOVE = 1500;
-  const DURATION_RETURN_TURN_2 = 1000;
-  const DURATION_RETURN = 3000;
-
-  const LERP = (a, b, t) => a + (b - a) * t;
-
-  // Helper untuk menghitung sudut antar 2 titik (untuk rotasi Y)
-  const calculateAngle = (fromX, fromZ, toX, toZ) => {
-    const dx = toX - fromX;
-    const dz = toZ - fromZ;
-    return Math.atan2(dx, dz);
-  };
+  // ADJUST PARAMETER DISINI:
+  const TURN_DURATION = 800; // Durasi putar 180° (ms) - UBAH INI untuk kecepatan putar
+  const Z_LIMIT = 2000; // Jarak terbang (+/-) - UBAH INI untuk jarak terbang
+  const flipDuration = 1000; // Durasi satu flip (ms) - UBAH INI untuk kecepatan flip
+  // ===================================================================
 
   var animate = function (time) {
     GL.viewport(0, 0, CANVAS.width, CANVAS.height);
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
+    // --- Update Kamera (Sama) ---
     var dt = time - time_prev;
     if (dt === 0) dt = 16.67;
     time_prev = time;
@@ -702,72 +696,225 @@ function main() {
     var forward_Z = Math.cos(THETA) * Math.cos(PHI);
     var right_X = Math.cos(THETA);
     var right_Z = -Math.sin(THETA);
+    if (keys["s"]) {
+      camX += forward_X * currentSpeed;
+      camY += forward_Y * currentSpeed;
+      camZ += forward_Z * currentSpeed;
+    }
+    if (keys["w"]) {
+      camX -= forward_X * currentSpeed;
+      camY -= forward_Y * currentSpeed;
+      camZ -= forward_Z * currentSpeed;
+    }
+    if (keys["a"]) {
+      camX -= right_X * currentSpeed;
+      camZ -= right_Z * currentSpeed;
+    }
+    if (keys["d"]) {
+      camX += right_X * currentSpeed;
+      camZ += right_Z * currentSpeed;
+    }
+    if (keys["e"]) {
+      camY += currentSpeed;
+    }
+    if (keys["q"]) {
+      camY -= currentSpeed;
+    }
+    if (!drag) {
+      dX *= 1 - FRICTION;
+      dY *= 1 - FRICTION;
+      THETA += dX;
+      PHI += dY;
+    }
+    LIBS.set_I4(VIEWMATRIX);
+    LIBS.rotateX(VIEWMATRIX, -PHI);
+    LIBS.rotateY(VIEWMATRIX, -THETA);
+    LIBS.translateX(VIEWMATRIX, -camX);
+    LIBS.translateY(VIEWMATRIX, -camY);
+    LIBS.translateZ(VIEWMATRIX, -camZ);
+    LIBS.set_I4(SKYBOX_VMATRIX);
+    LIBS.rotateX(SKYBOX_VMATRIX, -PHI);
+    LIBS.rotateY(SKYBOX_VMATRIX, -THETA);
 
-    if (cameraMode === "f") {
-      if (keys["s"]) {
-        camX += forward_X * currentSpeed;
-        camY += forward_Y * currentSpeed;
-        camZ += forward_Z * currentSpeed;
+    // =================================================================
+    // === ANIMASI CROBAT DI-UPDATE DI SINI ===
+    // =================================================================
+    var crobatTime = time / 100.0; // Gunakan 'time' dari environment
+    var wings = crobatData.wings;
+
+    // --- Animasi Float (Naik-Turun) ---
+    var floatAmplitude = 20; // Amplitudo lebih besar
+    var floatY = Math.sin(crobatTime * 0.6) * floatAmplitude;
+
+    // --- STATE MACHINE: ANIMASI TERBANG ---
+    const flySpeed = 15 * (dt / 16.67); // UBAH ANGKA 15 untuk kecepatan terbang
+    const currentTime = time;
+
+    switch (crobatFlyState) {
+      case "FORWARD":
+        // Terbang maju (positif Z)
+        crobatPosZ += flySpeed;
+        if (crobatPosZ >= Z_LIMIT) {
+          crobatPosZ = Z_LIMIT;
+          crobatFlyState = "TURNING_AT_PLUS";
+          turnStartTime = currentTime;
+        }
+        break;
+
+      case "TURNING_AT_PLUS":
+        // Putar balik 180° di batas +Z
+        let turnProgress1 = (currentTime - turnStartTime) / TURN_DURATION;
+        if (turnProgress1 >= 1.0) {
+          turnProgress1 = 1.0;
+          crobatRotationY = Math.PI; // 180 derajat
+          crobatFlyState = "BACKWARD";
+        } else {
+          crobatRotationY = turnProgress1 * Math.PI;
+        }
+        break;
+
+      case "BACKWARD":
+        // Terbang mundur (negatif Z)
+        crobatPosZ -= flySpeed;
+        if (crobatPosZ <= -Z_LIMIT) {
+          crobatPosZ = -Z_LIMIT;
+          crobatFlyState = "TURNING_AT_MINUS";
+          turnStartTime = currentTime;
+        }
+        break;
+
+      case "TURNING_AT_MINUS":
+        // Putar balik 180° di batas -Z
+        let turnProgress2 = (currentTime - turnStartTime) / TURN_DURATION;
+        if (turnProgress2 >= 1.0) {
+          turnProgress2 = 1.0;
+          crobatRotationY = 0; // Kembali ke arah semula
+          crobatFlyState = "RETURN";
+        } else {
+          crobatRotationY = Math.PI * (1.0 - turnProgress2);
+        }
+        break;
+
+      case "RETURN":
+        // Kembali ke posisi awal (Z = 0)
+        crobatPosZ += flySpeed;
+        if (crobatPosZ >= 0) {
+          crobatPosZ = 0;
+          crobatFlyState = "FLIPPING";
+          flipCount = 0;
+          isFlipping = false;
+        }
+        break;
+
+      case "FLIPPING":
+        // Lakukan 2 flip, kemudian lanjut terbang
+        if (flipCount >= 2) {
+          crobatFlyState = "FORWARD";
+        }
+        break;
+    }
+
+    // --- Animasi Flip (Hanya saat state FLIPPING) ---
+    let flipAngle = 0.0;
+    if (crobatFlyState === "FLIPPING") {
+      if (!isFlipping && flipCount < 2) {
+        isFlipping = true;
+        flipStartTime = currentTime;
       }
-      if (keys["w"]) {
-        camX -= forward_X * currentSpeed;
-        camY -= forward_Y * currentSpeed;
-        camZ -= forward_Z * currentSpeed;
-      }
-      if (keys["a"]) {
-        camX -= right_X * currentSpeed;
-        camZ -= right_Z * currentSpeed;
-      }
-      if (keys["d"]) {
-        camX += right_X * currentSpeed;
-        camZ += right_Z * currentSpeed;
-      }
-      if (keys["e"]) {
-        camY += currentSpeed;
-      }
-      if (keys["q"]) {
-        camY -= currentSpeed;
-      }
-      if (!drag) {
-        dX *= 1 - FRICTION;
-        dY *= 1 - FRICTION;
-        THETA += dX;
-        PHI += dY;
+
+      if (isFlipping) {
+        let flipProgress = (currentTime - flipStartTime) / flipDuration;
+        if (flipProgress >= 1.0) {
+          flipProgress = 1.0;
+          isFlipping = false;
+          flipCount++;
+          // Beri jeda singkat antar flip
+          flipStartTime = currentTime + 200; // UBAH ANGKA 200 untuk jeda antar flip (ms)
+        }
+        flipAngle = flipProgress * -Math.PI * 2.0;
       }
     }
 
-    var genericTime = time / 100.0;
+    // Terapkan Transformasi ke 'crobatAnimatorNode'
+    // URUTAN: Translate Z (posisi) → Rotate Y (arah) → Translate Y (float) → Rotate X (flip)
+    LIBS.set_I4(crobatAnimatorNode.localMatrix);
+    LIBS.translateZ(crobatAnimatorNode.localMatrix, crobatPosZ); // Posisi terbang
+    LIBS.rotateY(crobatAnimatorNode.localMatrix, crobatRotationY); // Arah hadap
+    LIBS.translateY(crobatAnimatorNode.localMatrix, -2250 + floatY); // Posisi vertikal + float
+    LIBS.rotateX(crobatAnimatorNode.localMatrix, flipAngle); // Flip
 
-    // Animasi idle untuk semua pokemon
-    var floatSpeedZ = 1.5;
-    var floatAmplitudeZ = 0.2 * 30;
-    idleFloats[0] = Math.sin(genericTime * floatSpeedZ) * floatAmplitudeZ;
-    var flapSpeedZ = 1.0;
-    var flapAmplitudeZ = 0.15;
-    var flapAngleZ = Math.sin(genericTime * flapSpeedZ) * flapAmplitudeZ;
+    // --- Animasi Kepak Sayap ---
+    var flapSpeed = 0.6;
+    var flapAmplitude = Math.PI / 12;
+    var flapAngle = Math.sin(crobatTime * flapSpeed) * flapAmplitude;
 
-    var zubatWings = idleFlapData[0];
-    LIBS.set_I4(zubatWings.left.localMatrix);
-    LIBS.translateY(zubatWings.left.localMatrix, 0.0);
-    LIBS.translateX(zubatWings.left.localMatrix, 0.5);
-    LIBS.rotateZ(zubatWings.left.localMatrix, 0.4 + flapAngleZ);
-    LIBS.rotateY(zubatWings.left.localMatrix, 0.2);
+    // Update localMatrix sayap (copy-paste dari main.js Crobat)
+    LIBS.set_I4(wings.upperLeft.localMatrix);
+    LIBS.scale(wings.upperLeft.localMatrix, 1.0, 1.0, 1.0);
+    LIBS.rotateY(wings.upperLeft.localMatrix, -0.25 + flapAngle);
+    LIBS.rotateZ(wings.upperLeft.localMatrix, 0.0);
+    LIBS.translateX(wings.upperLeft.localMatrix, 2);
+    LIBS.translateY(wings.upperLeft.localMatrix, 1.0);
+    LIBS.translateZ(wings.upperLeft.localMatrix, -0.3);
 
-    LIBS.set_I4(zubatWings.right.localMatrix);
-    LIBS.scale(zubatWings.right.localMatrix, -1, 1, 1);
-    LIBS.translateY(zubatWings.right.localMatrix, 0.0);
-    LIBS.translateX(zubatWings.right.localMatrix, -0.5);
-    LIBS.rotateZ(zubatWings.right.localMatrix, -0.4 - flapAngleZ);
-    LIBS.rotateY(zubatWings.right.localMatrix, -0.2);
+    LIBS.set_I4(wings.upperRight.localMatrix);
+    LIBS.scale(wings.upperRight.localMatrix, -1.0, 1.0, 1.0);
+    LIBS.rotateY(wings.upperRight.localMatrix, 0.25 - flapAngle);
+    LIBS.rotateZ(wings.upperRight.localMatrix, 0);
+    LIBS.translateX(wings.upperRight.localMatrix, 2);
+    LIBS.translateY(wings.upperRight.localMatrix, 1.0);
+    LIBS.translateZ(wings.upperRight.localMatrix, -0.3);
 
-    var floatSpeedG = 1.5;
-    var floatAmplitudeG_idle = 0.2 * 80;
-    idleFloats[1] = Math.sin(genericTime * floatSpeedG) * floatAmplitudeG_idle;
+    LIBS.set_I4(wings.lowerLeft.localMatrix);
+    LIBS.scale(wings.lowerLeft.localMatrix, 0.5, 0.25, 0.25);
+    LIBS.rotateY(wings.lowerLeft.localMatrix, 3.2 + flapAngle);
+    LIBS.rotateZ(wings.lowerLeft.localMatrix, 3.25);
+    LIBS.translateY(wings.lowerLeft.localMatrix, 3.5);
+
+    LIBS.set_I4(wings.lowerRight.localMatrix);
+    LIBS.scale(wings.lowerRight.localMatrix, -0.5, 0.25, 0.25);
+    LIBS.rotateY(wings.lowerRight.localMatrix, 3.0 - flapAngle);
+    LIBS.rotateZ(wings.lowerRight.localMatrix, 3.0);
+    LIBS.translateY(wings.lowerRight.localMatrix, 3.5);
+    // =================================================================
+    // === AKHIR ANIMASI CROBAT ===
+    // =================================================================
+
+    // =================================================================
+    // === ANIMASI GOLBAT DI-UPDATE DI SINI ===
+    // =================================================================
+    var golbatTime = time / 100.0;
+    var golbatWings = golbatData.wings;
+
+    // --- Animasi Float & Flip (dari main.js Golbat) ---
+    var floatSpeed = 1.5;
+    var floatAmplitude = 0.2 * 80; // Skala amplitudonya juga
+    var floatY = Math.sin(golbatTime * floatSpeed) * floatAmplitude;
+
+    // (Kita gunakan logika flip yang sama dari Crobat)
+    let golbatFlipAngle = 0.0;
+    if (isFlipping) {
+      // Pakai variabel 'isFlipping' yang sama
+      let flipProgress = (currentTime - flipStartTime) / flipDuration;
+      if (flipProgress >= 1.0) flipProgress = 1.0;
+      golbatFlipAngle = flipProgress * -Math.PI * 2.0;
+    }
+
+    // Terapkan float + flip ke 'golbatAnimatorNode'
+    // Model Golbat aslinya kecil, jadi float Y (150) Crobat mungkin terlalu besar
+    // Kita buat dia mengambang 150 unit di atas base-nya
+    LIBS.set_I4(golbatAnimatorNode.localMatrix);
+    LIBS.translateY(golbatAnimatorNode.localMatrix, -2250 + floatY);
+    // Pivot Z dari main.js Golbat
+    LIBS.translateZ(golbatAnimatorNode.localMatrix, 2.0 * 80); // Skala pivotnya
+    LIBS.rotateX(golbatAnimatorNode.localMatrix, golbatFlipAngle);
+    LIBS.translateZ(golbatAnimatorNode.localMatrix, -2.0 * 80);
+
+    // --- Animasi Kepak Sayap (dari main.js Golbat) ---
     var flapSpeedG = 1.0;
     var flapAmplitudeG = Math.PI / 4;
-    var flapAngleG = Math.sin(genericTime * flapSpeedG) * flapAmplitudeG;
+    var flapAngleG = Math.sin(golbatTime * flapSpeedG) * flapAmplitudeG;
 
-    var golbatWings = idleFlapData[1];
     LIBS.set_I4(golbatWings.left.localMatrix);
     LIBS.translateX(golbatWings.left.localMatrix, 0.5);
     LIBS.translateY(golbatWings.left.localMatrix, 0.1);
@@ -782,431 +929,84 @@ function main() {
     LIBS.rotateZ(golbatWings.right.localMatrix, -0.3);
     LIBS.rotateY(golbatWings.right.localMatrix, -0.2 - flapAngleG);
     LIBS.rotateX(golbatWings.right.localMatrix, 0.7);
+    // =================================================================
+    // === AKHIR ANIMASI GOLBAT ===
+    // =================================================================
 
-    var floatAmplitudeC = 20;
-    idleFloats[2] = Math.sin(genericTime * 0.6) * floatAmplitudeC;
-    var flapSpeedC = 0.6;
-    var flapAmplitudeC = Math.PI / 12;
-    var flapAngleC = Math.sin(genericTime * flapSpeedC) * flapAmplitudeC;
+    // =================================================================
+    // === ANIMASI ZUBAT DI-UPDATE DI SINI ===
+    // =================================================================
+    var zubatTime = time / 100.0; // Gunakan timer yang sama
+    var zubatWings = zubatData.wings;
 
-    var crobatWings = idleFlapData[2];
-    LIBS.set_I4(crobatWings.upperLeft.localMatrix);
-    LIBS.scale(crobatWings.upperLeft.localMatrix, 1.0, 1.0, 1.0);
-    LIBS.rotateY(crobatWings.upperLeft.localMatrix, -0.25 + flapAngleC);
-    LIBS.rotateZ(crobatWings.upperLeft.localMatrix, 0.0);
-    LIBS.translateX(crobatWings.upperLeft.localMatrix, 2);
-    LIBS.translateY(crobatWings.upperLeft.localMatrix, 1.0);
-    LIBS.translateZ(crobatWings.upperLeft.localMatrix, -0.3);
+    // --- Animasi Float & Flip (dari main.js Zubat) ---
+    var floatSpeedZ = 1.5;
+    var floatAmplitudeZ = 0.2 * 30; // Sesuaikan skala amplitudo
+    var floatYZ = Math.sin(zubatTime * floatSpeedZ) * floatAmplitudeZ;
 
-    LIBS.set_I4(crobatWings.upperRight.localMatrix);
-    LIBS.scale(crobatWings.upperRight.localMatrix, -1.0, 1.0, 1.0);
-    LIBS.rotateY(crobatWings.upperRight.localMatrix, 0.25 - flapAngleC);
-    LIBS.rotateZ(crobatWings.upperRight.localMatrix, 0);
-    LIBS.translateX(crobatWings.upperRight.localMatrix, 2);
-    LIBS.translateY(crobatWings.upperRight.localMatrix, 1.0);
-    LIBS.translateZ(crobatWings.upperRight.localMatrix, -0.3);
-
-    LIBS.set_I4(crobatWings.lowerLeft.localMatrix);
-    LIBS.scale(crobatWings.lowerLeft.localMatrix, 0.5, 0.25, 0.25);
-    LIBS.rotateY(crobatWings.lowerLeft.localMatrix, 3.2 + flapAngleC);
-    LIBS.rotateZ(crobatWings.lowerLeft.localMatrix, 3.25);
-    LIBS.translateY(crobatWings.lowerLeft.localMatrix, 3.5);
-
-    LIBS.set_I4(crobatWings.lowerRight.localMatrix);
-    LIBS.scale(crobatWings.lowerRight.localMatrix, -0.5, 0.25, 0.25);
-    LIBS.rotateY(crobatWings.lowerRight.localMatrix, 3.0 - flapAngleC);
-    LIBS.rotateZ(crobatWings.lowerRight.localMatrix, 3.0);
-    LIBS.translateY(crobatWings.lowerRight.localMatrix, 3.5);
-
-    const currentTime = time;
-    for (let i = 0; i < 3; i++) {
-      let state = idleFlipState[i];
-      let interval = flipIntervals[i];
-      let duration = flipDurations[i];
-
-      let flipAngle = 0.0;
-      if (!state.isFlipping && currentTime - state.lastFlipTime > interval) {
-        state.isFlipping = true;
-        state.flipStartTime = currentTime;
-        state.lastFlipTime = currentTime;
-      }
-
-      if (state.isFlipping) {
-        let flipProgress = (currentTime - state.flipStartTime) / duration;
-        if (flipProgress >= 1.0) {
-          flipProgress = 1.0;
-          state.isFlipping = false;
-        }
-        flipAngle = flipProgress * -Math.PI * 2.0;
-      }
-      idleFlipAngles[i] = flipAngle;
+    let zubatFlipAngle = 0.0;
+    if (isFlipping) {
+      // Gunakan state flip yang sama
+      let flipProgress = (currentTime - flipStartTime) / flipDuration;
+      if (flipProgress >= 1.0) flipProgress = 1.0;
+      zubatFlipAngle = flipProgress * -Math.PI * 2.0;
     }
 
-    let activeNode = animatorNodes[activePokemonIndex];
-    let activeBase = baseNodes[activePokemonIndex];
-    let activeBasePos = [
-      activeBase.localMatrix[12],
-      activeBase.localMatrix[13],
-      activeBase.localMatrix[14],
-    ];
-    let centerPos = [
-      baseNodes[2].localMatrix[12],
-      baseNodes[2].localMatrix[13],
-      baseNodes[2].localMatrix[14],
-    ];
+    // Terapkan float + flip ke 'zubatAnimatorNode'
+    LIBS.set_I4(zubatAnimatorNode.localMatrix);
+    LIBS.translateY(zubatAnimatorNode.localMatrix, -2250 + floatYZ); // Gunakan offset Y yang sama (45)
+    // Pivot Z dari main.js Zubat (diskalakan)
+    LIBS.translateZ(zubatAnimatorNode.localMatrix, 2.0 * 30);
+    LIBS.rotateX(zubatAnimatorNode.localMatrix, zubatFlipAngle);
+    LIBS.translateZ(zubatAnimatorNode.localMatrix, -2.0 * 30);
 
-    let timeInStage = time - stageStartTime;
+    // --- Animasi Kepak Sayap (dari main.js Zubat) ---
+    var flapSpeedZ = 1.0; // Mungkin perlu disesuaikan
+    var flapAmplitudeZ = 0.15; // Mungkin perlu disesuaikan
+    var flapAngleZ = Math.sin(zubatTime * flapSpeedZ) * flapAmplitudeZ;
 
-    LIBS.set_I4(activeNode.localMatrix);
+    LIBS.set_I4(zubatWings.left.localMatrix);
+    LIBS.translateY(zubatWings.left.localMatrix, 0.0);
+    LIBS.translateX(zubatWings.left.localMatrix, 1.2);
+    LIBS.rotateZ(zubatWings.left.localMatrix, 0.4 + flapAngleZ); // <-- Animasi
+    LIBS.rotateY(zubatWings.left.localMatrix, 0.2);
 
-    // Variabel untuk menyimpan posisi dan rotasi saat ini
-    let currentX = 0;
-    let currentY = IDLE_Y_OFFSET;
-    let currentZ = 0;
-    let currentRotationY = 0;
-    let currentRotationX = 0;
+    LIBS.set_I4(zubatWings.right.localMatrix);
+    LIBS.scale(zubatWings.right.localMatrix, -1, 1, 1);
+    LIBS.translateY(zubatWings.right.localMatrix, 0.0);
+    LIBS.translateX(zubatWings.right.localMatrix, 1.3);
+    LIBS.rotateZ(zubatWings.right.localMatrix, -0.4 - flapAngleZ); // <-- Animasi
+    LIBS.rotateY(zubatWings.right.localMatrix, -0.2);
+    // =================================================================
+    // === AKHIR ANIMASI ZUBAT ===
+    // =================================================================
 
-    switch (animationStage) {
-      case "IDLE": {
-        let floatY = idleFloats[activePokemonIndex];
-        let flipAngle = idleFlipAngles[activePokemonIndex];
-        LIBS.translateY(activeNode.localMatrix, IDLE_Y_OFFSET + floatY);
-        LIBS.rotateX(activeNode.localMatrix, flipAngle);
-
-        if (timeInStage > DURATION_IDLE) {
-          animationStage = "LIFT_OFF";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "LIFT_OFF": {
-        let progress = Math.min(1.0, timeInStage / DURATION_LIFT_OFF);
-        currentY = LERP(IDLE_Y_OFFSET, LIFT_Y_OFFSET, progress);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-
-        if (progress >= 1.0) {
-          animationStage = "MOVE_TO_CENTER";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "MOVE_TO_CENTER": {
-        let progress = Math.min(1.0, timeInStage / DURATION_MOVE_TO_CENTER);
-        let targetLocalX = centerPos[0] - activeBasePos[0];
-        let targetLocalZ = centerPos[2] - activeBasePos[2];
-
-        currentX = LERP(0, targetLocalX, progress);
-        currentZ = LERP(0, targetLocalZ, progress);
-        currentY = LIFT_Y_OFFSET;
-
-        // Hitung rotasi menghadap arah tujuan
-        currentRotationY = calculateAngle(
-          progress > 0 ? LERP(0, targetLocalX, Math.max(0, progress - 0.1)) : 0,
-          progress > 0 ? LERP(0, targetLocalZ, Math.max(0, progress - 0.1)) : 0,
-          currentX,
-          currentZ
-        );
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
-        if (progress >= 1.0) {
-          animationStage = "MOVE_TO_ORBIT";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "MOVE_TO_ORBIT": {
-        let progress = Math.min(1.0, timeInStage / DURATION_MOVE_TO_ORBIT);
-        let startX = centerPos[0] - activeBasePos[0];
-        let startZ = centerPos[2] - activeBasePos[2];
-        let targetZ = startZ + ORBIT_RADIUS;
-
-        currentX = startX;
-        currentY = LIFT_Y_OFFSET;
-        currentZ = LERP(startZ, targetZ, progress);
-
-        // Hitung rotasi menghadap arah gerakan (bergerak ke depan)
-        currentRotationY = calculateAngle(
-          currentX,
-          progress > 0
-            ? LERP(startZ, targetZ, Math.max(0, progress - 0.1))
-            : startZ,
-          currentX,
-          currentZ
-        );
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
-        if (progress >= 1.0) {
-          animationStage = "TURN_AND_BEND";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "TURN_AND_BEND": {
-        let progress = Math.min(1.0, timeInStage / DURATION_TURN);
-
-        currentX = centerPos[0] - activeBasePos[0];
-        currentY = LIFT_Y_OFFSET;
-        currentZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
-
-        // Rotasi Y: dari menghadap depan ke menghadap samping (90 derajat)
-        let startAngleY = 0;
-        let targetAngleY = Math.PI / 2;
-        currentRotationY = LERP(startAngleY, targetAngleY, progress);
-        currentRotationX = LERP(0, ORBIT_X_ROTATION, progress);
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, currentRotationX);
-
-        if (progress >= 1.0) {
-          animationStage = "CIRCLING";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "CIRCLING": {
-        let progress = (timeInStage % DURATION_CIRCLING) / DURATION_CIRCLING;
-        let angle = progress * Math.PI * 2;
-
-        let circleX = Math.sin(angle) * ORBIT_RADIUS;
-        let circleZ = Math.cos(angle) * ORBIT_RADIUS;
-
-        currentX = centerPos[0] - activeBasePos[0] + circleX;
-        currentY = LIFT_Y_OFFSET;
-        currentZ = centerPos[2] - activeBasePos[2] + circleZ;
-
-        // Rotasi menghadap arah pergerakan (tangent ke lingkaran)
-        let nextAngle = angle + 0.1;
-        let nextX = Math.sin(nextAngle) * ORBIT_RADIUS;
-        let nextZ = Math.cos(nextAngle) * ORBIT_RADIUS;
-        currentRotationY = calculateAngle(circleX, circleZ, nextX, nextZ);
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION);
-
-        if (timeInStage > DURATION_CIRCLING) {
-          animationStage = "PRE_RETURN_TURN";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "PRE_RETURN_TURN": {
-        let progress = Math.min(1.0, timeInStage / DURATION_RETURN_TURN_1);
-
-        currentX = centerPos[0] - activeBasePos[0];
-        currentY = LIFT_Y_OFFSET;
-        currentZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
-
-        // Putar dari menghadap samping ke menghadap belakang (ke center)
-        let startAngleY = Math.PI / 2;
-        let endAngleY = Math.PI; // Menghadap ke center (180 derajat dari awal)
-        currentRotationY = LERP(startAngleY, endAngleY, progress);
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION);
-
-        if (progress >= 1.0) {
-          animationStage = "PRE_RETURN_MOVE";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "PRE_RETURN_MOVE": {
-        let progress = Math.min(1.0, timeInStage / DURATION_RETURN_MOVE);
-
-        let startZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
-        let endZ = centerPos[2] - activeBasePos[2];
-
-        currentX = centerPos[0] - activeBasePos[0];
-        currentY = LIFT_Y_OFFSET;
-        currentZ = LERP(startZ, endZ, progress);
-
-        // Tetap menghadap arah gerakan (mundur ke center)
-        currentRotationY = calculateAngle(
-          currentX,
-          progress > 0
-            ? LERP(startZ, endZ, Math.max(0, progress - 0.1))
-            : startZ,
-          currentX,
-          currentZ
-        );
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, ORBIT_X_ROTATION);
-
-        if (progress >= 1.0) {
-          animationStage = "PRE_RETURN_TURN_FINAL";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "PRE_RETURN_TURN_FINAL": {
-        let progress = Math.min(1.0, timeInStage / DURATION_RETURN_TURN_2);
-
-        currentX = centerPos[0] - activeBasePos[0];
-        currentY = LIFT_Y_OFFSET;
-        currentZ = centerPos[2] - activeBasePos[2];
-
-        // Putar dari menghadap center ke menghadap base asal
-        let centerToBaseAngle = calculateAngle(currentX, currentZ, 0, 0);
-        let startAngleY = Math.PI;
-        currentRotationY = LERP(startAngleY, centerToBaseAngle, progress);
-        currentRotationX = LERP(ORBIT_X_ROTATION, 0, progress);
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-        LIBS.rotateX(activeNode.localMatrix, currentRotationX);
-
-        if (progress >= 1.0) {
-          animationStage = "RETURN_TO_BASE";
-          stageStartTime = time;
-        }
-        break;
-      }
-
-      case "RETURN_TO_BASE": {
-        let progress = Math.min(1.0, timeInStage / DURATION_RETURN);
-
-        let startX = centerPos[0] - activeBasePos[0];
-        let startZ = centerPos[2] - activeBasePos[2];
-
-        currentX = LERP(startX, 0, progress);
-        currentY = LERP(LIFT_Y_OFFSET, IDLE_Y_OFFSET, progress);
-        currentZ = LERP(startZ, 0, progress);
-
-        // Tetap menghadap arah base
-        currentRotationY = calculateAngle(
-          progress > 0 ? LERP(startX, 0, Math.max(0, progress - 0.1)) : startX,
-          progress > 0 ? LERP(startZ, 0, Math.max(0, progress - 0.1)) : startZ,
-          currentX,
-          currentZ
-        );
-
-        LIBS.translateX(activeNode.localMatrix, currentX);
-        LIBS.translateY(activeNode.localMatrix, currentY);
-        LIBS.translateZ(activeNode.localMatrix, currentZ);
-        LIBS.rotateY(activeNode.localMatrix, currentRotationY);
-
-        if (progress >= 1.0) {
-          animationStage = "IDLE";
-          stageStartTime = time;
-          activePokemonIndex = (activePokemonIndex + 1) % 3;
-        }
-        break;
-      }
-    }
-
-    // Terapkan animasi IDLE untuk pokemon yang tidak aktif
-    for (let i = 0; i < animatorNodes.length; i++) {
-      if (i !== activePokemonIndex) {
-        let inactiveNode = animatorNodes[i];
-        let floatY = idleFloats[i];
-        let flipAngle = idleFlipAngles[i];
-
-        LIBS.set_I4(inactiveNode.localMatrix);
-        LIBS.translateY(inactiveNode.localMatrix, IDLE_Y_OFFSET + floatY);
-        LIBS.rotateX(inactiveNode.localMatrix, flipAngle);
-      }
-    }
-
-    // Update world matrix untuk semua base nodes
-    pokemonBaseNode1.updateWorldMatrix(MOVEMATRIX);
-    pokemonBaseNode2.updateWorldMatrix(MOVEMATRIX);
-    pokemonBaseNode3.updateWorldMatrix(MOVEMATRIX);
-
-    // Logika kamera
-    if (cameraMode !== "f") {
-      let targetX = 0;
-      let targetY = 0;
-      let targetZ = 0;
-
-      switch (cameraMode) {
-        case "c":
-          targetX = baseNodes[2].worldMatrix[12];
-          targetY = baseNodes[2].worldMatrix[13];
-          targetZ = baseNodes[2].worldMatrix[14];
-          break;
-        case "1":
-          targetX = animatorNodes[0].worldMatrix[12];
-          targetY = animatorNodes[0].worldMatrix[13];
-          targetZ = animatorNodes[0].worldMatrix[14];
-          break;
-        case "2":
-          targetX = animatorNodes[1].worldMatrix[12];
-          targetY = animatorNodes[1].worldMatrix[13];
-          targetZ = animatorNodes[1].worldMatrix[14];
-          break;
-        case "3":
-          targetX = animatorNodes[2].worldMatrix[12];
-          targetY = animatorNodes[2].worldMatrix[13];
-          targetZ = animatorNodes[2].worldMatrix[14];
-          break;
-      }
-
-      camX = targetX;
-      camY = targetY + LOCK_ON_OFFSET_Y;
-      camZ = targetZ + LOCK_ON_OFFSET_Z;
-    }
-
-    LIBS.set_I4(VIEWMATRIX);
-    LIBS.rotateX(VIEWMATRIX, -PHI);
-    LIBS.rotateY(VIEWMATRIX, -THETA);
-    LIBS.translateX(VIEWMATRIX, -camX);
-    LIBS.translateY(VIEWMATRIX, -camY);
-    LIBS.translateZ(VIEWMATRIX, -camZ);
-    LIBS.set_I4(SKYBOX_VMATRIX);
-    LIBS.rotateX(SKYBOX_VMATRIX, -PHI);
-    LIBS.rotateY(SKYBOX_VMATRIX, -THETA);
-
+    // --- Set Uniforms Global ---
     GL.uniformMatrix4fv(uniforms._Pmatrix, false, PROJMATRIX);
-    GL.uniform3f(uniforms._ambientColor, 0.5, 0.5, 0.5);
-    GL.uniform3f(uniforms._lightColor, 1.0, 1.0, 1.0);
-    GL.uniform3f(uniforms._lightDirection, 0.5, 1.0, 0.5);
-    GL.uniform3f(uniforms._moonLightDirection, 0.0, -1.2, -0.7);
 
-    // RENDER
+    // Atur semua uniforms lighting
+    GL.uniform3f(uniforms._ambientColor, 0.5, 0.5, 0.5); // Ambient kuat (dari Crobat)
+    GL.uniform3f(uniforms._lightColor, 1.0, 1.0, 1.0); // Cahaya putih (dari Crobat)
+    GL.uniform3f(uniforms._lightDirection, 0.5, 1.0, 0.5); // Cahaya dari atas-samping
+    GL.uniform3f(uniforms._moonLightDirection, 0.0, -1.2, -0.7); // Untuk faked light env
+
+    // --- URUTAN RENDER ---
+    // 1. SKYBOX
     GL.disable(GL.BLEND);
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, SKYBOX_VMATRIX);
     GL.uniform1i(uniforms._isSkybox, true);
-    skyboxObj.draw(MOVEMATRIX, uniforms);
+    skyboxObj.draw(MOVEMATRIX, uniforms); // MOVEMATRIX adalah I4, tidak masalah
     GL.uniform1i(uniforms._isSkybox, false);
 
+    // 2. Obyek Opaque (Pulau, Pohon, Base, dan Crobat)
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, VIEWMATRIX);
     islandNode.draw(MOVEMATRIX, uniforms);
     treeNode.draw(MOVEMATRIX, uniforms);
-    pokemonBaseNode1.draw(MOVEMATRIX, uniforms);
+    pokemonBaseNode1.draw(MOVEMATRIX, uniforms); // <-- Ini akan menggambar Base DAN Crobat
     pokemonBaseNode2.draw(MOVEMATRIX, uniforms);
     pokemonBaseNode3.draw(MOVEMATRIX, uniforms);
 
+    // 3. Obyek Transparan (Jaring laba-laba, Air)
     GL.enable(GL.BLEND);
     webNode.draw(MOVEMATRIX, uniforms);
     waterNode.draw(MOVEMATRIX, uniforms);
