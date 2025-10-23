@@ -1,5 +1,5 @@
 // ===================================================================
-// main2.js - IMPROVED ANIMATION (Versi Transisi Smooth + Sonic Wave Integrated)
+// main2.js - IMPROVED ANIMATION (All Pokemon Sonic Waves)
 // ===================================================================
 
 // 1. IMPORT SEMUA MODULES
@@ -15,7 +15,10 @@ import { PokemonBase } from "./models/PokemonBase.js";
 import { Volcano } from "./models/Volcano.js";
 import { SmokeParticles } from "./models/SmokeParticles.js";
 // --- TAMBAHAN: IMPORT SONIC WAVE ---
-import { ZubatSonicWave } from "./models/Zubat/ZubatSonicWave.js"; // Path sudah benar
+import { ZubatSonicWave } from "./models/Zubat/ZubatSonicWave.js";
+// --- BARU: Import Golbat & Crobat Sonic Wave ---
+import { GolbatSonicWave } from "./models/Golbat/GolbatSonicWave.js"; // Pastikan path benar
+import { CrobatSonicWave } from "./models/Crobat/CrobatSonicWave.js"; // Pastikan path benar
 
 // --- IMPORT CROBAT ---
 import { CrobatBody } from "./models/crobat/CrobatBody.js";
@@ -577,17 +580,17 @@ function main() {
   var volcanoNodeRight = new Node();
   volcanoNodeRight.setGeometry(volcanoObj);
   // Posisikan gunung berapi:
-  LIBS.translateY(volcanoNodeRight.localMatrix, -2100); // Turunkan sedikit agar dasarnya di bawah air
-  LIBS.translateX(volcanoNodeRight.localMatrix, 1000); // Geser ke kanan
-  LIBS.translateZ(volcanoNodeRight.localMatrix, -3300); // Posisikan JAUH di belakang
+  LIBS.translateY(volcanoNodeRight.localMatrix, -2100);
+  LIBS.translateX(volcanoNodeRight.localMatrix, 1000);
+  LIBS.translateZ(volcanoNodeRight.localMatrix, -3300);
 
   // --- GUNUNG BERAPI 2 (Kiri) ---
   var volcanoNodeLeft = new Node();
   volcanoNodeLeft.setGeometry(volcanoObj2);
   // Posisikan gunung berapi:
-  LIBS.translateY(volcanoNodeLeft.localMatrix, -2500); // Sedikit lebih rendah (karena lebih besar)
-  LIBS.translateX(volcanoNodeLeft.localMatrix, -1450); // Jelas di sebelah KIRI
-  LIBS.translateZ(volcanoNodeLeft.localMatrix, -3800); // Sedikit lebih jauh ke belakang
+  LIBS.translateY(volcanoNodeLeft.localMatrix, -2500);
+  LIBS.translateX(volcanoNodeLeft.localMatrix, -1450);
+  LIBS.translateZ(volcanoNodeLeft.localMatrix, -3800);
   // --- AKHIR TAMBAHAN ---
 
   // --- NODE POKEMON BASE 1 (CROBAT) ---
@@ -603,6 +606,10 @@ function main() {
   LIBS.scale(crobatRootNode.localMatrix, 60, 60, 60);
   crobatAnimatorNode.add(crobatRootNode);
 
+  // --- BARU: Manager Serangan Crobat ---
+  const crobatSonicAttackManager = new Node();
+  crobatAnimatorNode.add(crobatSonicAttackManager);
+
   // --- NODE POKEMON BASE 2 (GOLBAT) ---
   var pokemonBaseNode2 = new Node();
   pokemonBaseNode2.setGeometry(pokemonBaseObj);
@@ -616,6 +623,10 @@ function main() {
   var golbatRootNode = golbatData.root;
   LIBS.scale(golbatRootNode.localMatrix, 45, 45, 45); // Scale Golbat
   golbatAnimatorNode.add(golbatRootNode);
+
+  // --- BARU: Manager Serangan Golbat ---
+  const golbatSonicAttackManager = new Node();
+  golbatAnimatorNode.add(golbatSonicAttackManager);
 
   // --- NODE POKEMON BASE 3 (ZUBAT) ---
   var pokemonBaseNode3 = new Node();
@@ -631,29 +642,23 @@ function main() {
   LIBS.scale(zubatRootNode.localMatrix, 20, 20, 20); // Scale Zubat
   zubatAnimatorNode.add(zubatRootNode);
 
-  // --- TAMBAHAN: MANAGER SERANGAN SONIC ---
-  const sonicAttackManager = new Node();
-  // !! PENTING: Attach ke zubatAnimatorNode, bukan zubatRootNode !!
-  zubatAnimatorNode.add(sonicAttackManager);
+  // --- Manager Serangan Zubat ---
+  const zubatSonicAttackManager = new Node();
+  zubatAnimatorNode.add(zubatSonicAttackManager);
 
   /*================= INISIALISASI SISTEM ASAP =================*/
-  // Definisikan kawah-kawah di sini
   const craterInfos = [
     {
-      // Gunung KANAN
-      pos: { x: 1000, y: -2100 + 2000 / 2, z: -3300 }, // Posisi Y = Y node + (Tinggi/2)
-      radius: 1500 * 0.4, // Radius = Radius Alas * 0.4 (dari Volcano.js)
-      count: 50, // Jumlah partikel
+      pos: { x: 1000, y: -2100 + 2000 / 2, z: -3300 },
+      radius: 1500 * 0.4,
+      count: 50,
     },
     {
-      // Gunung KIRI (Asumsi dari langkah sebelumnya)
       pos: { x: -1400, y: -2550 + 2300 / 2, z: -3600 },
       radius: 1800 * 0.4,
       count: 30,
     },
   ];
-
-  // Panggil init dan simpan node induknya
   var globalSmokeRootNode = SmokeParticles.init(GL, attribs, craterInfos);
   /*================= AKHIR INISIALISASI ASAP =================*/
 
@@ -667,11 +672,12 @@ function main() {
   var MOVEMATRIX = LIBS.get_I4();
   var VIEWMATRIX = LIBS.get_I4();
   var SKYBOX_VMATRIX = LIBS.get_I4();
-
   var camX = 0,
     camZ = 2000,
     camY = -2000;
-
+  // let cameraMode = "f";
+  // const LOCK_ON_OFFSET_Y = 500;
+  // const LOCK_ON_OFFSET_Z = 2000;
   var keys = {};
   var THETA = 0,
     PHI = 0;
@@ -683,7 +689,8 @@ function main() {
 
   var mouseDown = function (e) {
     drag = true;
-    (x_prev = e.pageX), (y_prev = e.pageY);
+    x_prev = e.pageX;
+    y_prev = e.pageY;
     e.preventDefault();
     return false;
   };
@@ -699,55 +706,184 @@ function main() {
     dY = ((-(e.pageY - y_prev) * 2 * Math.PI) / CANVAS.height) * 0.3;
     THETA += dX;
     PHI += dY;
-    (x_prev = e.pageX), (y_prev = e.pageY);
+    x_prev = e.pageX;
+    y_prev = e.pageY;
     e.preventDefault();
   };
-
   CANVAS.addEventListener("mousedown", mouseDown, false);
   CANVAS.addEventListener("mouseup", mouseUp, false);
   CANVAS.addEventListener("mouseout", mouseOut, false);
   CANVAS.addEventListener("mousemove", mouseMove, false);
 
-  // --- TAMBAHAN: LISTENER KEYBOARD (Trigger + Kamera) ---
+  /*================= VARIABEL & FUNGSI ANIMASI =================*/
+
+  // --- Variabel State untuk Animasi Sonic Wave (Zubat) ---
+  let zubatActiveWaves = [];
+  let zubatLastWaveSpawnTime = 0;
+  const zubatWaveSpawnInterval = 400;
+  const zubatWaveLifespan = 2000;
+  const zubatWaveMaxScale = 5.0;
+  const zubatWaveSpeed = 8.0;
+  const zubatWaveOptions = {
+    numRings: 1,
+    ringSpacing: 0,
+    baseRadius: 10.5,
+    radiusGrowth: 0,
+    tubeThickness: 0.5,
+    mainSegments: 32,
+    tubeSegments: 8,
+  };
+  let isZubatAutoAttacking = false;
+  let isKeyZPressed = false; // Tombol 'Z' untuk Zubat
+
+  // --- BARU: Variabel State untuk Animasi Sonic Wave (Golbat) ---
+  let golbatActiveWaves = [];
+  let golbatLastWaveSpawnTime = 0;
+  const golbatWaveSpawnInterval = 350; // Sedikit lebih cepat dari Zubat
+  const golbatWaveLifespan = 2200;
+  const golbatWaveMaxScale = 6.0;
+  const golbatWaveSpeed = 10.0;
+  const golbatWaveOptions = {
+    // Bisa disesuaikan
+    numRings: 1,
+    ringSpacing: 0,
+    baseRadius: 20.0,
+    radiusGrowth: 0, // Lebih besar
+    tubeThickness: 0.5,
+    mainSegments: 32,
+    tubeSegments: 8,
+    color: [0.6, 0.7, 1.0], // Warna sedikit beda
+  };
+  let isGolbatAutoAttacking = false;
+  let isKeyGPressed = false;
+
+  // --- BARU: Variabel State untuk Animasi Sonic Wave (Crobat) ---
+  let crobatActiveWaves = [];
+  let crobatLastWaveSpawnTime = 0;
+  const crobatWaveSpawnInterval = 300; // Paling cepat
+  const crobatWaveLifespan = 2500;
+  const crobatWaveMaxScale = 7.0;
+  const crobatWaveSpeed = 12.0;
+  const crobatWaveOptions = {
+    // Bisa disesuaikan
+    numRings: 1,
+    ringSpacing: 0,
+    baseRadius: 30.0,
+    radiusGrowth: 0, // Paling besar
+    tubeThickness: 0.5,
+    mainSegments: 32,
+    tubeSegments: 8,
+    color: [0.7, 0.6, 1.0], // Warna sedikit beda lagi
+  };
+  let isCrobatAutoAttacking = false;
+  let isKeyCPressed = false;
+
+  // --- Fungsi Helper untuk Spawn Gelombang (Zubat) ---
+  function spawnNewZubatWave(spawnTime) {
+    const wave = new ZubatSonicWave(GL, attribs, zubatWaveOptions);
+    wave.spawnTime = spawnTime;
+    wave.lifespan = zubatWaveLifespan;
+    zubatSonicAttackManager.add(wave);
+    zubatActiveWaves.push(wave);
+    zubatLastWaveSpawnTime = spawnTime;
+  }
+  // --- BARU: Fungsi Helper untuk Spawn Gelombang (Golbat) ---
+  function spawnNewGolbatWave(spawnTime) {
+    const wave = new GolbatSonicWave(GL, attribs, golbatWaveOptions); // Gunakan class Golbat
+    wave.spawnTime = spawnTime;
+    wave.lifespan = golbatWaveLifespan;
+    golbatSonicAttackManager.add(wave);
+    golbatActiveWaves.push(wave); // Gunakan manager & array Golbat
+    golbatLastWaveSpawnTime = spawnTime;
+  }
+  // --- BARU: Fungsi Helper untuk Spawn Gelombang (Crobat) ---
+  function spawnNewCrobatWave(spawnTime) {
+    const wave = new CrobatSonicWave(GL, attribs, crobatWaveOptions); // Gunakan class Crobat
+    wave.spawnTime = spawnTime;
+    wave.lifespan = crobatWaveLifespan;
+    crobatSonicAttackManager.add(wave);
+    crobatActiveWaves.push(wave); // Gunakan manager & array Crobat
+    crobatLastWaveSpawnTime = spawnTime;
+  }
+
+  // --- Event Listeners untuk Keyboard (Trigger + Kamera) ---
   var keyDown = function (e) {
-    keys[e.key] = true;
+    keys[e.key] = true; // Hanya simpan status tombol
+    const keyLower = e.key.toLowerCase(); // Handle Caps Lock
 
-    // Trigger Kamera (Sama seperti sebelumnya)
-    if (e.key === "f" || e.key === "F") {
-      cameraMode = "f";
-    } else if (e.key === "c" || e.key === "C") {
-      cameraMode = "c";
-    } else if (e.key === "1") {
-      cameraMode = "1";
-    } else if (e.key === "2") {
-      cameraMode = "2";
-    } else if (e.key === "3") {
-      cameraMode = "3";
+    // --- LOGIKA BARU UNTUK TRIGGER SERANGAN ---
+
+    // Zubat ('Z' / '1')
+    if (keyLower === "z") {
+      if (isKeyZPressed) return; // Hindari key repeat
+      isKeyZPressed = true;
+      isZubatAutoAttacking = false; // Matikan auto jika aktif
+      spawnNewZubatWave(performance.now()); // Langsung spawn saat klik
     }
-
-    // Trigger Serangan Sonic Wave
-    if (e.key === " " || e.code === "Space") {
-      if (!keys["SpaceProcessed"]) {
-        isAutoAttacking = !isAutoAttacking;
-        keys["SpaceProcessed"] = true;
+    if (keyLower === "1") {
+      // Toggle Auto Zubat
+      if (!keys["1Processed"]) {
+        // Hindari key repeat
+        isZubatAutoAttacking = !isZubatAutoAttacking;
+        keys["1Processed"] = true; // Tandai sudah diproses
       }
     }
-    if (e.key === "z" || e.code === "KeyZ") {
-      // Menggunakan 'Z'
-      if (isKey1Pressed) return;
-      isKey1Pressed = true;
-      isAutoAttacking = false;
-      spawnNewWave(performance.now());
+
+    // Golbat ('G' / '2')
+    if (keyLower === "g") {
+      if (isKeyGPressed) return;
+      isKeyGPressed = true;
+      isGolbatAutoAttacking = false;
+      spawnNewGolbatWave(performance.now());
+    }
+    if (keyLower === "2") {
+      // Toggle Auto Golbat
+      if (!keys["2Processed"]) {
+        isGolbatAutoAttacking = !isGolbatAutoAttacking;
+        keys["2Processed"] = true;
+      }
+    }
+
+    // Crobat ('C' / '3')
+    if (keyLower === "c") {
+      if (isKeyCPressed) return;
+      isKeyCPressed = true;
+      isCrobatAutoAttacking = false;
+      spawnNewCrobatWave(performance.now());
+    }
+    if (keyLower === "3") {
+      // Toggle Auto Crobat
+      if (!keys["3Processed"]) {
+        isCrobatAutoAttacking = !isCrobatAutoAttacking;
+        keys["3Processed"] = true;
+      }
     }
   };
 
   var keyUp = function (e) {
-    keys[e.key] = false;
-    if (e.key === " " || e.code === "Space") {
-      keys["SpaceProcessed"] = false;
+    keys[e.key] = false; // Reset status umum tombol
+    const keyLower = e.key.toLowerCase();
+
+    // Reset flag "hold" untuk serangan manual
+    if (keyLower === "z") {
+      isKeyZPressed = false;
     }
-    if (e.key === "z" || e.code === "KeyZ") {
-      isKey1Pressed = false;
+    if (keyLower === "g") {
+      isKeyGPressed = false;
+    }
+    if (keyLower === "c") {
+      isKeyCPressed = false;
+    }
+
+    // Reset flag "processed" untuk toggle auto attack
+    if (keyLower === "1") {
+      keys["1Processed"] = false;
+    }
+    if (keyLower === "2") {
+      keys["2Processed"] = false;
+    }
+    if (keyLower === "3") {
+      keys["3Processed"] = false;
     }
   };
 
@@ -766,27 +902,20 @@ function main() {
   // ========================================================
   // === AWAL BLOK ANIMASI (FSM Transisi Smooth) ===
   // ========================================================
-
-  // --- Konfigurasi Animasi Idle ---
   const idleFlipState = [
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 }, // Zubat
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 }, // Golbat
-    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 }, // Crobat
+    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
+    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
+    { isFlipping: false, lastFlipTime: 0, flipStartTime: 0 },
   ];
   const flipIntervals = [15000, 18000, 13000];
   const flipDurations = [1000, 1100, 900];
   const idleFlipAngles = [0, 0, 0];
   const idleFloats = [0, 0, 0];
-
-  // --- Konfigurasi FSM (Finite State Machine) ---
   let activePokemonIndex = 0;
   let animationStage = "IDLE";
   let stageStartTime = 0;
-
-  // --- Variabel untuk menyimpan status rotasi ---
   let currentPokemonYRotation = [0, 0, 0];
   let targetPokemonYRotation = [0, 0, 0];
-
   const baseNodes = [pokemonBaseNode3, pokemonBaseNode2, pokemonBaseNode1];
   const animatorNodes = [
     zubatAnimatorNode,
@@ -794,13 +923,10 @@ function main() {
     crobatAnimatorNode,
   ];
   const idleFlapData = [zubatData.wings, golbatData.wings, crobatData.wings];
-
-  // --- Konstanta Posisi & Durasi FSM ---
   const IDLE_Y_OFFSET = -2250;
   const LIFT_Y_OFFSET = -1500;
   const ORBIT_RADIUS = 600;
   const ORBIT_X_ROTATION = 0.5;
-
   const DURATION_IDLE = 5000;
   const DURATION_LIFT_OFF = 2000;
   const DURATION_SMOOTH_TURN = 800;
@@ -812,43 +938,9 @@ function main() {
   const DURATION_RETURN_MOVE = 1500;
   const DURATION_RETURN_TURN_2 = 1000;
   const DURATION_RETURN = 3000;
-
-  // Helper FSM
   const LERP = (a, b, t) => a + (b - a) * t;
-  const calculateAngle = (fromX, fromZ, toX, toZ) => {
-    const dx = toX - fromX;
-    const dz = toZ - fromZ;
-    return Math.atan2(dx, dz);
-  };
-
-  // --- TAMBAHAN: VARIABEL ANIMASI SONIC WAVE ---
-  let activeWaves = [];
-  let lastWaveSpawnTime = 0;
-  const waveSpawnInterval = 400;
-  const waveLifespan = 2000;
-  const waveMaxScale = 5.0;
-  const waveSpeed = 8.0; // Disesuaikan agar lebih terlihat
-  const waveOptions = {
-    numRings: 1,
-    ringSpacing: 0,
-    baseRadius: 10.5,
-    radiusGrowth: 0,
-    tubeThickness: 0.1, // Dibuat lebih tebal
-    mainSegments: 32,
-    tubeSegments: 8,
-  };
-  let isAutoAttacking = false;
-  let isKey1Pressed = false; // Untuk tombol 'Z'
-
-  // --- Fungsi Helper untuk Spawn Gelombang ---
-  function spawnNewWave(spawnTime) {
-    const wave = new ZubatSonicWave(GL, attribs, waveOptions);
-    wave.spawnTime = spawnTime;
-    wave.lifespan = waveLifespan;
-    sonicAttackManager.add(wave); // Attach ke manager
-    activeWaves.push(wave);
-    lastWaveSpawnTime = spawnTime;
-  }
+  const calculateAngle = (fromX, fromZ, toX, toZ) =>
+    Math.atan2(toX - fromX, toZ - fromZ);
 
   // ========================================================
   // === LOOP ANIMASI UTAMA ===
@@ -868,6 +960,7 @@ function main() {
     var right_X = Math.cos(THETA);
     var right_Z = -Math.sin(THETA);
 
+    // --- Update Kamera ---
     if (keys["s"]) {
       camX += forward_X * currentSpeed;
       camY += forward_Y * currentSpeed;
@@ -901,37 +994,33 @@ function main() {
 
     var genericTime = time / 100.0;
 
-    // --- 1. Animasi Idle Wing Flap (Berlaku untuk semua) ---
-    // Zubat (Index 0)
+    // --- 1. Animasi Idle Wing Flap ---
+    // Zubat
     var floatSpeedZ = 1.5;
-    var floatAmplitudeZ = 0.2 * 30; // Scale Zubat = 20
+    var floatAmplitudeZ = 0.2 * 30;
     idleFloats[0] = Math.sin(genericTime * floatSpeedZ) * floatAmplitudeZ;
     var flapSpeedZ = 1.0;
     var flapAmplitudeZ = 0.15;
     var flapAngleZ = Math.sin(genericTime * flapSpeedZ) * flapAmplitudeZ;
-
     var zubatWings = idleFlapData[0];
     LIBS.set_I4(zubatWings.left.localMatrix);
     LIBS.translateY(zubatWings.left.localMatrix, 0.0);
     LIBS.translateX(zubatWings.left.localMatrix, 1.1);
     LIBS.rotateZ(zubatWings.left.localMatrix, 0.4 + flapAngleZ);
     LIBS.rotateY(zubatWings.left.localMatrix, 0.2);
-
     LIBS.set_I4(zubatWings.right.localMatrix);
     LIBS.scale(zubatWings.right.localMatrix, -1, 1, 1);
     LIBS.translateY(zubatWings.right.localMatrix, 0.0);
     LIBS.translateX(zubatWings.right.localMatrix, 1.2);
     LIBS.rotateZ(zubatWings.right.localMatrix, -0.4 - flapAngleZ);
     LIBS.rotateY(zubatWings.right.localMatrix, -0.2);
-
-    // Golbat (Index 1)
+    // Golbat
     var floatSpeedG = 1.5;
-    var floatAmplitudeG_idle = 0.2 * 80; // Scale Golbat = 45
+    var floatAmplitudeG_idle = 0.2 * 80;
     idleFloats[1] = Math.sin(genericTime * floatSpeedG) * floatAmplitudeG_idle;
     var flapSpeedG = 1.0;
     var flapAmplitudeG = Math.PI / 4;
     var flapAngleG = Math.sin(genericTime * flapSpeedG) * flapAmplitudeG;
-
     var golbatWings = idleFlapData[1];
     LIBS.set_I4(golbatWings.left.localMatrix);
     LIBS.translateX(golbatWings.left.localMatrix, 0.5);
@@ -939,7 +1028,6 @@ function main() {
     LIBS.rotateZ(golbatWings.left.localMatrix, 0.3);
     LIBS.rotateY(golbatWings.left.localMatrix, 0.2 + flapAngleG);
     LIBS.rotateX(golbatWings.left.localMatrix, 0.7);
-
     LIBS.set_I4(golbatWings.right.localMatrix);
     LIBS.scale(golbatWings.right.localMatrix, -1, 1, 1);
     LIBS.translateX(golbatWings.right.localMatrix, 0.5);
@@ -947,14 +1035,12 @@ function main() {
     LIBS.rotateZ(golbatWings.right.localMatrix, -0.3);
     LIBS.rotateY(golbatWings.right.localMatrix, -0.2 - flapAngleG);
     LIBS.rotateX(golbatWings.right.localMatrix, 0.7);
-
-    // Crobat (Index 2)
-    var floatAmplitudeC = 20; // Scale Crobat = 60
+    // Crobat
+    var floatAmplitudeC = 20;
     idleFloats[2] = Math.sin(genericTime * 0.6) * floatAmplitudeC;
     var flapSpeedC = 0.6;
     var flapAmplitudeC = Math.PI / 12;
     var flapAngleC = Math.sin(genericTime * flapSpeedC) * flapAmplitudeC;
-
     var crobatWings = idleFlapData[2];
     LIBS.set_I4(crobatWings.upperLeft.localMatrix);
     LIBS.scale(crobatWings.upperLeft.localMatrix, 1.0, 1.0, 1.0);
@@ -963,7 +1049,6 @@ function main() {
     LIBS.translateX(crobatWings.upperLeft.localMatrix, 2);
     LIBS.translateY(crobatWings.upperLeft.localMatrix, 1.0);
     LIBS.translateZ(crobatWings.upperLeft.localMatrix, -0.3);
-
     LIBS.set_I4(crobatWings.upperRight.localMatrix);
     LIBS.scale(crobatWings.upperRight.localMatrix, -1.0, 1.0, 1.0);
     LIBS.rotateY(crobatWings.upperRight.localMatrix, 0.25 - flapAngleC);
@@ -971,33 +1056,29 @@ function main() {
     LIBS.translateX(crobatWings.upperRight.localMatrix, 2);
     LIBS.translateY(crobatWings.upperRight.localMatrix, 1.0);
     LIBS.translateZ(crobatWings.upperRight.localMatrix, -0.3);
-
     LIBS.set_I4(crobatWings.lowerLeft.localMatrix);
     LIBS.scale(crobatWings.lowerLeft.localMatrix, 0.5, 0.25, 0.25);
     LIBS.rotateY(crobatWings.lowerLeft.localMatrix, 3.2 + flapAngleC);
     LIBS.rotateZ(crobatWings.lowerLeft.localMatrix, 3.25);
     LIBS.translateY(crobatWings.lowerLeft.localMatrix, 3.5);
-
     LIBS.set_I4(crobatWings.lowerRight.localMatrix);
     LIBS.scale(crobatWings.lowerRight.localMatrix, -0.5, 0.25, 0.25);
     LIBS.rotateY(crobatWings.lowerRight.localMatrix, 3.0 - flapAngleC);
     LIBS.rotateZ(crobatWings.lowerRight.localMatrix, 3.0);
     LIBS.translateY(crobatWings.lowerRight.localMatrix, 3.5);
 
-    // --- 2. Logika Idle Flip (Berlaku untuk semua) ---
-    const currentTime = time; // Gunakan time dari animate
+    // --- 2. Logika Idle Flip ---
+    const currentTime = time;
     for (let i = 0; i < 3; i++) {
-      let state = idleFlipState[i];
-      let interval = flipIntervals[i];
-      let duration = flipDurations[i];
-
-      let flipAngle = 0.0;
+      let state = idleFlipState[i],
+        interval = flipIntervals[i],
+        duration = flipDurations[i],
+        flipAngle = 0.0;
       if (!state.isFlipping && currentTime - state.lastFlipTime > interval) {
         state.isFlipping = true;
         state.flipStartTime = currentTime;
         state.lastFlipTime = currentTime;
       }
-
       if (state.isFlipping) {
         let flipProgress = (currentTime - state.flipStartTime) / duration;
         if (flipProgress >= 1.0) {
@@ -1009,7 +1090,7 @@ function main() {
       idleFlipAngles[i] = flipAngle;
     }
 
-    // --- 3. Logika FSM (State Machine) Pokemon AKTIF ---
+    // --- 3. Logika FSM Pokemon AKTIF ---
     let activeNode = animatorNodes[activePokemonIndex];
     let activeBase = baseNodes[activePokemonIndex];
     let activeBasePos = [
@@ -1022,10 +1103,8 @@ function main() {
       baseNodes[2].localMatrix[13],
       baseNodes[2].localMatrix[14],
     ];
-
     let timeInStage = time - stageStartTime;
     LIBS.set_I4(activeNode.localMatrix);
-
     let currentX = 0,
       currentY = IDLE_Y_OFFSET,
       currentZ = 0;
@@ -1039,9 +1118,10 @@ function main() {
       centerToBaseAngle;
 
     switch (animationStage) {
+      // ... (Kode FSM Stages tidak berubah) ...
       case "IDLE": {
-        let floatY = idleFloats[activePokemonIndex];
-        let flipAngle = idleFlipAngles[activePokemonIndex];
+        let floatY = idleFloats[activePokemonIndex],
+          flipAngle = idleFlipAngles[activePokemonIndex];
         currentRotationY = currentPokemonYRotation[activePokemonIndex];
         LIBS.translateY(activeNode.localMatrix, IDLE_Y_OFFSET + floatY);
         LIBS.rotateX(activeNode.localMatrix, flipAngle);
@@ -1128,9 +1208,9 @@ function main() {
       }
       case "MOVE_TO_ORBIT": {
         progress = Math.min(1.0, timeInStage / DURATION_MOVE_TO_ORBIT);
-        let startX = centerPos[0] - activeBasePos[0];
-        let startZ = centerPos[2] - activeBasePos[2];
-        let targetZ = startZ + ORBIT_RADIUS;
+        let startX = centerPos[0] - activeBasePos[0],
+          startZ = centerPos[2] - activeBasePos[2],
+          targetZ = startZ + ORBIT_RADIUS;
         currentX = startX;
         currentY = LIFT_Y_OFFSET;
         currentZ = LERP(startZ, targetZ, progress);
@@ -1168,15 +1248,15 @@ function main() {
       }
       case "CIRCLING": {
         progress = (timeInStage % DURATION_CIRCLING) / DURATION_CIRCLING;
-        let angle = progress * Math.PI * 2;
-        let circleX = Math.sin(angle) * ORBIT_RADIUS;
-        let circleZ = Math.cos(angle) * ORBIT_RADIUS;
+        let angle = progress * Math.PI * 2,
+          circleX = Math.sin(angle) * ORBIT_RADIUS,
+          circleZ = Math.cos(angle) * ORBIT_RADIUS;
         currentX = centerPos[0] - activeBasePos[0] + circleX;
         currentY = LIFT_Y_OFFSET;
         currentZ = centerPos[2] - activeBasePos[2] + circleZ;
-        let nextAngle = angle + 0.1;
-        let nextX = Math.sin(nextAngle) * ORBIT_RADIUS;
-        let nextZ = Math.cos(nextAngle) * ORBIT_RADIUS;
+        let nextAngle = angle + 0.1,
+          nextX = Math.sin(nextAngle) * ORBIT_RADIUS,
+          nextZ = Math.cos(nextAngle) * ORBIT_RADIUS;
         currentRotationY = calculateAngle(circleX, circleZ, nextX, nextZ);
         LIBS.translateX(activeNode.localMatrix, currentX);
         LIBS.translateY(activeNode.localMatrix, currentY);
@@ -1212,8 +1292,8 @@ function main() {
       }
       case "PRE_RETURN_MOVE": {
         progress = Math.min(1.0, timeInStage / DURATION_RETURN_MOVE);
-        let startZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS;
-        let endZ = centerPos[2] - activeBasePos[2];
+        let startZ = centerPos[2] - activeBasePos[2] + ORBIT_RADIUS,
+          endZ = centerPos[2] - activeBasePos[2];
         currentX = centerPos[0] - activeBasePos[0];
         currentY = LIFT_Y_OFFSET;
         currentZ = LERP(startZ, endZ, progress);
@@ -1253,8 +1333,8 @@ function main() {
       }
       case "RETURN_TO_BASE": {
         progress = Math.min(1.0, timeInStage / DURATION_RETURN);
-        let startX = centerPos[0] - activeBasePos[0];
-        let startZ = centerPos[2] - activeBasePos[2];
+        let startX = centerPos[0] - activeBasePos[0],
+          startZ = centerPos[2] - activeBasePos[2];
         currentX = LERP(startX, 0, progress);
         currentY = LERP(LIFT_Y_OFFSET, IDLE_Y_OFFSET, progress);
         currentZ = LERP(startZ, 0, progress);
@@ -1273,84 +1353,147 @@ function main() {
       }
     }
 
-    // --- TAMBAHAN: ANIMASI SONIC WAVE ATTACK ---
+    // --- ANIMASI SONIC WAVE (Semua Pokemon) ---
     const currentTimeForWave = time; // Gunakan 'time' dari animate
-    const timeSinceLastSpawn = currentTimeForWave - lastWaveSpawnTime;
-
-    // Cek trigger untuk spawn gelombang
-    if (isAutoAttacking && timeSinceLastSpawn > waveSpawnInterval) {
-      spawnNewWave(currentTimeForWave);
-    } else if (isKey1Pressed && timeSinceLastSpawn > waveSpawnInterval) {
+    // --- ZUBAT ('Z' / '1') ---
+    let timeSinceLastSpawn = currentTimeForWave - zubatLastWaveSpawnTime;
+    // Cek trigger spawn Zubat
+    if (isZubatAutoAttacking && timeSinceLastSpawn > zubatWaveSpawnInterval) {
+      spawnNewZubatWave(currentTimeForWave);
+    } else if (isKeyZPressed && timeSinceLastSpawn > zubatWaveSpawnInterval) {
       // Untuk 'Z' hold
-      spawnNewWave(currentTimeForWave);
+      spawnNewZubatWave(currentTimeForWave);
     }
-
-    // Update dan bersihkan gelombang yang aktif
-    const wavesToRemove = [];
-    for (let wave of activeWaves) {
+    // Update & Hapus gelombang Zubat (Logic sama seperti sebelumnya)
+    let wavesToRemove = [];
+    for (let wave of zubatActiveWaves) {
+      /* ... Kode update & cek lifespan Zubat ... */
       const age = currentTimeForWave - wave.spawnTime;
-      if (age > wave.lifespan) {
+      if (age > zubatWaveLifespan) {
         wavesToRemove.push(wave);
       } else {
-        const progress = age / wave.lifespan;
-        const currentScale = 1.0 + progress * (waveMaxScale - 1.0); // Mulai dari 1.0
-        const currentZ_anim = progress * waveSpeed;
-
-        // !! PERBAIKAN SKALA & POSISI !!
-        // Kita perlu ZUBAT's world matrix untuk posisi spawn yang benar
-        // 1. Dapatkan world matrix dari zubatAnimatorNode
-        const zubatWorldMatrix = zubatAnimatorNode.worldMatrix;
-
-        // 2. Tentukan posisi spawn relatif terhadap Zubat
-        const spawnOffsetY = 2 * 20; // 2 (Y Anda) * 20 (Skala Zubat)
-        const spawnOffsetZ = 3 * 20; // 3 (Z Anda) * 20 (Skala Zubat)
-
-        // 3. Buat matriks transformasi untuk gelombang
+        const progress = age / zubatWaveLifespan;
+        const currentScale = 1.0 + progress * (zubatWaveMaxScale - 1.0);
+        const currentZ_anim = progress * zubatWaveSpeed;
+        const zubatWorldMatrix = animatorNodes[0].worldMatrix;
+        const spawnOffsetY = 2 * 20;
+        const spawnOffsetZ = 3 * 20;
         const M_scale = LIBS.get_I4();
         LIBS.scale(M_scale, currentScale, 1.0, currentScale);
-
         const M_rotate = LIBS.get_I4();
-        // LIBS.rotateX(M_rotate, Math.PI * 2); // Rotasi 360 = tidak ada rotasi
-        // Coba arahkan lurus dulu
-        LIBS.rotateX(M_rotate, Math.PI * 2); // Arahkan ke depan relatif thd Zubat
-
+        LIBS.rotateX(M_rotate, Math.PI * 2); // Arahkan depan
         const M_translate_local = LIBS.get_I4();
-        LIBS.translateY(M_translate_local, spawnOffsetY); // Posisi Y relatif
-        LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim); // Posisi Z relatif + Gerakan
-
-        // Gabungkan T * R * S secara lokal dulu
+        LIBS.translateY(M_translate_local, spawnOffsetY);
+        LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim);
         const M_LocalTransform = LIBS.multiply(
           M_translate_local,
           LIBS.multiply(M_rotate, M_scale)
         );
+        wave.localMatrix = LIBS.multiply(zubatWorldMatrix, M_LocalTransform); // Menggunakan multiply
+      }
+    }
+    if (wavesToRemove.length > 0) {
+      zubatSonicAttackManager.childs = zubatActiveWaves.filter(
+        (w) => !wavesToRemove.includes(w)
+      );
+      zubatActiveWaves = zubatSonicAttackManager.childs;
+    }
 
-        // Gabungkan dengan world matrix Zubat agar mengikuti Zubat
-        // Final = World_Zubat * Local_Wave_Transform
-        wave.localMatrix = LIBS.multiply(zubatWorldMatrix, M_LocalTransform);
-        // Catatan: Karena kita set localMatrix gelombang = worldMatrix Zubat * transform lokal,
-        // saat Node.draw() dipanggil, parentMatrix (dari zubatAnimatorNode)
-        // akan dikalikan lagi. Kita perlu sedikit trik.
-        // Opsi 1: Buat sonicAttackManager jadi child root scene (rumit).
-        // Opsi 2 (Lebih mudah): Set parentMatrix jadi Identity saat draw wave.
-        // Kita akan modifikasi Node.js atau buat fungsi draw khusus di ZubatSonicWave.
-        // Untuk sekarang, biarkan begini dulu, nanti diperbaiki jika posisinya salah.
+    // --- GOLBAT ('G' / '2') ---
+    timeSinceLastSpawn = currentTimeForWave - golbatLastWaveSpawnTime;
+    // Cek trigger spawn Golbat
+    if (isGolbatAutoAttacking && timeSinceLastSpawn > golbatWaveSpawnInterval) {
+      spawnNewGolbatWave(currentTimeForWave);
+    } else if (isKeyGPressed && timeSinceLastSpawn > golbatWaveSpawnInterval) {
+      // Untuk 'G' hold
+      spawnNewGolbatWave(currentTimeForWave);
+    }
+    // Update & Hapus gelombang Golbat (Logic sama, variabel berbeda)
+    wavesToRemove = [];
+    for (let wave of golbatActiveWaves) {
+      /* ... Kode update & cek lifespan Golbat ... */
+      const age = currentTimeForWave - wave.spawnTime;
+      if (age > golbatWaveLifespan) {
+        wavesToRemove.push(wave);
+      } else {
+        const progress = age / golbatWaveLifespan;
+        const currentScale = 1.0 + progress * (golbatWaveMaxScale - 1.0);
+        const currentZ_anim = progress * golbatWaveSpeed;
+        const golbatWorldMatrix = animatorNodes[1].worldMatrix;
+        const spawnOffsetY = -0.1 * 45;
+        const spawnOffsetZ = 0.7 * 45;
+        const M_scale = LIBS.get_I4();
+        LIBS.scale(M_scale, currentScale, 1.0, currentScale);
+        const M_rotate = LIBS.get_I4();
+        LIBS.rotateX(M_rotate, Math.PI * 2); // Arahkan depan
+        const M_translate_local = LIBS.get_I4();
+        LIBS.translateY(M_translate_local, spawnOffsetY);
+        LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim);
+        const M_LocalTransform = LIBS.multiply(
+          M_translate_local,
+          LIBS.multiply(M_rotate, M_scale)
+        );
+        wave.localMatrix = LIBS.multiply(golbatWorldMatrix, M_LocalTransform); // Menggunakan multiply
+      }
+    }
+    if (wavesToRemove.length > 0) {
+      golbatSonicAttackManager.childs = golbatActiveWaves.filter(
+        (w) => !wavesToRemove.includes(w)
+      );
+      golbatActiveWaves = golbatSonicAttackManager.childs;
+    }
+
+    // --- CROBAT ('C' / '3') ---
+    timeSinceLastSpawn = currentTimeForWave - crobatLastWaveSpawnTime;
+    // Cek trigger spawn Crobat
+    if (isCrobatAutoAttacking && timeSinceLastSpawn > crobatWaveSpawnInterval) {
+      spawnNewCrobatWave(currentTimeForWave);
+    } else if (isKeyCPressed && timeSinceLastSpawn > crobatWaveSpawnInterval) {
+      // Untuk 'C' hold
+      spawnNewCrobatWave(currentTimeForWave);
+    }
+    // Update & Hapus gelombang Crobat (Logic sama, variabel berbeda)
+    wavesToRemove = [];
+    for (let wave of crobatActiveWaves) {
+      /* ... Kode update & cek lifespan Crobat ... */
+      const age = currentTimeForWave - wave.spawnTime;
+      if (age > crobatWaveLifespan) {
+        wavesToRemove.push(wave);
+      } else {
+        const progress = age / crobatWaveLifespan;
+        const currentScale = 1.0 + progress * (crobatWaveMaxScale - 1.0);
+        const currentZ_anim = progress * crobatWaveSpeed;
+        const crobatWorldMatrix = animatorNodes[2].worldMatrix;
+        const spawnOffsetY = -0.3 * 60;
+        const spawnOffsetZ = 1.3 * 60;
+        const M_scale = LIBS.get_I4();
+        LIBS.scale(M_scale, currentScale, 1.0, currentScale);
+        const M_rotate = LIBS.get_I4();
+        LIBS.rotateX(M_rotate, Math.PI * 2); // Arahkan depan
+        const M_translate_local = LIBS.get_I4();
+        LIBS.translateY(M_translate_local, spawnOffsetY);
+        LIBS.translateZ(M_translate_local, spawnOffsetZ + currentZ_anim);
+        const M_LocalTransform = LIBS.multiply(
+          M_translate_local,
+          LIBS.multiply(M_rotate, M_scale)
+        );
+        wave.localMatrix = LIBS.multiply(crobatWorldMatrix, M_LocalTransform); // Menggunakan multiply
       }
     }
 
-    // Hapus gelombang yang sudah mati
     if (wavesToRemove.length > 0) {
-      sonicAttackManager.childs = activeWaves.filter(
+      crobatSonicAttackManager.childs = crobatActiveWaves.filter(
         (w) => !wavesToRemove.includes(w)
       );
-      activeWaves = sonicAttackManager.childs;
+      crobatActiveWaves = crobatSonicAttackManager.childs;
     }
 
     // --- 4. Terapkan Animasi Idle ke Pokemon NON-AKTIF ---
     for (let i = 0; i < animatorNodes.length; i++) {
       if (i !== activePokemonIndex) {
-        let inactiveNode = animatorNodes[i];
-        let floatY = idleFloats[i];
-        let flipAngle = idleFlipAngles[i];
+        let inactiveNode = animatorNodes[i],
+          floatY = idleFloats[i],
+          flipAngle = idleFlipAngles[i];
         currentPokemonYRotation[i] = 0;
         LIBS.set_I4(inactiveNode.localMatrix);
         LIBS.translateY(inactiveNode.localMatrix, IDLE_Y_OFFSET + floatY);
@@ -1359,10 +1502,20 @@ function main() {
       }
     }
 
-    // --- 5. Update World Matrix & Kamera FSM ---
+    // --- 5. Update World Matrix ---
     pokemonBaseNode1.updateWorldMatrix(MOVEMATRIX);
     pokemonBaseNode2.updateWorldMatrix(MOVEMATRIX);
     pokemonBaseNode3.updateWorldMatrix(MOVEMATRIX);
+    // Update world matrix untuk manager (meskipun kosong, ini best practice)
+    globalCloudRootNode.updateWorldMatrix(MOVEMATRIX);
+    globalSmokeRootNode.updateWorldMatrix(MOVEMATRIX);
+    islandNode.updateWorldMatrix(MOVEMATRIX);
+    treeNode.updateWorldMatrix(MOVEMATRIX);
+    spiderNode.updateWorldMatrix(MOVEMATRIX);
+    waterNode.updateWorldMatrix(MOVEMATRIX);
+    webNode.updateWorldMatrix(MOVEMATRIX);
+    volcanoNodeRight.updateWorldMatrix(MOVEMATRIX);
+    volcanoNodeLeft.updateWorldMatrix(MOVEMATRIX);
 
     // --- 6. Set Uniforms Global ---
     LIBS.set_I4(VIEWMATRIX);
@@ -1374,7 +1527,6 @@ function main() {
     LIBS.set_I4(SKYBOX_VMATRIX);
     LIBS.rotateX(SKYBOX_VMATRIX, -PHI);
     LIBS.rotateY(SKYBOX_VMATRIX, -THETA);
-
     GL.uniformMatrix4fv(uniforms._Pmatrix, false, PROJMATRIX);
     GL.uniform3f(uniforms._ambientColor, 0.5, 0.5, 0.5);
     GL.uniform3f(uniforms._lightColor, 1.0, 1.0, 1.0);
@@ -1385,40 +1537,26 @@ function main() {
     GL.disable(GL.BLEND);
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, SKYBOX_VMATRIX);
     GL.uniform1i(uniforms._isSkybox, true);
-    skyboxObj.draw(MOVEMATRIX, uniforms); // Draw Skybox
+    skyboxObj.draw(MOVEMATRIX, uniforms);
     GL.uniform1i(uniforms._isSkybox, false);
 
     GL.uniformMatrix4fv(uniforms._Vmatrix, false, VIEWMATRIX);
-    islandNode.draw(MOVEMATRIX, uniforms); // Draw Island
-    treeNode.draw(MOVEMATRIX, uniforms); // Draw Trees
-    volcanoNodeRight.draw(MOVEMATRIX, uniforms); // Draw Volcano Right
-    volcanoNodeLeft.draw(MOVEMATRIX, uniforms); // Draw Volcano Left
-    pokemonBaseNode1.draw(MOVEMATRIX, uniforms); // Draw Crobat Base + Crobat
-    pokemonBaseNode2.draw(MOVEMATRIX, uniforms); // Draw Golbat Base + Golbat
-    pokemonBaseNode3.draw(MOVEMATRIX, uniforms); // Draw Zubat Base + Zubat (Termasuk Sonic Waves)
+    islandNode.draw(MOVEMATRIX, uniforms);
+    treeNode.draw(MOVEMATRIX, uniforms);
+    volcanoNodeRight.draw(MOVEMATRIX, uniforms);
+    volcanoNodeLeft.draw(MOVEMATRIX, uniforms);
+    pokemonBaseNode1.draw(MOVEMATRIX, uniforms);
+    pokemonBaseNode2.draw(MOVEMATRIX, uniforms);
+    pokemonBaseNode3.draw(MOVEMATRIX, uniforms); // Ini akan menggambar Zubat + Sonic Waves
+    globalCloudRootNode.draw(MOVEMATRIX, uniforms);
 
-    // --- Animasi Awan Individual ---
-    const cloudDriftAmount = 2000;
-    for (const anim of cloudData.cloudAnimData) {
-      let timeWithOffset = time + anim.startOffset;
-      let drift =
-        Math.sin(timeWithOffset * anim.speed * 0.001) * cloudDriftAmount;
-      let newX = anim.baseX + drift * anim.direction;
-      anim.node.localMatrix[12] = newX;
-    }
-    globalCloudRootNode.draw(MOVEMATRIX, uniforms); // Draw Clouds
-
-    GL.enable(GL.BLEND); // Enable blending untuk asap dan air
-
-    // --- Update Animasi Partikel Asap ---
+    GL.enable(GL.BLEND);
     SmokeParticles.update(dt, THETA, PHI);
-    // Gambar Partikel Asap
-    GL.depthMask(false); // Disable depth writing
+    GL.depthMask(false);
     globalSmokeRootNode.draw(MOVEMATRIX, uniforms);
-    GL.depthMask(true); // Re-enable depth writing
-
-    webNode.draw(MOVEMATRIX, uniforms); // Draw Spider Webs
-    waterNode.draw(MOVEMATRIX, uniforms); // Draw Water
+    GL.depthMask(true);
+    webNode.draw(MOVEMATRIX, uniforms);
+    waterNode.draw(MOVEMATRIX, uniforms);
 
     GL.flush();
     window.requestAnimationFrame(animate);
